@@ -1,0 +1,80 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 13.04.2 ] */
+
+/* [wxMaxima: input   start ] */
+kill(all);
+
+sC : sqrt(C)$
+x0 : 0$
+v0 : 0$
+w0 : 0$
+
+t3 : w/A-t1+t2$
+
+k1 : A/(L*C)$
+x1 : (x0+v0/sC-k1)*exp(t1*sC)/2 + (x0-v0/sC-k1)*exp(-t1*sC)/2 + k1$
+v1 : (x0+v0/sC-k1)*sC*exp(t1*sC)/2 - (x0-v0/sC-k1)*sC*exp(-t1*sC)/2$
+w1 : w0+A*t1$
+
+k2 : -A/(L*C)$ 
+x2 : (x1+v1/sC-k2)*exp(t2*sC)/2 + (x1-v1/sC-k2)*exp(-t2*sC)/2 + k2$
+v2 : (x1+v1/sC-k2)*sC*exp(t2*sC)/2 - (x1-v1/sC-k2)*sC*exp(-t2*sC)/2$
+w2 : w1-A*t2$
+
+k3 : A/(L*C)$
+x3 : (x2+v2/sC-k3)*exp(t3*sC)/2 + (x2-v2/sC-k3)*exp(-t3*sC)/2 + k3$
+v3 : (x2+v2/sC-k3)*sC*exp(t3*sC)/2 - (x2-v2/sC-k3)*sC*exp(-t3*sC)/2$
+w3 : w2+A*t3$
+
+xeq : x = x3$
+veq : v = v3$
+
+expand(xeq);
+expand(veq);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+kill(all);
+sC : sqrt(C)$
+xeq : X*C*L/A - 1 = -cosh(sC*(a+t2)) + 2*cosh(sC*(a+2*t2-t1)) - 2*cosh(sC*(a+t2-t1));
+veq : V*sC*L/A = -sinh(sC*(a+t2)) + 2*sinh(sC*(a+2*t2-t1)) - 2*sinh(sC*(a+t2-t1));
+
+solve(veq, t2);
+solve(veq, t1);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+kill(all);
+
+sC : sqrt(C)$
+x0 : 0$
+v0 : 0$
+
+x1 : (x0+v0/sC-k)*exp(t1*sC)/2 + (x0-v0/sC-k)*exp(-t1*sC)/2 + k$
+v1 : (x0+v0/sC-k)*sC*exp(t1*sC)/2 - (x0-v0/sC-k)*sC*exp(-t1*sC)/2$
+
+x2 : (x1+v1/sC+k)*exp(t2*sC)/2 + (x1-v1/sC+k)*exp(-t2*sC)/2 - k;
+v2 : (x1+v1/sC+k)*sC*exp(t2*sC)/2 - (x1-v1/sC+k)*sC*exp(-t2*sC)/2;
+
+xeq : X = k*(-cosh(sC*(t1+t2)) + 2*cosh(sC*t2) - 1);
+veq : V = k*(-sinh(sC*(t1+t2)) + 2*sinh(sC*t2));
+
+solve(xeq, t1);
+solve(xeq, t2);
+
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+kill(all);
+
+sC : sqrt(C)$
+
+x : phi = c1*cos(t*sC) + c2*sin(-t*sC) - k$
+v : vphi = -c1*sC*sin(t*sC) + c2*sC*cos(t*sC)$
+
+solve(x, t);
+solve(v, t);
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$

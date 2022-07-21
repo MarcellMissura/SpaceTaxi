@@ -1,0 +1,993 @@
+Start thread 0 on case  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1284933827 
+Start thread 1 on case  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1284933827 
+Start thread 2 on case  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1284933827 
+Start thread 3 on case  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1210987308 
+Start thread 4 on case  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1210987308 
+Start thread 5 on case  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1210987308 
+Start thread 6 on case  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1188579809 
+Start thread 7 on case  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1188579809 
+Start thread 8 on case  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1188579809 
+Start thread 9 on case  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 595521486 
+  case 0 run 1 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 3 run 1 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 4 
+  case 1 run 1 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 2 run 1 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 6 run 1 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 7 
+  case 5 run 1 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 4 run 1 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 5 
+  case 7 run 1 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 9 
+  case 9 run 1 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 5 
+  case 8 run 1 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 0 run 2 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 1 run 2 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 3 run 2 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 3 
+  case 2 run 2 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 5 run 2 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 5 
+  case 6 run 2 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 3 
+  case 4 run 2 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 0 run 3 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 7 run 2 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 10 
+  case 9 run 2 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 9 
+  case 8 run 2 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 6 
+  case 1 run 3 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 3 run 3 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 3 
+  case 2 run 3 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 5 run 3 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 2 
+  case 0 run 4 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 0 
+  case 6 run 3 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 4 run 3 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 3 
+  case 9 run 3 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 4 
+  case 7 run 3 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 8 
+  case 8 run 3 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 9 
+  case 3 run 4 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 2 
+  case 1 run 4 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 2 run 4 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 0 run 5 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 5 run 4 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 8 
+  case 6 run 4 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 5 
+  case 4 run 4 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 4 
+  case 7 run 4 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 7 
+  case 3 run 5 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 1 
+  case 8 run 4 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 15 
+  case 9 run 4 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 7 
+  case 0 run 6 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 1 run 5 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 2 run 5 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 5 run 5 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 4 
+  case 6 run 5 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 3 
+  case 4 run 5 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 1 
+  case 0 run 7 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 7 run 5 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 5 
+  case 3 run 6 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 5 
+  case 1 run 6 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 2 run 6 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 8 run 5 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 8 
+  case 9 run 5 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 13 
+  case 6 run 6 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 3 
+  case 5 run 6 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 4 run 6 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 6 
+  case 0 run 8 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 3 run 7 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 3 
+  case 1 run 7 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 7 run 6 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 8 
+  case 2 run 7 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 8 run 6 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 9 run 6 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 6 
+  case 0 run 9 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 6 run 7 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 7 
+  case 5 run 7 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 3 
+  case 4 run 7 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 1 run 8 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 3 run 8 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 2 run 8 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 7 run 7 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 7 
+  case 0 run 10 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 8 run 7 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 5 
+  case 9 run 7 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 7 
+  case 6 run 8 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 5 
+  case 5 run 8 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 1 run 9 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 4 run 8 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 8 
+  case 3 run 9 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 3 
+  case 2 run 9 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 0 run 11 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 0 
+  case 7 run 8 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 8 
+  case 8 run 8 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 9 
+  case 1 run 10 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 6 run 9 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 4 
+  case 5 run 9 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 6 
+  case 3 run 10 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 1 
+  case 4 run 9 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 8 
+  case 9 run 8 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 9 
+  case 2 run 10 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 0 run 12 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 7 run 9 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 11 
+  case 1 run 11 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 3 run 11 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 3 
+  case 8 run 9 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 6 
+  case 6 run 10 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 5 
+  case 5 run 10 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 0 run 13 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 4 run 10 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 3 
+  case 9 run 9 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 11 
+  case 2 run 11 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 1 run 12 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 7 run 10 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 6 
+  case 3 run 12 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 6 
+  case 0 run 14 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 6 run 11 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 6 
+  case 8 run 10 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 9 
+  case 2 run 12 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 5 run 11 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 4 run 11 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 4 
+  case 9 run 10 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 6 
+  case 1 run 13 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 3 run 13 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 1 
+  case 0 run 15 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 7 run 11 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 10 
+  case 6 run 12 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 2 
+  case 2 run 13 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 5 run 12 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 4 
+  case 4 run 12 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 7 
+  case 8 run 11 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 1 run 14 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 9 run 11 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 0 run 16 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 3 run 14 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 1 
+  case 6 run 13 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 1 
+  case 2 run 14 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 7 run 12 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 10 
+  case 1 run 15 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 5 run 13 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 4 run 13 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 6 
+  case 8 run 12 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 5 
+  case 0 run 17 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 3 run 15 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 3 
+  case 9 run 12 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 7 
+  case 6 run 14 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 7 
+  case 2 run 15 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 1 run 16 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 7 run 13 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 8 
+  case 5 run 14 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 4 run 14 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 1 
+  case 0 run 18 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 3 run 16 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 1 
+  case 8 run 13 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 8 
+  case 9 run 13 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 10 
+  case 6 run 15 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 4 
+  case 2 run 16 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 3 run 17 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 6 
+  case 1 run 17 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 0 run 19 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 5 run 15 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 6 
+  case 7 run 14 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 7 
+  case 4 run 15 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 9 run 14 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 10 
+  case 8 run 14 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 9 
+  case 2 run 17 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 6 run 16 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 8 
+  case 0 run 20 agent 0 finished.  id 0 dumb 1 map apartment agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+Finished with case  id: 0 seed: 1284933827 dumb:1 map: apartment agents: 1 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [23, 28.2, 2.80225, 34] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.022804, 0.410914, 0.34017, 2.23502] trajTime: [0.063886, 14.9066, 6.74834, 40.1686] 
+Start thread 0 on case  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 595521486 
+  case 3 run 18 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 1 
+  case 1 run 18 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+  case 5 run 16 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 5 
+  case 4 run 16 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 7 run 15 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 10 
+  case 9 run 15 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 7 
+  case 2 run 18 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 8 run 15 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 6 
+  case 6 run 17 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 8 
+  case 3 run 19 agent 0 finished.  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 1 run 19 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 10 run 1 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 10 
+  case 5 run 17 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 2 
+  case 4 run 17 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 7 
+  case 9 run 16 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 5 
+  case 7 run 16 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 4 
+  case 3 run 20 agent 0 finished with dried Q: 1733  id 3 dumb 1 map apartment agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 1 
+Finished with case  id: 3 seed: 1210987308 dumb:1 map: apartment agents: 2 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [24, 27.1579, 2.38661, 33] collisions: [1, 2.68421, 1.63478, 6] stucks: 0 pathTime: [0.018237, 0.434763, 0.360704, 5.86577] trajTime: [0.060624, 14.8289, 6.84814, 30.4016] 
+Start thread 3 on case  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 595521486 
+  case 2 run 19 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 8 run 16 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 9 
+  case 6 run 18 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 9 
+  case 1 run 20 agent 0 finished.  id 1 dumb 1 map apartment agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 0 
+Finished with case  id: 1 seed: 1284933827 dumb:1 map: apartment agents: 1 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [15, 25, 3.09499, 30] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.038912, 0.419392, 0.345633, 7.45859] trajTime: [1.49431, 17.0088, 4.07048, 34.9] 
+Start thread 1 on case  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1569899119 
+  case 5 run 18 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 6 
+  case 4 run 18 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 10 run 2 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 12 
+  case 9 run 17 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 4 
+  case 2 run 20 agent 0 finished.  id 2 dumb 1 map apartment agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+Finished with case  id: 2 seed: 1284933827 dumb:1 map: apartment agents: 1 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [16, 20.8, 2.23842, 25] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.016306, 0.424415, 0.353267, 7.12871] trajTime: [0.050187, 17.758, 4.29865, 31.1041] 
+Start thread 2 on case  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1569899119 
+  case 7 run 17 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 10 
+  case 6 run 19 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 5 
+  case 11 run 1 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 8 
+  case 8 run 17 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 9 
+  case 12 run 1 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 8 
+  case 4 run 19 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 5 
+  case 5 run 19 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 4 
+  case 9 run 18 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 11 
+  case 10 run 3 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 10 
+  case 6 run 20 agent 0 finished.  id 6 dumb 1 map apartment agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+Finished with case  id: 6 seed: 1188579809 dumb:1 map: apartment agents: 3 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [23, 26.75, 2.84466, 33] collisions: [1, 4.9, 2.24546, 9] stucks: 0 pathTime: [0.041488, 0.468131, 0.392794, 13.8495] trajTime: [0.023848, 15.1391, 6.63777, 46.3319] 
+Start thread 6 on case  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1569899119 
+  case 7 run 18 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 5 
+  case 8 run 18 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 5 
+  case 13 run 1 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 17 
+  case 11 run 2 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 5 
+  case 12 run 2 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 7 
+  case 4 run 20 agent 0 finished.  id 4 dumb 1 map apartment agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 3 
+Finished with case  id: 4 seed: 1210987308 dumb:1 map: apartment agents: 2 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [11, 24.3, 4.70274, 31] collisions: [0, 4.35, 2.32322, 8] stucks: 0 pathTime: [0.028249, 0.463671, 0.357571, 3.3457] trajTime: [1.63295, 17.3493, 3.74359, 33.1465] 
+Start thread 4 on case  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1017693631 
+  case 5 run 20 agent 0 finished.  id 5 dumb 1 map apartment agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+Finished with case  id: 5 seed: 1210987308 dumb:1 map: apartment agents: 2 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [18, 21.65, 2.90689, 30] collisions: [1, 3.85, 1.81442, 8] stucks: 0 pathTime: [0.020246, 0.441198, 0.354069, 11.3866] trajTime: [0.068296, 17.6107, 4.54785, 33.2142] 
+Start thread 5 on case  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1017693631 
+  case 9 run 19 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 6 
+  case 10 run 4 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 9 
+  case 7 run 19 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 3 
+  case 8 run 19 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 9 
+  case 14 run 1 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 13 
+  case 11 run 3 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 7 
+  case 13 run 2 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 10 
+  case 12 run 3 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 8 
+  case 15 run 1 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 16 run 1 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 9 run 20 agent 0 finished.  id 9 dumb 1 map apartment agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 6 
+Finished with case  id: 9 seed: 595521486 dumb:1 map: apartment agents: 4 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [20, 25.8, 2.74533, 31] collisions: [4, 7.35, 2.62127, 13] stucks: 0 pathTime: [0.03397, 0.462327, 0.375494, 2.65541] trajTime: [0.082991, 15.2014, 6.65569, 32.3993] 
+Start thread 9 on case  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1017693631 
+  case 10 run 5 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 16 
+  case 7 run 20 agent 0 finished.  id 7 dumb 1 map apartment agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 4 
+Finished with case  id: 7 seed: 1188579809 dumb:1 map: apartment agents: 3 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [11, 23.25, 3.58175, 27] collisions: [3, 7.5, 2.37309, 11] stucks: 0 pathTime: [0.018724, 0.51893, 0.421241, 2.7253] trajTime: [1.60317, 17.2943, 3.89369, 34.6039] 
+Start thread 7 on case  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1205218727 
+  case 8 run 20 agent 0 finished.  id 8 dumb 1 map apartment agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 9 
+Finished with case  id: 8 seed: 1188579809 dumb:1 map: apartment agents: 3 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [17, 20.6, 2.37088, 25] collisions: [4, 7.5, 2.58538, 15] stucks: 0 pathTime: [0.033531, 0.467608, 0.369171, 2.69801] trajTime: [0.083634, 17.4785, 4.80807, 29.1319] 
+Start thread 8 on case  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1205218727 
+  case 11 run 4 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 12 
+  case 14 run 2 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 14 
+  case 13 run 3 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 13 
+  case 12 run 4 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 14 
+  case 15 run 2 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 17 run 1 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 16 run 2 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 10 run 6 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 9 
+  case 14 run 3 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 11 
+  case 11 run 5 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 13 
+  case 12 run 5 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 10 
+  case 18 run 1 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 19 run 1 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 13 run 4 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 13 
+  case 15 run 3 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 17 run 2 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 16 run 3 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 10 run 7 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 11 
+  case 12 run 6 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 10 
+  case 11 run 6 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 11 
+  case 14 run 4 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 10 
+  case 16 run 4 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 15 run 4 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 13 run 5 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 13 
+  case 17 run 3 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 18 run 2 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 1 
+  case 10 run 8 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 14 
+  case 19 run 2 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 12 run 7 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 8 
+  case 11 run 7 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 13 
+  case 14 run 5 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 15 
+  case 16 run 5 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 15 run 5 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 17 run 4 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 13 run 6 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 17 
+  case 10 run 9 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 12 
+  case 12 run 8 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 10 
+  case 18 run 3 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 19 run 3 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 11 run 8 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 9 
+  case 14 run 6 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 9 
+  case 16 run 6 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 15 run 6 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 17 run 5 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 13 run 7 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 9 cols: 14 
+  case 10 run 10 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 14 
+  case 12 run 9 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 7 
+  case 19 run 4 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 18 run 4 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 15 run 7 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 11 run 9 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 8 
+  case 16 run 7 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 14 run 7 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 13 
+  case 17 run 6 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 10 run 11 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 17 
+  case 13 run 8 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 18 
+  case 12 run 10 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 7 
+  case 15 run 8 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 11 run 10 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 18 
+  case 16 run 8 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 19 run 5 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 18 run 5 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 3 
+  case 14 run 8 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 15 
+  case 17 run 7 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 10 run 12 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 11 
+  case 13 run 9 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 17 
+  case 12 run 11 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 8 
+  case 15 run 9 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 11 run 11 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 8 
+  case 16 run 9 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 10 run 13 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 15 
+  case 17 run 8 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 14 run 9 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 13 
+  case 19 run 6 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 18 run 6 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 13 run 10 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 15 
+  case 12 run 12 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 13 
+  case 15 run 10 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 10 run 14 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 12 
+  case 11 run 12 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 16 
+  case 16 run 10 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 17 run 9 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 14 run 10 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 7 
+  case 19 run 7 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 18 run 7 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 12 run 13 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 14 
+  case 13 run 11 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 13 
+  case 15 run 11 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 10 run 15 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 9 
+  case 11 run 13 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 10 
+  case 16 run 11 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 17 run 10 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 0 
+  case 14 run 11 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 12 
+  case 19 run 8 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 1 
+  case 15 run 12 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 12 run 14 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 11 
+  case 13 run 12 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 9 
+  case 10 run 16 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 13 
+  case 18 run 8 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 11 run 14 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 17 
+  case 17 run 11 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 0 
+  case 16 run 12 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 14 run 12 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 12 
+  case 15 run 13 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 12 run 15 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 10 
+  case 10 run 17 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 9 
+  case 17 run 12 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 13 run 13 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 18 
+  case 11 run 15 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 11 
+  case 19 run 9 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 16 run 13 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 18 run 9 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 2 
+  case 14 run 13 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 13 
+  case 15 run 14 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 17 run 13 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 12 run 16 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 8 
+  case 10 run 18 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 17 
+  case 11 run 16 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 16 
+  case 13 run 14 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 9 
+  case 16 run 14 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 19 run 10 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 15 run 15 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 14 run 14 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 10 
+  case 18 run 10 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 17 run 14 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 12 run 17 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 13 
+  case 10 run 19 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 12 
+  case 11 run 17 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 14 
+  case 16 run 15 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 13 run 15 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 15 
+  case 15 run 16 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 14 run 15 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 14 
+  case 17 run 15 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 19 run 11 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 12 run 18 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 4 
+  case 10 run 20 agent 0 finished.  id 10 dumb 1 map apartment agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 6 
+Finished with case  id: 10 seed: 595521486 dumb:1 map: apartment agents: 4 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [21, 24.55, 2.37254, 30] collisions: [6, 11.9, 2.95403, 17] stucks: 0 pathTime: [0.018085, 0.531944, 0.424388, 3.34373] trajTime: [1.62389, 17.0785, 4.0682, 40.5577] 
+Start thread 0 on case  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1205218727 
+  case 18 run 11 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 11 run 18 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 10 
+  case 15 run 17 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 16 run 16 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 13 run 16 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 12 
+  case 17 run 16 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 14 run 16 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 14 
+  case 12 run 19 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 12 
+  case 11 run 19 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 11 
+  case 19 run 12 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 15 run 18 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 16 run 17 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 18 run 12 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 20 run 1 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 13 run 17 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 16 
+  case 17 run 17 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 14 run 17 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 12 
+  case 12 run 20 agent 0 finished.  id 12 dumb 1 map apartment agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 7 
+Finished with case  id: 12 seed: 1569899119 dumb:1 map: apartment agents: 5 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [21, 25.85, 2.39022, 30] collisions: [4, 9.45, 2.72368, 14] stucks: 0 pathTime: [0.029247, 0.5109, 0.421414, 16.5839] trajTime: [0.034114, 15.3187, 6.58061, 35.0516] 
+Start thread 1 on case  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 646570647 
+  case 11 run 20 agent 0 finished.  id 11 dumb 1 map apartment agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 13 
+Finished with case  id: 11 seed: 595521486 dumb:1 map: apartment agents: 4 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [18, 22.25, 2.24488, 26] collisions: [5, 11.5, 3.53181, 18] stucks: 0 pathTime: [0.017868, 0.529488, 0.407975, 4.47018] trajTime: [0.061681, 17.3345, 5.00415, 51.0794] 
+Start thread 3 on case  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 646570647 
+  case 15 run 19 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 16 run 18 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 19 run 13 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 18 run 13 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 13 run 18 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 17 
+  case 17 run 18 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 20 run 2 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 2 
+  case 14 run 18 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 12 
+  case 15 run 20 agent 0 finished.  id 15 dumb 1 map office agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+Finished with case  id: 15 seed: 1017693631 dumb:1 map: office agents: 1 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [16, 20, 2, 23] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.08951, 3.25151, 3.58355, 28.9929] trajTime: [0.103785, 17.5442, 4.59593, 32.9378] 
+Start thread 4 on case  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 646570647 
+  case 16 run 19 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 19 run 14 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 18 run 14 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 1 
+  case 22 run 1 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 21 run 1 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 17 run 19 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 0 
+  case 13 run 19 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 14 
+  case 14 run 19 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 13 
+  case 20 run 3 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 5 
+  case 16 run 20 agent 0 finished.  id 16 dumb 1 map office agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+Finished with case  id: 16 seed: 1017693631 dumb:1 map: office agents: 1 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [15, 18.15, 2.059, 24] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.073342, 3.60266, 3.90799, 30.1006] trajTime: [2.01884, 18.1963, 2.97062, 33.8575] 
+Start thread 5 on case  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 281877799 
+  case 17 run 20 agent 0 finished.  id 17 dumb 1 map office agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+Finished with case  id: 17 seed: 1017693631 dumb:1 map: office agents: 1 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [13, 16.6, 1.87504, 19] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.051503, 2.9801, 3.42807, 27.7425] trajTime: [0.045694, 18.3298, 3.22183, 34.1236] 
+Start thread 9 on case  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 281877799 
+  case 23 run 1 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 13 run 20 agent 0 finished.  id 13 dumb 1 map apartment agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 12 
+Finished with case  id: 13 seed: 1569899119 dumb:1 map: apartment agents: 5 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [9, 21.1, 4.36373, 28] collisions: [9, 14.1, 2.82657, 18] stucks: 0 pathTime: [0.032518, 0.533071, 0.402388, 3.11846] trajTime: [1.93513, 17.5461, 3.59632, 35.2727] 
+  case 19 run 15 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 1 
+Start thread 2 on case  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 281877799 
+  case 18 run 15 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 1 
+  case 14 run 20 agent 0 finished.  id 14 dumb 1 map apartment agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 16 
+Finished with case  id: 14 seed: 1569899119 dumb:1 map: apartment agents: 5 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [15, 20.65, 3.0483, 25] collisions: [7, 12.4, 2.18608, 16] stucks: 0 pathTime: [0.032924, 0.493717, 0.411345, 17.6415] trajTime: [0.078925, 17.3233, 5.04849, 33.2141] 
+Start thread 6 on case  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 281027722 
+  case 22 run 2 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 3 
+  case 21 run 2 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 20 run 4 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 1 
+  case 19 run 16 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 18 run 16 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 25 run 1 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 2 
+  case 24 run 1 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 23 run 2 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 4 
+  case 20 run 5 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 26 run 1 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 2 
+  case 22 run 3 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 4 
+  case 21 run 3 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 2 
+  case 19 run 17 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 27 run 1 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 18 run 17 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 20 run 6 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 2 
+  case 23 run 3 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 24 run 2 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 25 run 2 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 19 run 18 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 2 
+  case 22 run 4 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 1 
+  case 21 run 4 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 3 
+  case 26 run 2 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 9 
+  case 18 run 18 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 2 
+  case 20 run 7 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 1 
+  case 19 run 19 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 23 run 4 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 9 
+  case 27 run 2 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 24 run 3 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 3 
+  case 21 run 5 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 4 
+  case 25 run 3 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 22 run 5 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 1 
+  case 18 run 19 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 20 run 8 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 26 run 3 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 7 
+  case 19 run 20 agent 0 finished.  id 19 dumb 1 map office agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 1 
+Finished with case  id: 19 seed: 1205218727 dumb:1 map: office agents: 2 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [17, 18.8, 1.28145, 21] collisions: [0, 1.45, 1.14593, 4] stucks: 0 pathTime: [0.136132, 3.64997, 4.16939, 33.7461] trajTime: [2.03161, 18.0176, 3.22522, 30.6343] 
+Start thread 8 on case  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 281027722 
+  case 23 run 5 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 24 run 4 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 18 run 20 agent 0 finished.  id 18 dumb 1 map office agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+Finished with case  id: 18 seed: 1205218727 dumb:1 map: office agents: 2 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [17, 20, 1.86378, 24] collisions: [0, 1.3, 1.30182, 5] stucks: 0 pathTime: [0.0848, 3.98256, 4.7918, 34.4385] trajTime: [0.114692, 17.5866, 4.58344, 30.4915] 
+Start thread 7 on case  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 281027722 
+  case 27 run 3 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 5 
+  case 20 run 9 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 2 
+  case 21 run 6 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 2 
+  case 25 run 4 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 6 
+  case 22 run 6 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 2 
+  case 26 run 4 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 9 
+  case 23 run 6 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 7 
+  case 28 run 1 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 20 run 10 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 3 
+  case 24 run 5 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 5 
+  case 25 run 5 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 21 run 7 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 22 run 7 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 27 run 4 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 29 run 1 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 8 
+  case 26 run 5 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 5 
+  case 20 run 11 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 23 run 7 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 3 
+  case 21 run 8 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 22 run 8 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 0 
+  case 28 run 2 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 24 run 6 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 8 
+  case 25 run 6 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 20 run 12 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 1 
+  case 23 run 8 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 4 
+  case 29 run 2 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 4 
+  case 27 run 5 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 3 
+  case 22 run 9 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 3 
+  case 26 run 6 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 4 
+  case 21 run 9 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 20 run 13 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 1 
+  case 25 run 7 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 10 
+  case 24 run 7 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 1 
+  case 23 run 9 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 28 run 3 agent 0 finished with dried Q: 7011  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 4 cols: 13 
+  case 22 run 10 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 5 
+  case 26 run 7 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 7 
+  case 29 run 3 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 9 
+  case 21 run 10 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 4 
+  case 20 run 14 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 3 
+  case 27 run 6 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 1 
+  case 23 run 10 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 3 
+  case 24 run 8 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 25 run 8 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 10 cols: 1 
+  case 22 run 11 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 28 run 4 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 8 
+  case 20 run 15 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 26 run 8 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 2 
+  case 21 run 11 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 27 run 7 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 1 
+  case 23 run 11 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 6 
+  case 29 run 4 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 10 
+  case 20 run 16 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 1 
+  case 22 run 12 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 24 run 9 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 5 
+  case 25 run 9 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 7 
+  case 21 run 12 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 1 
+  case 26 run 9 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 7 
+  case 28 run 5 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+  case 23 run 12 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 20 run 17 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 2 
+  case 29 run 5 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 22 run 13 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 5 
+  case 27 run 8 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 6 
+  case 24 run 10 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 7 
+  case 25 run 10 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 6 
+  case 21 run 13 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 2 
+  case 20 run 18 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 0 
+  case 26 run 10 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 4 
+  case 23 run 13 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 4 
+  case 22 run 14 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 1 
+  case 28 run 6 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 5 
+  case 27 run 9 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 3 
+  case 20 run 19 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 3 
+  case 29 run 6 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 6 
+  case 21 run 14 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 24 run 11 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 3 
+  case 23 run 14 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 25 run 11 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 22 run 15 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 6 
+  case 26 run 11 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 4 
+  case 20 run 20 agent 0 finished.  id 20 dumb 1 map office agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+Finished with case  id: 20 seed: 1205218727 dumb:1 map: office agents: 2 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [13, 15.8, 1.88065, 20] collisions: [0, 1.6, 1.56945, 5] stucks: 0 pathTime: [0.050763, 3.48472, 3.94752, 31.6298] trajTime: [0.120401, 18.2814, 3.36419, 36.9938] 
+Start thread 0 on case  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1592669122 
+  case 27 run 10 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 21 run 15 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 3 
+  case 28 run 7 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 5 
+  case 22 run 16 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 6 
+  case 24 run 12 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 2 
+  case 30 run 1 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 0 
+  case 23 run 15 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 5 
+  case 29 run 7 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 12 
+  case 25 run 12 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 2 
+  case 26 run 12 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 6 
+  case 30 run 2 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 21 run 16 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 2 
+  case 22 run 17 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 30 run 3 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 28 run 8 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 10 
+  case 27 run 11 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 10 
+  case 23 run 16 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 1 
+  case 24 run 13 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 8 
+  case 30 run 4 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 0 
+  case 25 run 13 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 29 run 8 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 6 
+  case 26 run 13 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 21 run 17 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 2 
+  case 22 run 18 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 1 
+  case 30 run 5 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 23 run 17 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 4 
+  case 24 run 14 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 4 
+  case 27 run 12 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 3 
+  case 30 run 6 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 0 
+  case 28 run 9 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 11 
+  case 25 run 14 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 8 
+  case 30 run 7 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 37 cols: 0 
+  case 26 run 14 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 2 
+  case 21 run 18 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 3 
+  case 22 run 19 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 29 run 9 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 6 cols: 6 
+  case 23 run 18 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 24 run 15 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 4 
+  case 30 run 8 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 30 run 9 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 38 cols: 0 
+  case 27 run 13 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 6 
+  case 25 run 15 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 7 
+  case 28 run 10 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 8 
+  case 21 run 19 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 22 run 20 agent 0 finished.  id 22 dumb 1 map office agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 6 
+Finished with case  id: 22 seed: 646570647 dumb:1 map: office agents: 3 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [16, 18.15, 1.56525, 22] collisions: [0, 3, 1.89181, 6] stucks: 0 pathTime: [0.050907, 3.48139, 3.82283, 32.7541] trajTime: [1.14477, 17.9607, 3.301, 33.0184] 
+Start thread 3 on case  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1592669122 
+  case 23 run 19 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 3 
+  case 26 run 15 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 2 
+  case 24 run 16 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 4 
+  case 30 run 10 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 29 run 10 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 30 run 11 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 37 cols: 0 
+  case 31 run 1 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 0 
+  case 21 run 20 agent 0 finished.  id 21 dumb 1 map office agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 3 
+Finished with case  id: 21 seed: 646570647 dumb:1 map: office agents: 3 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [17, 19.7, 1.94936, 23] collisions: [0, 2.05, 1.2763, 4] stucks: 0 pathTime: [0.072075, 3.98201, 4.36383, 30.8312] trajTime: [0.033987, 17.6209, 4.54306, 32.4754] 
+Start thread 1 on case  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1592669122 
+  case 25 run 16 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 8 
+  case 30 run 12 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 23 run 20 agent 0 finished.  id 23 dumb 1 map office agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 3 
+Finished with case  id: 23 seed: 646570647 dumb:1 map: office agents: 3 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [12, 15.7, 1.97617, 19] collisions: [0, 4, 2, 9] stucks: 0 pathTime: [0.087875, 3.2177, 3.74195, 29.1978] trajTime: [0.080762, 18.2232, 3.52488, 33.934] 
+Start thread 4 on case  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1389707791 
+  case 24 run 17 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 4 
+  case 27 run 14 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 2 
+  case 28 run 11 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 6 
+  case 31 run 2 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 7 cols: 0 
+  case 26 run 16 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 10 
+  case 32 run 1 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 30 run 13 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 29 run 11 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 5 
+  case 31 run 3 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 0 
+  case 32 run 2 agent 0 finished with dried Q: 2603  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 0 
+  case 33 run 1 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 6 
+  case 30 run 14 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 0 
+  case 24 run 18 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 26 run 17 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 4 
+  case 25 run 17 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 32 run 3 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 33 run 2 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 39 cols: 6 
+  case 30 run 15 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 0 
+  case 27 run 15 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 28 run 12 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 6 
+  case 31 run 4 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 0 
+  case 29 run 12 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 8 
+  case 32 run 4 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 33 run 3 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 4 
+  case 30 run 16 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 0 
+  case 26 run 18 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 5 
+  case 31 run 5 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 10 cols: 0 
+  case 32 run 5 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 33 run 4 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 13 
+  case 24 run 19 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 6 
+  case 25 run 18 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 5 
+  case 30 run 17 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 35 cols: 0 
+  case 31 run 6 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 0 
+  case 27 run 16 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 4 
+  case 32 run 6 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 0 
+  case 28 run 13 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 30 run 18 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 0 
+  case 33 run 5 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 8 
+  case 29 run 13 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 6 
+  case 26 run 19 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 7 
+  case 31 run 7 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 7 cols: 0 
+  case 24 run 20 agent 0 finished.  id 24 dumb 1 map office agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 3 
+Finished with case  id: 24 seed: 281877799 dumb:1 map: office agents: 4 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [17, 20.2, 1.43637, 23] collisions: [1, 3.8, 2.14231, 8] stucks: 0 pathTime: [0.138374, 3.64438, 4.13261, 44.7376] trajTime: [0.094373, 17.4348, 4.81702, 30.8546] 
+Start thread 5 on case  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1389707791 
+  case 30 run 19 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 35 cols: 0 
+  case 32 run 7 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 0 
+  case 33 run 6 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 5 
+  case 25 run 19 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 3 
+  case 30 run 20 agent 0 finished.  id 30 dumb 1 map clutter agents 1 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 48 cols: 0 
+Finished with case  id: 30 seed: 1592669122 dumb:1 map: clutter agents: 1 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [28, 34.25, 4.17858, 48] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.014842, 0.620715, 1.44815, 27.4479] trajTime: [0.029799, 15.4502, 6.58415, 49.0161] 
+Start thread 0 on case  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1389707791 
+  case 31 run 8 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 0 
+  case 32 run 8 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 34 run 1 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 7 cols: 0 
+  case 29 run 14 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 3 
+  case 33 run 7 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 7 
+  case 27 run 17 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 3 
+  case 26 run 20 agent 0 finished.  id 26 dumb 1 map office agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 5 
+Finished with case  id: 26 seed: 281877799 dumb:1 map: office agents: 4 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [13, 15.5, 1.31789, 18] collisions: [2, 5.25, 2.4468, 10] stucks: 0 pathTime: [0.092283, 3.4047, 3.70988, 31.1354] trajTime: [0.074944, 18.1668, 3.66474, 33.1011] 
+Start thread 2 on case  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1061777804 
+  case 28 run 14 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 6 
+  case 32 run 9 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 31 run 9 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 0 
+  case 35 run 1 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 4 
+  case 34 run 2 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 2 
+  case 33 run 8 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 8 
+  case 25 run 20 agent 0 finished.  id 25 dumb 1 map office agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 4 
+Finished with case  id: 25 seed: 281877799 dumb:1 map: office agents: 4 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [10, 17.7, 2.59757, 22] collisions: [1, 4.95, 2.37254, 10] stucks: 0 pathTime: [0.072521, 3.75306, 4.24895, 33.5835] trajTime: [1.75987, 18.1078, 3.08598, 32.5505] 
+Start thread 9 on case  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1061777804 
+  case 32 run 10 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 0 
+  case 36 run 1 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 35 cols: 14 
+  case 31 run 10 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 0 
+  case 35 run 2 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 7 
+  case 33 run 9 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 40 cols: 10 
+  case 29 run 15 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 6 
+  case 32 run 11 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 0 
+  case 34 run 3 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 5 cols: 7 
+  case 37 run 1 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 17 
+  case 31 run 11 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 0 
+  case 27 run 18 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 4 
+  case 36 run 2 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 12 
+  case 28 run 15 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 9 
+  case 33 run 10 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 3 
+  case 32 run 12 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 35 run 3 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 2 
+  case 31 run 12 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 0 
+  case 34 run 4 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 5 cols: 4 
+  case 33 run 11 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 41 cols: 6 
+  case 36 run 3 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 17 
+  case 32 run 13 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 29 run 16 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 6 
+  case 35 run 4 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 37 run 2 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 15 
+  case 31 run 13 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 0 
+  case 34 run 5 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 1 
+  case 27 run 19 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 3 
+  case 32 run 14 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 0 
+  case 33 run 12 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 9 
+  case 36 run 4 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 11 
+  case 35 run 5 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 3 
+  case 31 run 14 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 0 
+  case 28 run 16 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 4 
+  case 37 run 3 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 15 
+  case 32 run 15 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 0 
+  case 34 run 6 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 6 cols: 5 
+  case 33 run 13 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 3 
+  case 29 run 17 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 16 cols: 7 
+  case 36 run 5 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 37 cols: 10 
+  case 35 run 6 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 7 
+  case 31 run 15 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 0 
+  case 32 run 16 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 0 
+  case 37 run 4 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 9 
+  case 33 run 14 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 3 
+  case 27 run 20 agent 0 finished.  id 27 dumb 1 map office agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 8 
+Finished with case  id: 27 seed: 281027722 dumb:1 map: office agents: 5 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [17, 19.9, 1.55259, 23] collisions: [1, 3.85, 2.3681, 10] stucks: 0 pathTime: [0.057763, 3.63175, 4.1134, 41.2199] trajTime: [0.065641, 17.4793, 4.75218, 34.5625] 
+Start thread 6 on case  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1061777804 
+  case 34 run 7 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 2 
+  case 36 run 6 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 9 
+  case 35 run 7 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 2 
+  case 31 run 16 agent 0 finished.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 0 
+  case 32 run 17 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 0 
+  case 28 run 17 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 6 
+  case 33 run 15 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 38 cols: 4 
+  case 29 run 18 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 8 
+  case 37 run 5 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 13 
+  case 34 run 8 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 3 
+  case 38 run 1 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 13 
+  case 32 run 18 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 35 run 8 agent 0 finished with dried Q: 1484  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 31 run 17 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 0 
+  case 36 run 7 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 6 
+  case 33 run 16 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 4 
+  case 32 run 19 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 0 
+  case 34 run 9 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 0 
+  case 35 run 9 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 0 
+  case 31 run 18 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 0 
+  case 33 run 17 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 11 
+  case 38 run 2 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 7 
+  case 37 run 6 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 9 
+  case 36 run 8 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 39 cols: 14 
+  case 28 run 18 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 9 
+  case 32 run 20 agent 0 finished.  id 32 dumb 1 map clutter agents 1 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 38 cols: 0 
+Finished with case  id: 32 seed: 1592669122 dumb:1 map: clutter agents: 1 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [18, 27.4211, 4.6226, 38] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.020172, 0.690096, 1.45735, 38.94] trajTime: [0.041119, 17.5229, 4.76592, 34.6149] 
+Start thread 1 on case  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 1724244333 
+  case 34 run 10 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 9 
+  case 35 run 10 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 4 
+  case 29 run 19 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 7 
+  case 31 run 19 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 0 
+  case 33 run 18 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 2 
+  case 38 run 3 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 13 
+  case 36 run 9 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 8 
+  case 37 run 7 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 16 
+  case 34 run 11 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 0 
+  case 33 run 19 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 4 
+  case 31 run 20 agent 0 finished with low score.  id 31 dumb 1 map clutter agents 1 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 0 
+case 31 clutter 1 STAA* has too few completed runs. 8 
+Finished with case  id: 31 seed: 1592669122 dumb:1 map: clutter agents: 1 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [7, 14.875, 7.10005, 25] collisions: [0, 0, 0, 0] stucks: 0 pathTime: [0.01484, 0.653362, 0.875158, 14.4566] trajTime: [1.39867, 21.498, 3.42097, 60.6842] 
+Start thread 3 on case  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 1724244333 
+  case 35 run 11 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 2 
+  case 39 run 1 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 6 
+  case 33 run 20 agent 0 finished.  id 33 dumb 1 map clutter agents 2 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 41 cols: 6 
+Finished with case  id: 33 seed: 1389707791 dumb:1 map: clutter agents: 2 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [23, 32.65, 5.18373, 41] collisions: [2, 6.1, 2.9718, 13] stucks: 0 pathTime: [0.017658, 0.838139, 2.05598, 38.164] trajTime: [0.09611, 15.6011, 6.5576, 35.577] 
+Start thread 4 on case  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 1724244333 
+  case 36 run 10 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 14 
+  case 34 run 12 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 3 
+  case 38 run 4 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 8 
+  case 28 run 19 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 6 
+  case 37 run 8 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 11 cols: 8 
+  case 35 run 12 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 5 
+  case 29 run 20 agent 0 finished.  id 29 dumb 1 map office agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 10 
+Finished with case  id: 29 seed: 281027722 dumb:1 map: office agents: 5 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [6, 15.25, 2.8631, 19] collisions: [3, 6.75, 2.33678, 12] stucks: 0 pathTime: [0.114518, 3.1887, 3.47191, 34.9494] trajTime: [0.127928, 18.0392, 3.94344, 50.0589] 
+Start thread 7 on case  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 seed: 626055085 
+  case 39 run 2 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 12 
+  case 34 run 13 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 6 
+  case 36 run 11 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 6 
+  case 40 run 1 agent 0 finished with low score.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 2 
+  case 37 run 9 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 8 
+  case 35 run 13 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 4 
+  case 41 run 1 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 10 
+  case 42 run 1 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 17 
+  case 38 run 5 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 8 
+  case 34 run 14 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 6 cols: 4 
+  case 39 run 3 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 10 
+  case 36 run 12 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 17 
+  case 28 run 20 agent 0 finished.  id 28 dumb 1 map office agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 10 
+Finished with case  id: 28 seed: 281027722 dumb:1 map: office agents: 5 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [14, 17.8421, 1.7721, 20] collisions: [1, 6.31579, 2.84903, 11] stucks: 0 pathTime: [0.104925, 3.69822, 4.17254, 32.1263] trajTime: [1.38945, 17.8554, 3.30638, 34.5014] 
+Start thread 8 on case  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 seed: 626055085 
+  case 35 run 14 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 6 
+  case 37 run 10 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 9 
+  case 40 run 2 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 10 cols: 9 
+  case 34 run 15 agent 0 finished.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 4 
+  case 38 run 6 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 8 
+  case 41 run 2 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 13 
+  case 42 run 2 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 31 
+  case 35 run 15 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 3 
+  case 39 run 4 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 40 cols: 13 
+  case 36 run 13 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 13 
+  case 37 run 11 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 8 
+  case 43 run 1 agent 0 finished with low score.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 8 
+  case 40 run 3 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 18 
+  case 35 run 16 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 10 
+  case 38 run 7 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 41 cols: 22 
+  case 34 run 16 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 6 
+  case 41 run 3 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 12 
+  case 39 run 5 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 19 
+  case 36 run 14 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 6 
+  case 37 run 12 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 2 
+  case 40 run 4 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 13 
+  case 42 run 3 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 11 
+  case 35 run 17 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 7 
+  case 38 run 8 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 12 
+  case 34 run 17 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 5 
+  case 43 run 2 agent 0 finished with low score.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 30 
+  case 41 run 4 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 9 
+  case 39 run 6 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 38 cols: 15 
+  case 36 run 15 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 8 
+  case 35 run 18 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 8 
+  case 37 run 13 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 1 
+  case 40 run 5 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 17 
+  case 42 run 4 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 16 
+  case 34 run 18 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 4 cols: 11 
+  case 38 run 9 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 3 
+  case 43 run 3 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 21 
+  case 36 run 16 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 37 cols: 9 
+  case 41 run 5 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 10 
+  case 39 run 7 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 14 
+  case 35 run 19 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 4 
+  case 34 run 19 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 1 
+  case 37 run 14 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 5 cols: 6 
+  case 42 run 5 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 12 
+  case 38 run 10 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 14 
+  case 40 run 6 agent 0 finished with low score.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 12 
+  case 36 run 17 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 10 
+  case 35 run 20 agent 0 finished.  id 35 dumb 1 map clutter agents 2 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 5 
+Finished with case  id: 35 seed: 1389707791 dumb:1 map: clutter agents: 2 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [21, 25.4211, 2.94987, 29] collisions: [0, 4.47368, 2.52473, 10] stucks: 0 pathTime: [0.013914, 1.04654, 2.42722, 36.6592] trajTime: [0.096215, 17.5491, 4.78019, 37.2025] 
+Start thread 0 on case  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 seed: 626055085 
+  case 41 run 6 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 35 cols: 27 
+  case 39 run 8 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 10 
+  case 34 run 20 agent 0 finished with low score.  id 34 dumb 1 map clutter agents 2 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 0 
+Finished with case  id: 34 seed: 1389707791 dumb:1 map: clutter agents: 2 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [5, 12.7273, 10.1202, 36] collisions: [0, 3.72727, 2.68667, 9] stucks: 0 pathTime: [0.012599, 0.936197, 1.80117, 18.4438] trajTime: [4.02712, 20.1845, 2.78708, 42.8782] 
+  case 43 run 4 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 10 cols: 16 
+  case 42 run 6 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 17 
+  case 38 run 11 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 6 
+  case 36 run 18 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 10 
+  case 40 run 7 agent 0 finished with low score.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 3 
+  case 44 run 1 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 10 
+  case 41 run 7 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 17 
+  case 43 run 5 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 26 
+  case 39 run 9 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 29 
+  case 38 run 12 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 5 
+  case 36 run 19 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 4 
+  case 37 run 15 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 0 cols: 1 
+  case 42 run 7 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 12 
+  case 41 run 8 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 12 
+  case 40 run 8 agent 0 finished with low score.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 10 
+  case 36 run 20 agent 0 finished.  id 36 dumb 1 map clutter agents 3 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 41 cols: 12 
+Finished with case  id: 36 seed: 1061777804 dumb:1 map: clutter agents: 3 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [27, 32.9, 4.08978, 41] collisions: [4, 10.5, 3.64908, 17] stucks: 0 pathTime: [0.013922, 0.992538, 1.88995, 38.3216] trajTime: [0.080128, 15.7525, 6.47908, 30.7187] 
+  case 39 run 10 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 13 
+  case 43 run 6 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 18 
+  case 44 run 2 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 10 
+  case 38 run 13 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 15 cols: 7 
+  case 37 run 16 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 4 
+  case 42 run 8 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 19 
+  case 39 run 11 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 41 cols: 14 
+  case 41 run 9 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 18 
+  case 40 run 9 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 10 
+  case 44 run 3 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 20 
+  case 43 run 7 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 3 
+  case 38 run 14 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 7 
+  case 37 run 17 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 12 cols: 9 
+  case 39 run 12 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 12 
+  case 42 run 9 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 17 
+  case 40 run 10 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 9 cols: 5 
+  case 38 run 15 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 14 
+  case 44 run 4 agent 0 finished with dried Q: 1146  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 29 
+  case 41 run 10 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 15 
+  case 43 run 8 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 6 cols: 3 
+  case 39 run 13 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 23 
+  case 37 run 18 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 10 
+  case 38 run 16 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 16 
+  case 40 run 11 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 36 cols: 14 
+  case 42 run 10 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 27 
+  case 39 run 14 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 25 
+  case 41 run 11 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 18 
+  case 44 run 5 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 19 
+  case 43 run 9 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 7 cols: 17 
+  case 38 run 17 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 9 
+  case 37 run 19 agent 0 finished.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 13 cols: 6 
+  case 40 run 12 agent 0 finished with low score.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 3 cols: 13 
+  case 39 run 15 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 17 
+  case 42 run 11 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 18 
+  case 41 run 12 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 14 
+  case 38 run 18 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 7 
+  case 44 run 6 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 27 
+  case 40 run 13 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 21 cols: 19 
+  case 37 run 20 agent 0 finished with low score.  id 37 dumb 1 map clutter agents 3 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 4 
+case 37 clutter 3 STAA* has too few completed runs. 8 
+Finished with case  id: 37 seed: 1061777804 dumb:1 map: clutter agents: 3 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [5, 13, 4.40779, 20] collisions: [6, 9.25, 3.19598, 15] stucks: 0 pathTime: [0.013595, 1.16155, 2.81256, 16.5954] trajTime: [7.61738, 21.2495, 3.13009, 67.6428] 
+  case 39 run 16 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 5 
+  case 43 run 10 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 22 
+  case 42 run 12 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 37 cols: 34 
+  case 38 run 19 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 10 
+  case 41 run 13 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 7 
+  case 40 run 14 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 18 
+  case 44 run 7 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 22 cols: 23 
+  case 39 run 17 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 17 
+  case 43 run 11 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 22 
+  case 42 run 13 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 12 
+  case 38 run 20 agent 0 finished.  id 38 dumb 1 map clutter agents 3 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 30 cols: 4 
+Finished with case  id: 38 seed: 1061777804 dumb:1 map: clutter agents: 3 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [15, 26.7, 6.21628, 41] collisions: [3, 9.65, 4.62573, 22] stucks: 0 pathTime: [0.013359, 1.00182, 2.5388, 42.7746] trajTime: [0.101067, 17.3873, 5.00061, 34.9809] 
+  case 41 run 14 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 13 
+  case 40 run 15 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 24 
+  case 39 run 18 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 14 
+  case 44 run 8 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 19 
+  case 41 run 15 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 39 cols: 16 
+  case 42 run 14 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 28 cols: 15 
+  case 43 run 12 agent 0 finished with dried Q: 1050  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 2 cols: 23 
+  case 40 run 16 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 15 
+  case 39 run 19 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 8 
+  case 44 run 9 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 36 
+  case 41 run 16 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 21 
+  case 43 run 13 agent 0 finished with dried Q: 1032  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 31 
+  case 42 run 15 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 18 
+  case 40 run 17 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 11 
+  case 39 run 20 agent 0 finished.  id 39 dumb 1 map clutter agents 4 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 29 cols: 13 
+Finished with case  id: 39 seed: 1724244333 dumb:1 map: clutter agents: 4 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [24, 31.8, 4.42005, 41] collisions: [5, 14.45, 6.03041, 29] stucks: 0 pathTime: [0.012465, 0.837228, 1.85643, 45.4048] trajTime: [0.061441, 15.4281, 6.72605, 32.7601] 
+  case 44 run 10 agent 0 finished with dried Q: 1035  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 36 
+  case 41 run 17 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 25 cols: 19 
+  case 43 run 14 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 33 cols: 21 
+  case 42 run 16 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 20 
+  case 40 run 18 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 20 
+  case 44 run 11 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 22 
+  case 41 run 18 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 17 
+  case 43 run 15 agent 0 finished with low score.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 11 
+  case 40 run 19 agent 0 finished.  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 14 
+  case 42 run 17 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 12 
+  case 44 run 12 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 26 
+  case 41 run 19 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 19 cols: 13 
+  case 40 run 20 agent 0 finished with dried Q: 3759  id 40 dumb 1 map clutter agents 4 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 13 
+Finished with case  id: 40 seed: 1724244333 dumb:1 map: clutter agents: 4 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [9, 21.9286, 7.56982, 36] collisions: [5, 14.7857, 5.01043, 24] stucks: 0 pathTime: [0.014991, 1.02134, 2.21803, 31.4832] trajTime: [1.579, 18.7047, 3.07594, 42.2117] 
+  case 43 run 16 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 13 
+  case 42 run 18 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 13 
+  case 41 run 20 agent 0 finished.  id 41 dumb 1 map clutter agents 4 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 31 cols: 16 
+Finished with case  id: 41 seed: 1724244333 dumb:1 map: clutter agents: 4 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [18, 25.8, 5.12579, 39] collisions: [7, 14.85, 4.61434, 27] stucks: 0 pathTime: [0.014972, 0.806693, 2.02213, 43.3457] trajTime: [0.085719, 17.1339, 5.38489, 28.0213] 
+  case 44 run 13 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 20 cols: 14 
+  case 43 run 17 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 14 cols: 12 
+  case 42 run 19 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 26 cols: 16 
+  case 44 run 14 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 34 cols: 29 
+  case 42 run 20 agent 0 finished.  id 42 dumb 1 map clutter agents 5 controller STAA* heuristic MC pred Uni traj Arc freq 30 stucks: 0 score: 48 cols: 31 
+Finished with case  id: 42 seed: 626055085 dumb:1 map: clutter agents: 5 controller: STAA* heuristic: MC pred: Uni traj: Arc freq: 30 score: [23, 29.55, 5.49138, 48] collisions: [11, 18.4, 6.93883, 34] stucks: 0 pathTime: [0.016747, 0.90221, 1.81079, 52.7883] trajTime: [0.054877, 15.477, 6.75619, 30.987] 
+  case 43 run 18 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 17 cols: 12 
+  case 44 run 15 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 20 
+  case 44 run 16 agent 0 finished with dried Q: 3284  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 18 cols: 24 
+  case 43 run 19 agent 0 finished.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 32 cols: 14 
+  case 44 run 17 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 23 cols: 19 
+  case 43 run 20 agent 0 finished with low score.  id 43 dumb 1 map clutter agents 5 controller STAA* heuristic Dij pred Uni traj Arc freq 30 stucks: 0 score: 1 cols: 0 
+Finished with case  id: 43 seed: 626055085 dumb:1 map: clutter agents: 5 controller: STAA* heuristic: Dij pred: Uni traj: Arc freq: 30 score: [6, 20.9286, 10.0878, 33] collisions: [3, 15.7143, 6.84362, 26] stucks: 0 pathTime: [0.013265, 1.49431, 2.0028, 24.2949] trajTime: [6.32139, 18.4463, 2.76701, 37.9824] 
+  case 44 run 18 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 27 cols: 24 
+  case 44 run 19 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 24 cols: 25 
+  case 44 run 20 agent 0 finished.  id 44 dumb 1 map clutter agents 5 controller STAA* heuristic PEuk pred Uni traj Arc freq 30 stucks: 0 score: 35 cols: 28 
+Finished with case  id: 44 seed: 626055085 dumb:1 map: clutter agents: 5 controller: STAA* heuristic: PEuk pred: Uni traj: Arc freq: 30 score: [20, 26.1176, 4.76815, 35] collisions: [10, 21.8235, 6.7197, 36] stucks: 0 pathTime: [0.014192, 0.622623, 1.16025, 23.9139] trajTime: [0.055949, 16.447, 6.18234, 27.671] 
+All cases finished. Final save of data/cases.dat. 

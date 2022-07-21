@@ -1,0 +1,20 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 18.02.0 ] */
+/* [wxMaxima: input   start ] */
+h : (1/2)$
+c1(x, v, z) := h*(x -z + v/C)$
+c2(x, v, z) := h*(x - z - v/C)$
+e1(t) := exp(C*t)$
+e2(t) := exp(-C*t)$
+x1(t, z) := c1(x0, v0, z)*e1(t) + c2(x0, v0, z)*e2(t) + z;
+v1(t, z) := C*(c1(x0, v0, z)*e1(t) - c2(x0, v0, z)*e2(t));
+x2(t1, t2, z1, z2) := c1(x1(t1, z1), v1(t1, z1), z2)*e1(t2) + c2(x1(t1, z1), v1(t1, z1), z2)*e2(t2) +z2;
+v2(t1, t2, z1, z2) := C*(c1(x1(t1, z1), v1(t1, z1), z2)*e1(t2) - c2(x1(t1, z1), v1(t1, z1), z2)*e2(t2));
+
+solve(x2, z1);
+/* [wxMaxima: input   end   ] */
+
+
+
+/* Old versions of Maxima abort on loading files that end in a comment. */
+"Created with wxMaxima 18.02.0"$
