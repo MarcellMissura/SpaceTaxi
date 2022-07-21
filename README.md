@@ -19,3 +19,5 @@ Install all packages that are reported missing during compilation.
 # Editing
 
 QtCreator is recommended for browsing the source code and editing the project. In File -> "Open File or Project", open the SpaceTaxi.pro file and QtCreator will load the project. Point the build directory either to the root of the project, or make sure to copy conf/config.conf and styles.css next to the executable if you want to compile in a separate build directory.
+
+A good starting point to explore the source code is the step() function of World.cpp where the agent control functions and the physical simulation are stepped.
