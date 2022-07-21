@@ -1,5 +1,5 @@
 # SpaceTaxi
-This is a simulation environment with a graphical user interface that contains the implementations of the STAA*, DWA, and a PD controllers for nonholonomic agents and also the Minimal Construct path planning algorithm. It is based on Qt the framework for the graphical user interface and uses the Box2D physics engine (https://box2d.org) for simulating the motion of the vehicles.
+This is a simulation environment with a graphical user interface that contains the implementations of the STAA*, DWA, and a PD controllers for nonholonomic agents and also the Minimal Construct path planning algorithm. It is based on Qt the framework for the graphical user interface and uses the Box2D physics engine (https://box2d.org) for simulating the motion of the vehicles. The concepts of the motion planning embedded into this software release are explained in the accompanying paper https://arxiv.org/pdf/2109.07775.pdf. 
 
 # Compilation
 
