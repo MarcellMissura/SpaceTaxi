@@ -1,8 +1,8 @@
 #include "OLS.h"
 #include <QColor>
 #include "blackboard/Config.h"
-#include "util/GLlib.h"
-#include "util/ColorUtil.h"
+#include "GLlib.h"
+#include "ColorUtil.h"
 #include <GL/glu.h>
 
 // This is an ordinary (linear) least squares regressor.

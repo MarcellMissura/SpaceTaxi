@@ -2,9 +2,9 @@
 #define OPENGLWIDGET_H_
 
 #include <QGLViewer/qglviewer.h>
-#include "util/StopWatch.h"
 #include "MessageQueue.h"
-#include "util/Pose2D.h"
+#include "lib/util/StopWatch.h"
+#include "lib/util/Pose2D.h"
 
 using namespace qglviewer;
 

@@ -72,7 +72,10 @@ public:
     void setGridModel(GridModel &gm);
     void setGeometricModel(GeometricModel &gm);
 
+    // The search itself.
     bool aStarSearch(int debug=0);
+
+    void setStuck(bool value);
 
     // Analytic functions.
     Vec2 getAction() const;
@@ -84,12 +87,10 @@ public:
     int getQSize() const;
     int getPathsComputed() const;
 
-    // QPainter visualization.
+    // Visualization.
     void draw(QPainter* painter) const;
     void drawVisibilityGraph(QPainter *painter) const;
     void draw() const;
-
-    void setStuck(bool value);
 
 private:
     double heuristic(const Pose2D& from, const Pose2D &to);

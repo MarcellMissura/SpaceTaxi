@@ -1,5 +1,5 @@
 #include "GridSearchNode.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 
 // The GridSearchNode class is used by A* searches in grid models.

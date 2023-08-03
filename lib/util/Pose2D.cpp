@@ -43,11 +43,33 @@ bool Pose2D::isNull() const
 }
 
 // Resets the Pose2D to all zeros.
+void Pose2D::setNull()
+{
+    x = 0;
+    y = 0;
+    z = 0;
+}
+
+// Resets the Pose2D to all zeros.
 void Pose2D::setZero()
 {
     x = 0;
     y = 0;
     z = 0;
+}
+
+// Returns true if either x, y, or z is nan.
+bool Pose2D::isNan() const
+{
+    return (std::isnan(x) || std::isnan(y) || std::isnan(z));
+}
+
+// Sets the Pose2D to NaNs.
+void Pose2D::setNan()
+{
+    x = NAN;
+    y = NAN;
+    z = NAN;
 }
 
 // Sets the (x,y) position of the Pose2D.
@@ -69,6 +91,13 @@ void Pose2D::set(const Vec2 &p, double rot)
 {
     setPos(p);
     setHeading(rot);
+}
+
+// Sets the position of the Pose2D to p and the heading to rot.
+void Pose2D::set(double x, double y, double theta)
+{
+    setPos(x,y);
+    setHeading(theta);
 }
 
 // Sets the (x,y) position of the Pose2D.
@@ -251,6 +280,7 @@ Transform3D Pose2D::getMatrix() const
     return mat;
 }
 
+// Returns a QTransform matrix fabricated from this Pose2D.
 QTransform Pose2D::getQTransform() const
 {
     QTransform tr;

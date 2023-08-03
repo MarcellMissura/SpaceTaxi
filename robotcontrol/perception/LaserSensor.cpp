@@ -1,22 +1,21 @@
-#include "LaserSensor.h"
+﻿#include "LaserSensor.h"
 #include "blackboard/Config.h"
 #include "blackboard/Command.h"
 #include "blackboard/State.h"
 #include "lib/geometry/Line.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
+#include "lib/util/Statistics.h"
 
 // The LaserSensor class bundles all things related to the laser sensor we are using
-// for perception. The LaserSensor class contains a buffer for the data, which make
-// up the points of the laser rays.
-// The LaserSensor class offers an interface to read and write this buffer, and functions
-// to process the laser data to a visiblity polygon and high-fidelity lines features
-// and corners.
+// for perception. The LaserSensor class contains a pointBuffer where the laser points
+// are stored as Vec2. The LaserSensor class offers an interface to read and write this
+// buffer in a thread safe manner, and functions to process the laser data to a visiblity
+// polygon, high-fidelity line features and corners, and triangle markers.
 
 LaserSensor::LaserSensor()
 {
     frameId = 0;
-    init();
 }
 
 LaserSensor::~LaserSensor()
@@ -41,6 +40,7 @@ LaserSensor& LaserSensor::operator=(const LaserSensor &o)
         return *this;
 
     QMutexLocker locker(&mutex);
+    QMutexLocker locker2(&o.mutex);
 
     frameId = o.frameId;
     laserInfo = o.laserInfo;
@@ -48,15 +48,6 @@ LaserSensor& LaserSensor::operator=(const LaserSensor &o)
     pointBuffer = o.pointBuffer;
 
     return *this;
-}
-
-
-// Initialization after construction.
-void LaserSensor::init()
-{
-    // Default for the HSR
-    laserToBasePose.setPos(0.167,0);
-    laserToBasePose.setHeading(0.0);
 }
 
 // Returns a descriptor with information about the laser sensor.
@@ -191,7 +182,7 @@ const Vector<TrackedLine> &LaserSensor::extractLines(bool debug) const
                 seenP2 = true;
         }
 
-        // Add a new line.
+        // Add the detected line to the buffer.
         lineResultBuffer << TrackedLine(line1, seenP1, seenP2, state.frameId);
     }
 
@@ -223,7 +214,7 @@ const Polygon& LaserSensor::getVisibilityPolygon() const
     for (uint i = 1; i < pointBuffer.size(); i++)
     {
         if ((pointBuffer[i-1]-pointBuffer[i]).norm() > config.laserSegmentDistanceThreshold
-                || pointBuffer[i].norm() > config.laserLengthBound)
+                || pointBuffer[i].norm() > config.laserMaxRayLength)
         {
             visibilityPolygon.appendVertex(pointBuffer[i], Line::SightLine);
             //qDebug() << "appended sight vertex" << pointBuffer[i] << visibilityPolygon.getEdges().last();
@@ -257,25 +248,20 @@ const Polygon& LaserSensor::getVisibilityPolygon() const
 
     // Use the Douglas Peucker algorithm to simplify the segments to polylines.
     visibilityPolygon.simplify(config.laserDouglasPeuckerEpsilon);
+
     // Prune short edges from the polygon.
     ListIterator<Line> shortIt = visibilityPolygon.edgeIterator();
     while (!shortIt.atEnd())
     {
         if (shortIt.cur().length() < 0.035)
-        {
-            //qDebug() << "removing short segment" << shortIt << shortIt.cur().length();
             visibilityPolygon.removeEdge(shortIt);
-        }
         else
-        {
             shortIt.next();
-        }
     }
 
     // Grooming. Remove inverse spikes.
     // Inverse spikes are very sharp inward corners that are caused by a single
-    // laser point being way out of place due to sensor noise or a very small
-    // object such as a chair leg.
+    // laser point being way out of place or a very small object such as a chair leg.
     visibilityPolygon.rewriteEdgeIds();
     ListIterator<Line> spikeIt = visibilityPolygon.edgeIterator();
     while (!spikeIt.atEnd())
@@ -307,9 +293,197 @@ const Polygon& LaserSensor::getVisibilityPolygon() const
     return visibilityPolygon;
 }
 
-// Smoothes the points with a configurable low-pass filter
-// and removes small segments.
-void LaserSensor::smoothPoints()
+// Returns the detected triangle dock frame.
+Polygon LaserSensor::extractTriangleMarker(int debug) const
+{
+    // The way this algorithm works is that for every point in the point buffer, we assume the point to
+    // be the tip of the triangle and try to find triangle candidates in the neighborhood (stride) around
+    // the point by validating whether the tip, a point to the left of the tip and a point to the right of
+    // the tip make a triangle of the right size, shape, and orientation. Every candidate that matches the
+    // search criteria is then voted by all points in the stride. The points in the stride that are close
+    // enough to one of the legs of the triangle candidate votes for the triangle. Triangle hypotheses are
+    // then clustered, i.e., similar triangles are grouped together, and the cluster with the most total
+    // votes is selected. In the end, the algorithm returns a triangle and its pose computed as the weighted
+    // average of the most voted cluster.
+
+    QMutexLocker locker(&mutex);
+
+    thread_local Vector<Polygon> triangles;
+    triangles.clear();
+    thread_local Vector<Pose2D> poses;
+    poses.clear();
+    thread_local Vector<uint> votes;
+    votes.clear();
+
+    // Determine the expected scalar product of the normalized triangle legs.
+    // This scalar product will be used for a quick shape check.
+    double fs = fsin(0.5*config.laserTriangleAngle);
+    double expectedScalar = 1.0-2.0*fs*fs;
+
+    // Further parameters that determine the selection of triangle candidates.
+    double legLength = config.laserTriangleLegLength; // The expected length of a triangle leg.
+    double maxLegDifference = 0.15; // The max deviation of the two leg lengths in percent.
+    double maxExpectedScalarDiff = 0.15; // Max deviation from the expected scalar product of the legs.
+    double maxOrthogonalDist = 0.008; // Max deviation of a voting point to the triangle leg in meters.
+
+    // For every laser point in the point buffer...
+    for (uint i = 0; i < pointBuffer.size(); i++)
+    {
+        Vec2 a = pointBuffer[i]; // Assume the point is point a, the tip of the triangle.
+
+        // Compute the size of the neighborhood (stride) that we scan left and right of the point in
+        // order to discover triangle candidates. The stride is computed based on the distance to point i.
+        // How many laser rays left and right of the point do we have to check to cover the expected leg
+        // length of the triangle?
+        uint stride = fatan2(legLength, a.norm())/laserInfo.angleIncrement;
+
+        // Skip pointlessly small strides.
+        if (stride < 3)
+            continue;
+
+        // This check makes it easy to deal with the boundaries of the sensor range.
+        if (i <= stride || i >= pointBuffer.size()-stride)
+            continue;
+
+        if (debug > 1)
+            qDebug() << i << "Scanning point" << a;
+
+        // Scan for triangle candidates in the stride.
+        for (uint j = 1; j <= stride; j++)
+        {
+            // Points b and c are the legs of the triangle with respect to point a.
+            Vec2 b = pointBuffer[i-j]; // b is to the right of the tip.
+            Vec2 c = pointBuffer[i+j]; // c is to the left of the tip.
+
+            // Check for shape, size, and orientation.
+            double n1 = (b-a).norm();
+            double n2 = (c-a).norm();
+            bool scalarProductRight = fabs(((b-a)/n1)*((c-a)/n1) - expectedScalar) < maxExpectedScalarDiff;
+            bool reasonableSize = n1 < legLength && n1 > 0.4*legLength && n2 < legLength && n2 > 0.4*legLength && fabs(n1/n2-1.0) < maxLegDifference;
+            bool frontFacing = -c.det(b-c) * (a-c).det(b-c) > 0;
+            if (debug > 1)
+                qDebug() << "  " << j << "|"
+                         << scalarProductRight << frontFacing << reasonableSize
+                         << "| scalar:" << fabs(((b-a)/n1)*((c-a)/n1) - expectedScalar)
+                         << "| size:" << n1 << n2 << fabs((n1/n2)-1.0);
+
+            // If all criteria are right, we have a triangle candidate.
+            if (scalarProductRight && reasonableSize && frontFacing)
+            {
+                // Count the supporting points along the legs of the triangle candidate.
+                uint voteCountLeft = 0;
+                uint voteCountRight = 0;
+                Line leg1(a, b);
+                Line leg2(a, c);
+                for (uint k = 1; k <= stride; k++)
+                {
+                    // skip self votes
+                    if (k == j)
+                        continue;
+
+                    if (fabs(leg1.orthogonalDistance(pointBuffer[i-k])) < maxOrthogonalDist)
+                        voteCountRight++;
+                    if (fabs(leg2.orthogonalDistance(pointBuffer[i+k])) < maxOrthogonalDist)
+                        voteCountLeft++;
+                    if (debug > 2)
+                        qDebug() << "      " << k << "|" << voteCountRight << voteCountLeft << "|" << fabs(leg1.orthogonalDistance(pointBuffer[i+k])) << fabs(leg2.orthogonalDistance(pointBuffer[i-k]));
+                }
+
+                // Discard candidates with too few votes either left or right.
+                if (voteCountLeft <= max((uint)3, stride/3) || voteCountRight <= max((uint)3, stride/3))
+                    continue;
+
+                // Construct the triangle and its pose.
+                Polygon trig;
+                trig << a << b << c;
+                Pose2D pose;
+                pose.setPos(a);
+                pose.setOrientation((b-c).angle()+PI2);
+                triangles << trig; // Only for visualization.
+                poses << pose;
+                votes << voteCountLeft+voteCountRight;
+
+                if (debug > 1)
+                    qDebug() << "   triangle:" << a << b << c << "pose:" << pose << "votes:" << voteCountLeft << voteCountRight;
+            }
+        }
+    }
+
+    if (poses.isEmpty())
+        return Polygon();
+
+    // Now we have a set of triangle and pose hypotheses along with their votes.
+
+    // Cluster the hypotheses by their pose.
+    Vector<Vector<uint> > clusterIdx = Statistics::cluster(poses, 0.2);
+
+
+    // Determine the index and the votes of the largest cluster.
+    uint largestClusterVotes = 0;
+    uint largestClusterIdx = 0;
+    for (uint i = 0; i < clusterIdx.size(); i++)
+    {
+        uint clusterVotes = 0;
+        for (uint j = 0; j < clusterIdx[i].size(); j++)
+            clusterVotes += votes[clusterIdx[i][j]];
+        if (clusterVotes > largestClusterVotes)
+        {
+            largestClusterIdx = i;
+            largestClusterVotes = clusterVotes;
+        }
+    }
+
+    if (debug > 0)
+    {
+        qDebug() << "Clusters:";
+        for (uint i = 0; i < clusterIdx.size(); i++)
+        {
+            uint clusterVotes = 0;
+            for (uint j = 0; j < clusterIdx[i].size(); j++)
+                clusterVotes += votes[clusterIdx[i][j]];
+            qDebug() << i << "Cluster votes:" << clusterVotes;
+            for (uint j = 0; j < clusterIdx[i].size(); j++)
+                qDebug() << "  " << j << "votes:" <<  votes[clusterIdx[i][j]] << "pose:" << poses[clusterIdx[i][j]];
+        }
+    }
+
+    // Compute the weighted average pose of the largest cluster. That's our triangle.
+    double totalWeight = 0;
+    Pose2D avgPose;
+    for (uint j = 0; j < clusterIdx[largestClusterIdx].size(); j++)
+    {
+        Pose2D tr = poses[clusterIdx[largestClusterIdx][j]];
+        double weight = votes[clusterIdx[largestClusterIdx][j]];
+        avgPose.x += weight*tr.x;
+        avgPose.y += weight*tr.y;
+        avgPose.z += weight*tr.z;
+        totalWeight += weight;
+    }
+    avgPose /= totalWeight;
+
+    Polygon avgTriangle;
+    avgTriangle << Vec2()
+                << Vec2(legLength, 0).rotated(0.5*config.laserTriangleAngle)
+                << Vec2(legLength, 0).rotated(-0.5*config.laserTriangleAngle);
+    avgTriangle.setPose(avgPose);
+    return avgTriangle;
+}
+
+// Main control for all filters.
+void LaserSensor::filter()
+{
+    if (command.laserParticleRemoval)
+        particleRemoval();
+    if (command.laserSpatialFilter)
+        spatialFilter();
+}
+
+// Removes small clusters of points as determined by the parameters:
+// config.laserSegmentDistanceThreshold - maximum distance between points in a segment
+// config.laserSmoothingMinSegmentSize - minimum number of points in a cluster (otherwise removed).
+// It permanently removes points from the sensor and the pointBuffer will be smaller.
+// Currently, this does not work well together with the temporal filter.
+void LaserSensor::particleRemoval()
 {
     QMutexLocker locker(&mutex);
 
@@ -319,7 +493,6 @@ void LaserSensor::smoothPoints()
     segment.clear();
 
     // Remove small clusters.
-    int firstSegmentBoundaryIdx = 0;
     for (int i = 1; i < pointBuffer.size(); i++)
     {
         if ((pointBuffer[i]-pointBuffer[i-1]).norm() > config.laserSegmentDistanceThreshold)
@@ -327,24 +500,26 @@ void LaserSensor::smoothPoints()
             if (segment.size() >= config.laserSmoothingMinSegmentSize)
                 pointBufferCpy << segment;
             segment.clear();
-
-            if (firstSegmentBoundaryIdx == 0)
-            {
-                firstSegmentBoundaryIdx = i;
-                pointBufferCpy.clear();
-            }
         }
 
         segment << pointBuffer[i];
     }
-    for (int i = 0; i < firstSegmentBoundaryIdx; i++)
-        segment << pointBuffer[i];
-    pointBufferCpy << segment;
+    if (segment.size() >= config.laserSmoothingMinSegmentSize)
+        pointBufferCpy << segment;
 
     pointBuffer = pointBufferCpy;
+}
+
+// Smoothes the points with a configurable spatial low-pass filter.
+void LaserSensor::spatialFilter()
+{
+    QMutexLocker locker(&mutex);
+
+    thread_local Vector<Vec2> pointBufferCpy;
+    pointBufferCpy = pointBuffer;
 
     // Multi pass low-pass filter.
-    for (uint n = 0; n < config.laserSmoothingPasses; n++) // multiple passes!
+    for (uint n = 0; n < config.laserSmoothingSpatialPasses; n++) // multiple passes!
     {
         for (int i = 0; i < pointBuffer.size(); i++)
         {
@@ -368,17 +543,17 @@ void LaserSensor::smoothPoints()
 // Draws the laser points on a QPainter in 3 modes.
 // 0 - draw nothing
 // 1 - draw the laser beams and laser points
-// 2 - draw the extracted lines and beam and points
+// 2 - draw the points and the extracted features
 void LaserSensor::draw(QPainter *painter) const
 {
-    if (command.showLidar == 0)
+    if (command.showLaser == 0)
         return;
 
     if (pointBuffer.isEmpty())
         return;
 
     // Raw laser points segmentwise connected.
-    if (command.showLidar > 0)
+    if (command.showLaser > 0)
     {
         // Segment the point buffer into contiguous sequences by splitting where the
         // distance between two points is too large.
@@ -393,11 +568,13 @@ void LaserSensor::draw(QPainter *painter) const
                 segments << segment;
                 segment.clear();
             }
-            segment << pointBuffer[i];
+            if (segment.isEmpty() || segment.last() != pointBuffer[i])
+                segment << pointBuffer[i];
         }
         segments << segment;
         mutex.unlock();
 
+        uint counter = 0;
         painter->save();
         for (uint i = 0; i < segments.size(); i++)
         {
@@ -421,48 +598,60 @@ void LaserSensor::draw(QPainter *painter) const
                 painter->drawLine(QPointF(), segments[i][j]);
             painter->setOpacity(1.0);
 
-            // Draw the end points.
+            // Draw the points.
             painter->setBrush(QBrush(c));
             for (uint j = 0; j < segments[i].size(); j++)
-                painter->drawEllipse(segments[i][j], 0.03, 0.03);
+                painter->drawEllipse(segments[i][j], 0.01, 0.01);
+
+            // Draw the labels.
+            if (command.showLabels)
+            {
+                for (uint j = 0; j < segments[i].size(); j++)
+                {
+                    painter->save();
+                    painter->translate(segments[i][j]);
+                    painter->scale(0.0005, -0.0005);
+                    painter->setOpacity(0.8);
+                    painter->drawText(QPointF(), QString::number(counter++));
+                    painter->restore();
+                }
+            }
         }
         painter->restore();
     }
 
-    // Line features as extracted for line mapping.
-    if (command.showLidar == 2)
+    if (command.showLaser == 2)
     {
-        painter->save();
+        // Line features as extracted for line mapping.
         QPen penThick;
         penThick.setCosmetic(true);
         penThick.setWidth(8);
         penThick.setColor(drawUtil.blue);
-        painter->setPen(penThick);
-        painter->setBrush(drawUtil.brushBlue);
-        Vector<TrackedLine> lines = extractLines();
-        for (uint i = 0; i < lines.size(); i++)
+//        Vector<TrackedLine> lines = extractLines();
+//        for (uint i = 0; i < lines.size(); i++)
+//            lines[i].draw(painter, penThick);
+
+        // Triangle feature for docking.
+        Polygon triangle = extractTriangleMarker(config.debugLevel);
+        if (!triangle.isEmpty())
         {
-            painter->drawLine(lines[i].p1(), lines[i].p2());
-            if (lines[i].seenP1)
-                painter->drawEllipse(lines[i].p1(), 0.05, 0.05);
-            if (lines[i].seenP2)
-                painter->drawEllipse(lines[i].p2(), 0.05, 0.05);
+            triangle.draw(painter, drawUtil.penThick, drawUtil.brushYellow);
+            drawUtil.drawFrame(painter, triangle.pose());
         }
-        painter->restore();
     }
 }
 
 // Draws the sensor data.
 void LaserSensor::draw() const
 {
-    if (command.showLidar == 0)
+    if (command.showLaser == 0)
         return;
 
     if (pointBuffer.isEmpty())
         return;
 
     // Raw laser points segmentwise connected.
-    if (command.showLidar == 1 || command.showLidar == 3)
+    if (command.showLaser == 1 || command.showLaser == 3)
     {
         // Segment the point buffer into contiguous sequences by splitting where the
         // distance between two points is too large.
@@ -512,7 +701,7 @@ void LaserSensor::draw() const
     }
 
     // Line features as extracted for line mapping.
-    if (command.showLidar == 2 || command.showLidar == 3)
+    if (command.showLaser == 2 || command.showLaser == 3)
     {
         glPushMatrix();
         glTranslated(0,0,0.01);

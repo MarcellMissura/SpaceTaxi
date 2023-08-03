@@ -3,7 +3,7 @@
 #include "blackboard/Command.h"
 #include "blackboard/State.h"
 #include "lib/util/Vec3u.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 
 // This is an A*-based motion planner that plans short plans with a high frequency.

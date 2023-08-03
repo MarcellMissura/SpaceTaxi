@@ -1,7 +1,7 @@
 #include "Obstacle.h"
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 // The Obstacle class represents a static obstacle that is a Polygon and
 // can be added to the physical simulation. It extends the Polygon class

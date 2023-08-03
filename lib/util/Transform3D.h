@@ -1,7 +1,7 @@
 #ifndef TRANSFORM3D_H
 #define TRANSFORM3D_H
-#include "lib/util/Vec3.h"
-#include "lib/util/Vector.h"
+#include "Vec3.h"
+#include "Vector.h"
 
 struct TransformParams
 {

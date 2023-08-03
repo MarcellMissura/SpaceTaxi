@@ -1,5 +1,5 @@
 #include "UnicycleSearchNode.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "blackboard/Command.h"
 #include "blackboard/Config.h"
@@ -168,10 +168,10 @@ void UnicycleSearchNode::draw(QPainter* painter) const
 void UnicycleSearchNode::drawNoseCircle(QPainter *painter, double r, QBrush brush) const
 {
     painter->save();
-    painter->setPen(drawUtil.penThin);
-    painter->setBrush(brush);
     painter->translate(pos());
     painter->rotate(heading()*RAD_TO_DEG);
+    painter->setPen(drawUtil.penThin);
+    painter->setBrush(brush);
     painter->drawEllipse(QPointF(), r, r);
     painter->drawLine(QPointF(), QPointF(2*r, 0));
 

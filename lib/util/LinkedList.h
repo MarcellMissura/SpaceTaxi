@@ -522,33 +522,32 @@ public:
         return false;
     }
 
-    // Returns true if this list contains all elements of list o, i.e. the == operator
-    // evaluates to true for all elements of o at least with one element of this list.
-    bool contains(const LinkedList<T>& o) const
+    // Returns true if o contains all elements of this list, i.e. the == operator
+    // evaluates to true for all elements of this list with at least one element of o.
+    bool isSubsetOf(const LinkedList<T>& o) const
     {
         // Empty list case.
         if (isEmpty())
+            return true;
+        if (o.isEmpty())
             return false;
 
-        ListIterator<T> it = o.begin();
+        ListIterator<T> it = begin();
         while (it.hasNext())
-            if (!contains(it.next()))
+            if (!o.contains(it.next()))
                 return false;
         return true;
     }
 
-    // Returns true if this list contains all elements of Vector o, i.e. the == operator
-    // evaluates to true for all elements of o at least with one element of this list.
-    bool contains(const Vector<T>& o) const
+    // Returns true if this list intersects with o, i.e. this list contains at least one element
+    // that is also contained by o.
+    bool intersects(const LinkedList<T>& o) const
     {
-        // Empty list case.
-        if (isEmpty())
-            return false;
-
-        for (uint i = 0; i < o.size(); i++)
-            if (!contains(o[i]))
-                return false;
-        return true;
+        ListIterator<T> it = begin();
+        while (it.hasNext())
+            if (o.contains(it.next()))
+                return true;
+        return false;
     }
 
     // Unifies this LinkedList with item o in a way that the item appears only once in the list.
@@ -769,6 +768,7 @@ public:
         {
             pop_front();
             it.cur_ = head;
+            it.flipped = true;
             return;
         }
 

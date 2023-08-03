@@ -1,6 +1,6 @@
 #include "LinePair.h"
 #include "lib/util/GLlib.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 LinePair::LinePair()
 {
@@ -28,12 +28,18 @@ double LinePair::angleDiff() const
     return pihalfcut(mapLine->angle()-(inputLine->angle()+inputPose.z));
 }
 
+// Return the absolute difference between the lengths of the input line and the map line.
+double LinePair::lengthDiff() const
+{
+    return fabs(inputLine->length() - mapLine->length());
+}
+
 // Returns a percentual overlap measure between the prospected line and the map line.
 // How much percent of the input line (prospected line) is covered by the map line?
 double LinePair::percentualOverlap() const
 {
     double overlap = mapLine->projectionOverlap(prospectedLine());
-    return overlap/inputLine->length();
+    return overlap/min(mapLine->length(), inputLine->length());
 }
 
 // Returns a Pose2D transform relative to inputPose that matches the input line with the map line.

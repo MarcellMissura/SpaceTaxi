@@ -1,7 +1,7 @@
 #include "GraphWidget.h"
 #include <math.h>
 #include "blackboard/State.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 // The GraphWidget shows plotted data of the members that have been
 // registered in state.

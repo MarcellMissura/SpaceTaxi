@@ -341,12 +341,12 @@ public:
         return acos(qBound(-1.0, ((*this)*o) / (norm()*o.norm()), 1.0));
     }
 
-	// Fills the vector with random values between 0 and 1.0.
+    // Fills the vector with random values between 0 and 1.0.
     void randomize()
-	{
-		for (int i = 0; i < N; i++)
+    {
+        for (int i = 0; i < N; i++)
             v[i] = (int)rand()/RAND_MAX;
-	}
+    }
 
     // Projects this vector onto the vector o.
     void projectOnVector(const VecNi<N> &o)

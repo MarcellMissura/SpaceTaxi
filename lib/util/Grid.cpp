@@ -1,7 +1,7 @@
 #include "Grid.h"
-#include "lib/util/Statistics.h"
-#include "lib/util/ColorUtil.h"
-#include "lib/util/Vec3.h"
+#include "Statistics.h"
+#include "DrawUtil.h"
+#include "Vec3.h"
 #include <QFile>
 #include <GL/glu.h>
 
@@ -226,7 +226,7 @@ const uint* Grid::getNodeIndexBl(const double* x) const
 }
 
 // Computes the DIM dimensional index of the grid node closest to the point x.
-// Out of bounds queries are truncated to the closest cell on the border.
+// Out of bounds queries are mapped to the closest cell on the border.
 // Invalidates all dim index references returned so far.
 const uint* Grid::getNodeIndex(const double* x) const
 {

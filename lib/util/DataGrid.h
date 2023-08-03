@@ -1,7 +1,7 @@
 #ifndef DATAGRID_H_
 #define DATAGRID_H_
 #include "Grid.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/Vec3u.h"
 #include "lib/util/Vec3.h"
 #include <QFile>
@@ -170,7 +170,7 @@ public:
 
     // Draws a 2D color matrix in OpenGL context where the color of each cell indicates
     // a value between min and max. The color is computed according to the blue-red-yellow
-    // height map palette in ColorUtil. If the DataGrid is 3D, the sliceIdx can be used
+    // height map palette in DrawUtil. If the DataGrid is 3D, the sliceIdx can be used
     // to draw a 2D slice of the grid taken in the x-y plane. Higher than 3D is not supported.
     void draw(double min=0, double max=1.0, double opacity=1.0, uint sliceIdx=0) const
     {

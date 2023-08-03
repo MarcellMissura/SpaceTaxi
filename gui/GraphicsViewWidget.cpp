@@ -165,7 +165,7 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
     // Draw the world overlay.
     state.world.draw(painter);
 
-    // The painter draws in scene coordinates by default, but we want to draw in view coordinates.
+    // The painter draws in scene coordinates by default, but now we want to draw in view coordinates.
     painter->resetTransform();
 
     // Show recording state.

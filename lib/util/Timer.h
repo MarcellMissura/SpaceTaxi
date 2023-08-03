@@ -4,9 +4,9 @@
 #include <QObject>
 
 #ifdef __linux__
-#include "lib/util/TimerLinux.h"
+#include "TimerLinux.h"
 #elif _WIN32
-#include "util/TimerWindows.h"
+#include "TimerWindows.h"
 #endif
 
 class Timer : public QObject

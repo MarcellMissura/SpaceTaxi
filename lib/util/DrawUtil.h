@@ -1,18 +1,19 @@
-#ifndef COLORUTIL_H_
-#define COLORUTIL_H_
+#ifndef DRAWUTIL_H_
+#define DRAWUTIL_H_
 #include <QPen>
 #include <QBrush>
 #include <QColor>
-#include "lib/util/Vector.h"
-#include "lib/util/Vec2.h"
+#include "Vector.h"
+#include "Vec2.h"
+#include "Pose2D.h"
 
-// The ColorUtil is a useful helper when used in the context
+// The DrawUtil is a useful helper when used in the context
 // of rendering on a QPainter. Mostly, it is a collection of
 // named QPen and QBrush objects, for example penRedThin, that
-// are already set up ready for use, but the ColorUtil also
+// are already set up ready for use, but the DrawUtil also
 // offers a color interpolation interface for height maps and
-// heat maps, random color sampling functions, and a cross
-// polygon.
+// heat maps, random color sampling functions, and drawing
+// routines of shapes like a cross, nose circle, and arrow.
 
 struct DrawUtil
 {
@@ -42,6 +43,7 @@ struct DrawUtil
     QPen penLightGray;
     QPen penLightGrayDashed;
     QPen penLightGrayThin;
+    QPen penLightGrayThick;
     QPen penDarkGray;
     QPen penDarkGrayDashed;
     QPen penDarkGrayThin;
@@ -82,8 +84,8 @@ struct DrawUtil
     QColor white;
     QColor black;
     QColor grey;
-    QColor lightGrey;
-    QColor darkGrey;
+    QColor lightGray;
+    QColor darkGray;
     QColor yellow;
     QColor red;
     QColor green;
@@ -103,11 +105,13 @@ struct DrawUtil
     static QColor sampleUniformColor();
     static QColor sampleNonRBColor();
 
-    static QPolygonF getCrossPolygon();
-    static QPainterPath getArrow(const Vec2 &from, const Vec2 &to);
+    static void drawCross(QPainter* painter, const Vec2& pos, const QPen& pen, const QBrush& brush, double size=0.1, double opacity=0.8);
+    static void drawArrow(QPainter* painter, const Vec2 &from, const Vec2 &to, const QPen& pen);
+    static void drawNoseCircle(QPainter* painter, const Pose2D &pose, const QPen& pen, const QBrush& brush, double radius=0.1);
+    static void drawFrame(QPainter* painter, const Pose2D& pose, double size=0.1);
 };
 
 extern DrawUtil drawUtil;
 
-#endif /* COLORUTIL_H_ */
+#endif
 

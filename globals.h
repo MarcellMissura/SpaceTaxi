@@ -77,8 +77,9 @@ static double interpolateAngle(double from, double to, double frac)
     return ffpicut(pfrom + frac*diff);
 }
 
-// A better version of modulo (%) that wraps rather than returning a number < 0.
-static int mod(int x, int y) { return x >= 0 ? x%y : ((x%y)+y)%y;}
+// A better version of modulo (x%y) that wraps rather than returning a number < 0.
+// E.g., mod(-3, 10) is 7 and not -3, mod(-17, 10) is 3 and not -7.
+static int mod(int x, int y) { return y == 0 ? abs(x) : (x >= 0 ? x%y : ((x%y)+y)%y);}
 
 // This is a 20x faster sine implementation with just a tiny error.
 static double fsin(double x)
@@ -107,6 +108,16 @@ static double fsin(double x)
     double p3  = p5*x2  + coeffs[1];
     double p1  = p3*x2  + coeffs[0];
     return (x - pi_major - pi_minor) * (x + pi_major + pi_minor) * p1 * x;
+}
+
+// This is a 40x faster sine implementation with just a small error.
+static double fsin2(double x)
+{
+    // This algorithm is based on the Bhaskara I sine approximation.
+    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
+
+    x = fpicut(x);
+    return (16.0*x*(PI-x))/(5.0*PI*PI - 4.0*x*(PI-x));
 }
 
 // This is a 20x faster cosine implementation with just a tiny error.

@@ -2,7 +2,7 @@
 #include "PathAStar.h"
 #include "blackboard/Config.h"
 #include "lib/util/Logger.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "lib/util/Vec2i.h"
 #include <iostream>

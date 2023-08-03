@@ -1,7 +1,7 @@
 #ifndef ADJACENCYMATRIX_H_
 #define ADJACENCYMATRIX_H_
-#include "lib/util/Vector.h"
-#include "lib/util/Vec2u.h"
+#include "Vector.h"
+#include "Vec2u.h"
 
 // This is a memory preserving implementation of an adjacency matrix.
 // Memory preserving means that the matrix grows automatically in size

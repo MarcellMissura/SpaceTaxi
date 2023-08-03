@@ -1,6 +1,6 @@
-#include "ColorUtil.h"
+#include "DrawUtil.h"
 #include <QtCore/qmath.h>
-#include "lib/util/Statistics.h"
+#include "Statistics.h"
 
 // The ColorUtil is a useful helper when used in the context
 // of rendering on a QPainter. Mostly, it is a collection of
@@ -34,8 +34,8 @@ DrawUtil::DrawUtil()
     lightGreen = QColor::fromRgb(100,255,100);
     blue = QColor("blue");
     grey = QColor("#808080");
-    lightGrey = QColor("#BBBBBB");
-    darkGrey = QColor("#4C4C4C");
+    lightGray = QColor("#BBBBBB");
+    darkGray = QColor("#4C4C4C");
     ivory = QColor::fromRgb(255,255,240);
     transparent = QColor::fromRgb(0,0,0,255);
 
@@ -103,6 +103,10 @@ DrawUtil::DrawUtil()
     penLightGrayThin.setCosmetic(true);
     penLightGrayThin.setWidth(1);
     penLightGrayThin.setColor(QColor::fromRgb(200,200,200));
+
+    penLightGrayThick.setCosmetic(true);
+    penLightGrayThick.setWidth(3);
+    penLightGrayThick.setColor(QColor::fromRgb(200,200,200));
 
     penLightGrayDashed.setCosmetic(true);
     penLightGrayDashed.setStyle(Qt::DashLine);
@@ -334,7 +338,7 @@ QColor DrawUtil::sampleUniformColor()
 // Returns a uniformly sampled color.
 QColor DrawUtil::randomColor(uint idx)
 {
-    return randomPalette[min(idx, randomPalette.size()-1)];
+    return randomPalette[idx % randomPalette.size()];
 }
 
 // Returns a color sample that avoids the red and blue corners.
@@ -351,9 +355,8 @@ QColor DrawUtil::sampleNonRBColor()
     return QColor::fromHsv(h,s,v);
 }
 
-// Returns a cross expressed as QPolygonF for to be drawn
-// on a QPainter with painter->drawPolygon().
-QPolygonF DrawUtil::getCrossPolygon()
+// Draws a cross on painter at the pose using the given pen and brush and size and opacity.
+void DrawUtil::drawCross(QPainter* painter, const Vec2& pos, const QPen& pen, const QBrush& brush, double size, double opacity)
 {
     QPolygonF cross;
     cross.append(QPointF(-3, 1));
@@ -368,18 +371,69 @@ QPolygonF DrawUtil::getCrossPolygon()
     cross.append(QPointF(-1, -3));
     cross.append(QPointF(-1, -1));
     cross.append(QPointF(-3, -1));
-    return cross;
+
+    painter->save();
+    painter->translate(pos);
+    painter->rotate(45);
+    painter->scale(size, size);
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->setOpacity(opacity);
+    painter->drawPolygon(cross);
+    painter->setOpacity(1.0);
+    painter->setBrush(QColor::fromRgb(0,0,0));
+    painter->drawEllipse(QPointF(), 0.1, 0.1);
+    painter->restore();
+
+    return;
 }
 
-// Returns an arrow from from to to expressed as QPainterPath to be drawn
-// on a QPainter using painter->drawPath().
-QPainterPath DrawUtil::getArrow(const Vec2& from, const Vec2& to)
+// Draws an arrow from from to to on a QPainter using the given pen.
+void DrawUtil::drawArrow(QPainter* painter, const Vec2& from, const Vec2& to, const QPen& pen)
 {
+    painter->save();
+    painter->setPen(pen);
     QPainterPath pp;
     pp.moveTo(from);
     pp.lineTo(to);
     pp.lineTo(to+Vec2((from-to).normalized(0.2*(to-from).norm())).rotated(PI4));
     pp.moveTo(to);
     pp.lineTo(to+Vec2((from-to).normalized(0.2*(to-from).norm())).rotated(-PI4));
-    return pp;
+    painter->drawPath(pp);
+    painter->restore();
+    return;
+}
+
+// Draws a nose circle on painter at the pose using the given pen and brush.
+void DrawUtil::drawNoseCircle(QPainter* painter, const Pose2D& pose, const QPen& pen, const QBrush& brush, double radius)
+{
+    painter->save();
+    painter->setTransform(pose.getQTransform(), true);
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->drawEllipse(QPointF(), radius, radius);
+    painter->drawLine(QPointF(), QPointF(2*radius, 0));
+    painter->restore();
+    return;
+}
+
+// Draws a frame on painter at the pose using the given pen and brush.
+void DrawUtil::drawFrame(QPainter* painter, const Pose2D& pose, double size)
+{
+    QPen redPen;
+    redPen.setCosmetic(true);
+    redPen.setWidth(5);
+    redPen.setColor(Qt::red);
+
+    QPen greenPen;
+    greenPen.setCosmetic(true);
+    greenPen.setWidth(5);
+    greenPen.setColor(Qt::green);
+
+    painter->save();
+    painter->setTransform(pose.getQTransform(), true);
+    drawArrow(painter, Vec2(), Vec2(size,0), redPen);
+    drawArrow(painter, Vec2(), Vec2(0, size), greenPen);
+    painter->restore();
+    return;
 }

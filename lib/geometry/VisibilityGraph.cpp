@@ -2,7 +2,7 @@
 #include "GeometricModel.h"
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/StopWatch.h"
 #include "lib/util/GLlib.h"
 #include <GL/glu.h>
@@ -749,7 +749,6 @@ void VisibilityGraph::draw(QPainter *painter) const
     painter->setFont(font);
     painter->setPen(drawUtil.pen);
     painter->setOpacity(0.8);
-
     it = nodes.begin();
     while (it.hasNext())
     {

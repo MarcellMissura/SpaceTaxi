@@ -367,8 +367,12 @@ Pose2D Box::intersection(const Vector<Vec2>& path) const
 }
 
 // Draws the box on a QPainter.
-void Box::draw(QPainter *painter) const
+void Box::draw(QPainter *painter, const QPen& pen, const QBrush& brush, double opacity) const
 {
+    painter->save();
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->setOpacity(opacity);
     QPainterPath pp;
     pp.moveTo(left(), top());
     pp.lineTo(right(), top());
@@ -376,6 +380,7 @@ void Box::draw(QPainter *painter) const
     pp.lineTo(left(), bottom());
     pp.lineTo(left(), top());
     painter->drawPath(pp);
+    painter->restore();
 }
 
 // Draws the box in an OpenGL environment.

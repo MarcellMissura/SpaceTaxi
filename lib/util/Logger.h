@@ -5,12 +5,12 @@
 #include <QTextStream>
 #include <QMutex>
 
-#include "lib/util/Vec2.h"
-#include "lib/util/Vec3.h"
-#include "lib/util/Vec2u.h"
-#include "lib/util/Vec3u.h"
-#include "lib/util/VecN.h"
-#include "lib/util/Pose2D.h"
+#include "Vec2.h"
+#include "Vec3.h"
+#include "Vec2u.h"
+#include "Vec3u.h"
+#include "VecN.h"
+#include "Pose2D.h"
 #include "ExperimentConfig.h"
 
 #define SPACE " "

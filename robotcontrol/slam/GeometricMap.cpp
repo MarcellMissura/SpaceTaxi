@@ -2,7 +2,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/Command.h"
 #include "blackboard/State.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "lib/util/Statistics.h"
 #include "lib/util/StopWatch.h"
@@ -92,58 +92,102 @@ Pose2D GeometricMap::slam(const Pose2D &inputPose, const Vector<TrackedLine> &in
         while (mapLineIterator.hasNext())
             activeMapLines << &mapLineIterator.next();
         addPoseGraphNode(inputPose, activeMapLines);
+        closestPoseGraphNode = &poseGraphNodes.last();
+        closestPoseGraphNodeBefore = 0;
         updatePolygonMap(inputPose, visPol);
         return inputPose;
     }
 
-    if (state.frameId == 7078)
-        state.stop = true;
-
     // Procedure:
+    // Determine the closest node
     // Gather active map lines
-    // snap -> medium pose, local pose, confirmed lines, unconfirmed lines, observers
+    // snap -> global pose, medium pose, local pose, confirmed lines, unconfirmed lines, observers
     // update map lines -> seen lines
     // unify active map lines and seen lines
     // update pose graph
-    // update polygons
+    // update polygon map
     // loop close -> observer lines
     // merge, expire, erase
 
+
+    // Determine the closest node.
+    // This task is not as trivial as selecting the Euklidean closest node from the graph,
+    // because then errors can occur in near loop closing situations. Imagine the robot has driven
+    // a large loop and is returning to a known portion of the map with a large error. Loop detection
+    // is based on snapping to lines inside the selection box around the robot EXCLUDING the recent
+    // lines in the graph neighborhood. If we were to accept an older node in the graph as the closest
+    // before the loop has been closed, then the old lines would become the graph neighborhood of the
+    // robot, which are not allowed to be used for the medium snap, and the loop detection would fail.
+    // But then again, there are small loops where the robot drives around a room and returns to a
+    // recent part of the graph where we do want to accept the closest node and create a link to it,
+    // otherwise the robot would create new lines where we already have lines. Therefore, the closest
+    // node detection algorithm is as follows. Determine the geometrically closest node candidate. If
+    // the candidate is seen line-connected with the current closest node, then we accept the new
+    // closest node and close a small loop. However, if the candidate is not connected with the current
+    // closest node in any way, then we do not accept the candidate and keep the current closest node.
+    // Loop closing may occur if the medium snap snaps in the latter case. In the former case, the
+    // medium snap should not snap.
+    PoseGraphNode* closestNodeCandidate = getClosestNode(inputPose);
+    if (closestNodeCandidate != closestPoseGraphNode)
+    {
+        // Shares a seen line with the neighborhood of the closest node.
+//        if (closestNodeCandidate->getSeenLines().intersects(closestPoseGraphNode->getSeenLines()))
+        if (closestNodeCandidate->getSeenLines().intersects(closestPoseGraphNode->gatherNearbyLines()))
+        {
+            // Detect and close small loops.
+            // Small loops occur when the robot drives a small loop, e.g. inside a room, and returns to
+            // a recent pose graph node. We can close these small loops without optimization by simply
+            // connecting the last closest node with the new closest node the robot returned to. Creating
+            // this link allows to match with recent lines that would otherwise not be in the neighborhood.
+
+            // If the nodes are not connected yet, connect them now.
+            if (!closestPoseGraphNode->neighbours.contains(closestNodeCandidate))
+            {
+                closestPoseGraphNode->neighbours << closestNodeCandidate;
+                closestNodeCandidate->neighbours << closestPoseGraphNode;
+                if (config.debugLevel > 0)
+                    qDebug() << "Small loop detected between nodes" << closestPoseGraphNode->id << "and" << closestNodeCandidate->id;
+            }
+
+            // Accept the new closest node.
+            // Merge the observed neighborhood of the last closest node with the polygon map.
+            closestPoseGraphNodeBefore = closestPoseGraphNode;
+            closestPoseGraphNode = closestNodeCandidate;
+            if (config.debugLevel > 0)
+                qDebug() << state.frameId << "New closest node:" << closestPoseGraphNode << "dist:" << closestPoseGraphNode->dist(inputPose);
+        }
+    }
 
     // Gather the map lines near the input pose from the pose graph.
     // These active map lines are used for snapping, merging, expiring.
     // The "active" flag of the map lines are used for global snapping,
     // so that the non-active lines can be selected faster.
-    gatherActiveMapLines(inputPose);
+    gatherActiveMapLines(closestPoseGraphNode);
 
     // Use the global snap function to try and localize in the entire map.
     // This is needed to initially find our pose in the map when the robot is switched on.
+    // This feature still needs a bit of work.
     if (command.globalLocalization)
         globalSnappedPose = snapGlobal(this->inputLines, config.debugLevel > 10);
 
     // The medium snap is used as an indicator for loop closing. The snapMedium() function
     // also produces a mediumSnapQuality indicator, confirmedLinePairs, and observer poses.
-    mediumSnappedPose = snapMedium(this->inputLines, inputPose, config.debugLevel > 10);
+    mediumSnappedPose = snapMedium(this->inputLines, inputPose, config.debugLevel > 0);
 
     // Use the local snap function to compute a snappedPose that aligns the input lines with the map
     // lines as good as it can. After this function, the confirmedLinePairs and unconfirmedInputLines
     // will be filled with data as needed for updating the map.
     localSnappedPose = snapLocal(this->inputLines, inputPose, config.debugLevel > 10);
 
-    // Detect bad snaps and return in order to avoid messing up the map.
-    if (localSnappedPose == inputPose)
+    // Detect bad snaps and return the input pose without modifying the map.
+    if (localSnappedPose.isNan())
     {
         qDebug() << state.frameId << "Bad snap detected!";
         //qDebug() << "input pose:" << inputPose;
         //qDebug() << "input lines:" << inputLines;
         //localSnappedPose = snapLocal(this->inputLines, inputPose, true);
-
-        if (state.frameId > 4550 && state.frameId < state.frameId < 4600)
-            return savedSnappedPose; // hack for the bad frames in the dataset
-
-        return localSnappedPose;
+        return inputPose;
     }
-    savedSnappedPose = localSnappedPose;
 
     // Return if the map update is manually disabled.
     if (!command.mapUpdateEnabled)
@@ -176,7 +220,7 @@ Pose2D GeometricMap::slam(const Pose2D &inputPose, const Vector<TrackedLine> &in
         this->inputPose = mediumSnappedPose;
 
         // Gather more active lines.
-        activeMapLines.unify(closestPoseGraphNode->gatherNearbyLines(config.slamPoseGraphNearbyNodes));
+        activeMapLines.unify(closestPoseGraphNode->gatherNearbyLines(config.slamPoseGraphNeighborhoodSize));
     }
 
     // Map line maintenance. Merge, expire and erase.
@@ -185,6 +229,12 @@ Pose2D GeometricMap::slam(const Pose2D &inputPose, const Vector<TrackedLine> &in
     eraseMapLines(localSnappedPose, visPol, config.debugLevel > 10);
 
     return localSnappedPose;
+}
+
+// Returns the polygons that make up the polygon map as a GeometricModel.
+const GeometricModel &GeometricMap::getGeometricModel() const
+{
+    return polygonMap;
 }
 
 // Prints the amount of memory used by the map in kilobytes.
@@ -219,12 +269,12 @@ void GeometricMap::exportMap() const
 // The set of active map lines is gathered from the graph nodes near the agent.
 // When building this set, we also mark map lines as active or inactive for easier
 // processing later.
-void GeometricMap::gatherActiveMapLines(const Pose2D& pose)
+void GeometricMap::gatherActiveMapLines(PoseGraphNode* closestNode)
 {
     ListIterator<TrackedLine*> it = activeMapLines.begin();
     while (it.hasNext())
         it.next()->active = false;
-    activeMapLines = getClosestNode(pose)->gatherNearbyLines(config.slamPoseGraphNearbyNodes);
+    activeMapLines = closestNode->gatherNearbyLines(config.slamPoseGraphNeighborhoodSize);
     it = activeMapLines.begin();
     while (it.hasNext())
         it.next()->active = true;
@@ -249,7 +299,7 @@ LinkedList<TrackedLine*> GeometricMap::gatherRecentMapLines() const
 LinkedList<TrackedLine *> GeometricMap::boxSelectMapLines(const Box &box) const
 {
     LinkedList<TrackedLine*> intersectingMapLines;
-    ListIterator<TrackedLine> it = mapLines.begin();
+    ListIterator<TrackedLine> it = mapLines.begin(); // There could be many map lines.
     while (it.hasNext())
     {
         TrackedLine* l = &it.next();
@@ -335,6 +385,7 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     if (linePairs.isEmpty())
     {
         qDebug() << state.frameId << "No local pairs found!";
+        localSnappedPose.setNan(); // Localization failed.
         return localSnappedPose;
     }
 
@@ -389,13 +440,15 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
             LinePair& lpj = linePairs[j];
 
             // Compute a translation hypothesis from line pairs i and j.
-            if (th.computeTranslation(lpi, lpj, debug)) // returns false if the pair is invalid
+            if (th.computeTranslation(lpi, lpj, debug)) // returns false if the pair of pairs is invalid
             {
                 // In a local snap, the transformation cannot be very large.
+                // Discard the hypothesis if it suggests a too large of a pose jump.
+                // This constraint can only be applied when local snapping.
                 if (th.tr().norm() > config.slamMaxPoseDiff)
                 {
                     if (debug)
-                        qDebug() << "Discarding hyp" << lpi.inputLine->id << lpi.mapLine->id << "and" << lpj.inputLine->id << lpj.mapLine->id << "because of pose diff." << th.tr().norm();
+                        qDebug() << "Discarding hyp" << lpi.inputLine->id << lpi.mapLine->id << "and" << lpj.inputLine->id << lpj.mapLine->id << "because of the pose diff limit." << th.tr().norm();
                     continue;
                 }
 
@@ -434,8 +487,8 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     if (properHypothesisSet.isEmpty() && parallelHypothesisSet.isEmpty())
     {
         qDebug() << state.frameId << "No local hypotheses found!";
-        return inputPose; // hack to solve an artifical problem with a data set.
-        //return localSnappedPose;
+        localSnappedPose.setNan(); // Localization failed.
+        return localSnappedPose;
     }
 
 
@@ -552,7 +605,6 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
 
     if (false && debug)
         qDebug() << state.frameId << "Unconfirmed input lines:" << unconfirmedInputLines;
-
 
     if (debug)
         qDebug() << "Returning snapped pose:" << localSnappedPose  << "diff:" << localSnappedPose-inputPose << (localSnappedPose-inputPose).norm();
@@ -824,15 +876,15 @@ Pose2D GeometricMap::snapMedium(Vector<TrackedLine> &inputLines, const Pose2D &i
 {
     // Medium snapping happens exactly the same as the global snap, except we preselect map lines
     // with a box constraint.
-    // 1. We pair input lines with map lines. The pairs are made from all combinations of input lines
+    // 1. Pair input lines with map lines. The pairs are made from all combinations of input lines
     // and map lines. Only few pairs can be discarded based on length considerations.
-    // 2. We build pairs of line pairs to acquire a set of hypotheses of what the transformation of
+    // 2. Build pairs of line pairs to acquire a set of hypotheses of what the transformation of
     // the entire scan could be. Since one input - map line pair only gives information about the rotation
     // and then the orthogonal distance between the lines, but leaves uncertainty along the map line, two
     // pairs are needed to determine all parameters of the transformation (x,y,theta).
-    // 3. We compute a final transformation from the consensus set of the computed hypotheses.
-    // 4. We build a set of confirmed line pairs from the input and map lines that could be matched.
-    // 5. We assess the quality of the snap by the confirmed input length over the total input length.
+    // 3. Compute a final transformation from the consensus set of the computed hypotheses.
+    // 4. Build a set of confirmed line pairs from the input and map lines that could be matched.
+    // 5. Assess the quality of the snap by the confirmed input length over the total input length.
 
     mediumSnappedPose = Pose2D();
     if (isEmpty())
@@ -1059,7 +1111,7 @@ Pose2D GeometricMap::snapMedium(Vector<TrackedLine> &inputLines, const Pose2D &i
         qDebug() << state.frameId << "Medium snap quality total length:" << totalInputLength
                  << "confirmed length:" << confirmedLength << mediumSnapQuality;
 
-    // We only consider highly reliable global snaps with at least 75% confirmed overlap.
+    // We only consider highly reliable medium snaps with at least 75% confirmed overlap.
     if (mediumSnapQuality < 0.75)
     {
         // Snap failed.
@@ -1070,7 +1122,7 @@ Pose2D GeometricMap::snapMedium(Vector<TrackedLine> &inputLines, const Pose2D &i
     // Gather the observers from the confirmed line pairs that contributed to the
     // global snap. We need this to identify the closest pose graph node in a loop
     // closing situation, and also to gather the map lines that need merging after
-    // closing a loop.
+    // closing the loop.
     observers.clear();
     for (uint i = 0; i < confirmedLinePairs.size(); i++)
         observers.unify(confirmedLinePairs[i].mapLine->observerNodes);
@@ -1092,11 +1144,10 @@ Vector<LinePair> GeometricMap::computeNearestLinePairs(Vector<TrackedLine> &inpu
 {
     // Using an inputPose and thresholds in the transformation between input and map line pairs,
     // we are actually investing a prior and constrain this function to be a "local" pair
-    // building function, where the actual pose of the robot where the pairs are seen from
-    // can only deviate from the inputPose by a bounded amount defined by the bounds applied
-    // to the line-pose-distance. We are picking pairs only from the active map lines in the
-    // close neighbourhood of the agent in order to avoid having to cycle through all lines
-    // in the map.
+    // building function, where the actual pose of the robot the pairs are seen from can only
+    // deviate from the inputPose by a limited amount defined by the bounds applied to the
+    // line-pose-distance. We are picking pairs only from the active map lines in the close
+    // neighbourhood of the agent in order to avoid having to cycle through all lines in the map.
 
     Vector<LinePair> linePairs;
 
@@ -1115,6 +1166,11 @@ Vector<LinePair> GeometricMap::computeNearestLinePairs(Vector<TrackedLine> &inpu
 
             // Length difference threshold check. Input lines cannot be significantly longer than map lines.
             // This is a generic constraint that can always be applied, no matter if local or global pairing.
+            // Input lines can only be longer than map lines by a small amount that occurs when the robot is
+            // exploring a new area and it extends a partially seen line with new information. The amount of
+            // extension depends strongly on the velocity of the robot and on the frame rate. Map lines,
+            // however, can be significantly longer than input lines, for example in situations where only a
+            // small portion of a long wall is observed through an open door.
             double lengthDiff = inputLine.length()-mapLine->length();
             if (lengthDiff > config.slamPairingMaxLengthDeviation)
             {
@@ -1147,6 +1203,11 @@ Vector<LinePair> GeometricMap::computeNearestLinePairs(Vector<TrackedLine> &inpu
             {
                 nearestMapLineCost = cost;
                 nearestMapLine = mapLine;
+                if (debug)
+                {
+                    qDebug() << "New nearest pair" << inputLine.id << mapLine->id  << "cost:" << nearestMapLineCost;
+                    mapLine->linePoseDist(inputLine, inputPose, debug);
+                }
             }
         }
 
@@ -1217,7 +1278,7 @@ Vector<LinePair> GeometricMap::computeAllLinePairs(Vector<TrackedLine> &inputLin
 
 // Build all possible pairs between input lines and map lines that touch the selection box.
 // One sanity check is applied: an input line is not allowed to be much longer than a map line.
-// We never want to global snap in the active snap, so active lines are also ignored.
+// We never want to global snap in the active snap, so active lines are ignored.
 // The input lines can be in any coordinate frame, it does not matter.
 // The inputPose of the returned line pairs remains zero.
 Vector<LinePair> GeometricMap::computeBoxLinePairs(Vector<TrackedLine> &inputLines, const Pose2D &inputPose, bool debug)
@@ -1233,7 +1294,7 @@ Vector<LinePair> GeometricMap::computeBoxLinePairs(Vector<TrackedLine> &inputLin
         TrackedLine& inputLine = inputLines[i];
 
         ListIterator<TrackedLine*> mapLineIterator = selectedMapLines.begin();
-        while (mapLineIterator.hasNext()) // There could be many map lines.
+        while (mapLineIterator.hasNext())
         {
             TrackedLine* mapLine = mapLineIterator.next();
 
@@ -1403,10 +1464,10 @@ void GeometricMap::eraseMapLines(const Pose2D& pose, const Polygon &visPol, bool
         Line& edge = ei.next();
         Vec2& p1 = edge.p1();
         Vec2& p2 = edge.p2();
-        if (p1.length() > config.slamVisibilityPolygonMaxDistance)
-            p1.normalize(config.slamVisibilityPolygonMaxDistance);
-        if (p2.length() > config.slamVisibilityPolygonMaxDistance)
-            p2.normalize(config.slamVisibilityPolygonMaxDistance);
+        if (p1.length() > config.slamVisibilityPolygonBound)
+            p1.normalize(config.slamVisibilityPolygonBound);
+        if (p2.length() > config.slamVisibilityPolygonBound)
+            p2.normalize(config.slamVisibilityPolygonBound);
     }
     Polygon visibilityPolygon = boundedVisPol + pose;
     Vector<Polygon> reducedVisibilityPolygons = boundedVisPol.offseted(-config.slamVisibilityPolygonShrinking, config.laserDouglasPeuckerEpsilon);
@@ -1736,28 +1797,6 @@ void GeometricMap::updatePoseGraph(const Pose2D& pose, const LinkedList<TrackedL
     // node in the graph. Newly observed lines are connected with the nearest graph node whenever
     // they are discovered.
 
-    // First, determine the closest node.
-    closestPoseGraphNodeBefore = closestPoseGraphNode;
-    closestPoseGraphNode = getClosestNode(pose);
-    if (debug && !closestPoseGraphNode->isLeaf())
-        qDebug() << state.frameId << "The closest node is not a leaf node.";
-    if (debug && closestPoseGraphNode->isJunction())
-        qDebug() << state.frameId << "The closest node is a junction.";
-    if (debug)
-        qDebug() << state.frameId << "Closest node is:" << closestPoseGraphNode << "dist:" << closestPoseGraphNode->dist(pose);
-
-    // Detect small loops.
-    if (closestPoseGraphNode != 0 && closestPoseGraphNodeBefore != 0
-            && abs((int)closestPoseGraphNode->id - (int)closestPoseGraphNodeBefore->id) > 1
-            && !closestPoseGraphNode->neighbours.contains(closestPoseGraphNodeBefore))
-    {
-        if (debug)
-            qDebug() << "Small loop detected between nodes" << closestPoseGraphNode->id << "and" << closestPoseGraphNodeBefore->id;
-        closestPoseGraphNode->neighbours << closestPoseGraphNodeBefore;
-        closestPoseGraphNodeBefore->neighbours << closestPoseGraphNode;
-    }
-
-
     // Distance-based pose graph node creation.
     // Add a node to the poseGraph (sometimes) and connect it with all currently seen lines.
     if (poseGraphNodes.isEmpty() || closestPoseGraphNode->dist(pose) > config.slamPoseGraphNodeDist)
@@ -1766,7 +1805,7 @@ void GeometricMap::updatePoseGraph(const Pose2D& pose, const LinkedList<TrackedL
         closestPoseGraphNodeBefore = closestPoseGraphNode;
         closestPoseGraphNode = &poseGraphNodes.last();
         if (debug)
-            qDebug() << state.frameId << "New distance Node added" << poseGraphNodes.last();
+            qDebug() << state.frameId << "New pose graph node added" << poseGraphNodes.last();
     }
     else
     {
@@ -1805,35 +1844,31 @@ void GeometricMap::updatePolygonMap(const Pose2D& pose, const Polygon& visPol, b
         Line& edge = ei.next();
         Vec2& p1 = edge.p1();
         Vec2& p2 = edge.p2();
-        if (p1.length() > config.slamVisibilityPolygonMaxDistance)
-            p1.normalize(config.slamVisibilityPolygonMaxDistance);
-        if (p2.length() > config.slamVisibilityPolygonMaxDistance)
-            p2.normalize(config.slamVisibilityPolygonMaxDistance);
+        if (p1.length() > config.slamVisibilityPolygonBound)
+            p1.normalize(config.slamVisibilityPolygonBound);
+        if (p2.length() > config.slamVisibilityPolygonBound)
+            p2.normalize(config.slamVisibilityPolygonBound);
     }
 
     // Use a negative offset to reduce the size of the bounded visibility polygon.
     // This operation implicitely inflates the obstacles and mitigates the growing union problem.
     // The offsetting operation can result in multiple polygons.
     const Vector<Polygon>& reducedVisibilityPolygons = boundedVisPol.offseted(-config.slamVisibilityPolygonShrinking, config.laserDouglasPeuckerEpsilon);
-
-    // Select the "root" offseted visibility polygon right in front of the robot that would
-    // contain the robot in the origin if it weren't for the offset. We could still try just
-    // adding the whole pack, what's the big deal?
     for (uint i = 0; i < reducedVisibilityPolygons.size(); i++)
     {
-        // Extend the observed polygon of the closest node by uniting it with the currently seen
-        // reduced visibility polygon.
+        // Extend the observed neighborhood of the closest node by uniting it with the currently seen
+        // reduced visibility polygon(s). After the offset operation, some reduced visibility polygons
+        // may have changed from CCW to CW, but so far this has been no problem.
         Polygon ppol = reducedVisibilityPolygons[i];
         ppol += pose;
         ppol.transform();
         if (closestPoseGraphNode != 0)
             closestPoseGraphNode->observedNeighborhood.unite(ppol);
-        else
-            polygonMap.unite(ppol);
     }
 
-    // If the closest pose graph node just changed, merge the observed neighborhood of the last
-    // closest node with the polygon map.
+    if (closestPoseGraphNodeBefore == 0)
+        polygonMap.unite(closestPoseGraphNode->observedNeighborhood);
+
     if (closestPoseGraphNode != closestPoseGraphNodeBefore && closestPoseGraphNodeBefore != 0)
     {
         polygonMap.unite(closestPoseGraphNodeBefore->observedNeighborhood);
@@ -1894,13 +1929,13 @@ void GeometricMap::removeLineFromPoseGraph(TrackedLine* o)
 // Gathers pointers to the map lines that have been seen by nodes close to the pose.
 LinkedList<TrackedLine*> GeometricMap::gatherNearbyMapLines(const Pose2D& pose) const
 {
-    return getClosestNode(pose)->gatherNearbyLines(config.slamPoseGraphNearbyNodes);
+    return getClosestNode(pose)->gatherNearbyLines(config.slamPoseGraphNeighborhoodSize);
 }
 
 // Gathers pointers to the nodes close to the pose.
 LinkedList<PoseGraphNode *> GeometricMap::gatherNearbyNodes(const Pose2D &pose) const
 {
-    return getClosestNode(pose)->gatherNeighborhood(config.slamPoseGraphNearbyNodes);
+    return getClosestNode(pose)->gatherNeighborhood(config.slamPoseGraphNeighborhoodSize);
 }
 
 // Returns the PoseGraphNode that minimizes the Pose2D dist to pose p.
@@ -2210,16 +2245,209 @@ void GeometricMap::optimizeGraph(PoseGraphNode* rootNode, PoseGraphNode* leafNod
 }
 
 // Draws the LineMap on a QPainter.
-void GeometricMap::draw(QPainter *painter, const QPen &pen, const QBrush &brush, double opacity) const
+void GeometricMap::draw(QPainter *painter) const
 {
-    painter->save();
-    painter->setPen(pen);
-    painter->setBrush(brush);
-    painter->setOpacity(opacity);
-    ListIterator<TrackedLine> it = mapLines.begin();
-    while (it.hasNext())
-        it.next().draw(painter);
-    painter->restore();
+    // Draw the polygon map.
+    if (command.showPolygonMap > 0)
+    {
+        // 0 - nothing
+        // 1 - map polygon
+        // 2 - observed neighborhood
+        // 3 - both
+
+        if (command.showPolygonMap == 1 || command.showPolygonMap == 3)
+            polygonMap.draw(painter, drawUtil.pen, drawUtil.brushGray, drawUtil.brushLightGreen);
+
+        if (closestPoseGraphNode != 0 && command.showPolygonMap > 1)
+            closestPoseGraphNode->observedNeighborhood.draw(painter, drawUtil.pen, drawUtil.brushGray, drawUtil.lightGreen);
+    }
+
+    // Draw the line map.
+    if (command.showLineMap > 0)
+    {
+        // 0 - nothing
+        // 1 - line matching view
+        // 2 - bare line view
+        // 3 - line observation accumulation view
+
+        // Line matching view.
+        if (command.showLineMap == 1)
+        {
+            // First all map lines in light gray.
+            ListIterator<TrackedLine> it = mapLines.begin();
+            while (it.hasNext())
+                it.next().draw(painter, drawUtil.penLightGrayThin);
+
+            // The selection box.
+            Box selectionBox(inputPose.pos(), config.slamSelectionBoxSize, -config.slamSelectionBoxSize, -config.slamSelectionBoxSize, config.slamSelectionBoxSize);
+            //selectionBox.draw(painter, drawUtil.penLightGrayThin);
+
+            // The selected line set in gray.
+            it = mapLines.begin();
+            while (it.hasNext())
+            {
+                if (selectionBox.intersects(it.cur()))
+                    it.cur().draw(painter, drawUtil.penGray);
+                it.next();
+            }
+
+            // The active map line set in black.
+            ListIterator<TrackedLine*> it2 = activeMapLines.begin();
+            while (it2.hasNext())
+                it2.next()->draw(painter, drawUtil.pen);
+
+            // The input lines in blue relative to inputPose.
+            painter->save();
+            painter->setTransform(inputPose.getQTransform(), true);
+            for (uint i = 0; i < inputLines.size(); i++)
+                inputLines[i].draw(painter, drawUtil.penBlueThick);
+            painter->restore();
+
+            // Prospected input lines in red relative to local snapped pose.
+            painter->save();
+            painter->setTransform(localSnappedPose.getQTransform(), true);
+            for (uint j = 0; j < inputLines.size(); j++)
+                inputLines[j].draw(painter, drawUtil.penRedThick);
+            painter->restore();
+
+            // The input pose in blue.
+            drawUtil.drawNoseCircle(painter, inputPose, drawUtil.penBlue, drawUtil.brushBlue, 0.3*config.agentRadius);
+
+            // The local snapped pose in red.
+            drawUtil.drawNoseCircle(painter, localSnappedPose, drawUtil.penRed, drawUtil.brushRed, 0.3*config.agentRadius);
+
+            // Line matching labels.
+            if (command.showLabels)
+            {
+                // All map line labels in light gray.
+                ListIterator<TrackedLine> it = mapLines.begin();
+                while (it.hasNext())
+                    it.next().drawLabel(painter, drawUtil.penLightGray);
+
+                // The selected line set labels in gray.
+                it = mapLines.begin();
+                while (it.hasNext())
+                {
+                    if (selectionBox.intersects(it.cur()))
+                        it.cur().drawLabel(painter, drawUtil.penGray);
+                    it.next();
+                }
+
+                // The active map line set labels in black.
+                ListIterator<TrackedLine*> it2 = activeMapLines.begin();
+                while (it2.hasNext())
+                    it2.next()->drawLabel(painter, drawUtil.pen);
+
+                // Input line labels in blue.
+                painter->save();
+                painter->setTransform(inputPose.getQTransform(), true);
+                for (uint i = 0; i < inputLines.size(); i++)
+                    inputLines[i].drawLabel(painter, drawUtil.penBlue, 1.0, -inputPose.heading());
+                painter->restore();
+            }
+        }
+
+        // Bare line map view.
+        if (command.showLineMap == 2)
+        {
+            // All map lines in black.
+            ListIterator<TrackedLine> it = mapLines.begin();
+            while (it.hasNext())
+                it.next().draw(painter, drawUtil.penThick);
+
+            // Bare line map labels.
+            if (command.showLabels == 2)
+            {
+                ListIterator<TrackedLine> it = mapLines.begin();
+                while (it.hasNext())
+                    it.next().drawLabel(painter, drawUtil.pen, 0.8);
+            }
+        }
+
+        // Line observation accumulation view.
+        if (command.showLineMap == 3)
+        {
+            // The accumulated lines in thin black.
+            ListIterator<TrackedLine> it = mapLines.begin();
+            while (it.hasNext())
+            {
+                const TrackedLine& l = it.next();
+                for (uint j = 0; j < l.lineObservations.size(); j++)
+                    l.lineObservations[j].draw(painter, drawUtil.penThin);
+            }
+
+            // All map lines in thick blue.
+            it = mapLines.begin();
+            while (it.hasNext())
+                it.next().draw(painter, drawUtil.penBlueThick);
+        }
+    }
+
+    // Draw the pose graph.
+    if (command.showPoseGraph > 0)
+    {
+        // 0 - none
+        // 1 - the nodes and the closest neighborhood
+        // 2 - neighborhood seen line connections
+        // 3 - all seen line connections
+
+        QColor activeColor(qRgba(0, 255, 0, 255));
+        QColor inactiveColor(qRgba(0, 255, 0, 200));
+        inactiveColor.setRgba(qRgba(0, 255, 0, 200));
+
+        // The seen line connections of all nodes.
+        if (command.showPoseGraph >= 3)
+        {
+            ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
+            while (it.hasNext())
+                it.next().drawSeenLineConnections(painter, drawUtil.penLightGrayThin);
+        }
+
+        // The seen line connections of the nearby nodes.
+        if (command.showPoseGraph >= 2 && closestPoseGraphNode != 0)
+        {
+            LinkedList<PoseGraphNode*> nearbyNodes = closestPoseGraphNode->gatherNeighborhood(config.slamPoseGraphNeighborhoodSize);
+            ListIterator<PoseGraphNode*> it = nearbyNodes.begin();
+            while (it.hasNext())
+                it.next()->drawSeenLineConnections(painter, drawUtil.penLightGrayThin);
+        }
+
+        // All nodes.
+        ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
+        while (it.hasNext())
+        {
+            ListIterator<PoseGraphNode*> nit = it.cur().neighbours.begin();
+            while (nit.hasNext())
+                Line(it.cur().pose.pos(), nit.next()->pose.pos()).draw(painter, drawUtil.penGray);
+            it.next().draw(painter, drawUtil.penThin, drawUtil.brushGreen, 0.5*config.agentRadius);
+        }
+
+        // The neighborhood of the closest node.
+        if (closestPoseGraphNode != 0)
+        {
+            closestPoseGraphNode->drawNeighborhood(painter, config.slamPoseGraphNeighborhoodSize, drawUtil.pen, drawUtil.brushGreen, 0.6*config.agentRadius);
+
+            // Mark the closest node with a red circle.
+            painter->save();
+            painter->translate(closestPoseGraphNode->pose.pos());
+            painter->setPen(drawUtil.penRedThick);
+            painter->setBrush(Qt::NoBrush);
+            painter->drawEllipse(QPointF(), 0.8*config.agentRadius, 0.8*config.agentRadius);
+            painter->restore();
+        }
+
+        // Pose graph node labels.
+        if (command.showLabels)
+        {
+            ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
+            while (it.hasNext())
+                it.next().drawLabel(painter, drawUtil.pen, 0.8);
+        }
+    }
+
+    // The global localization.
+    if (globalSnapQuality >= 0.75)
+        drawUtil.drawNoseCircle(painter, globalSnappedPose, drawUtil.pen, drawUtil.brushRed, 0.5*config.agentRadius);
 }
 
 // Draws the GeometricMap in OpenGL context.
@@ -2229,249 +2457,217 @@ void GeometricMap::draw() const
         return;
 
     if (command.showPolygonMap > 0)
-        drawPolygonMap();
-
-    // Line matching view.
-    if (command.showLineMap == 1)
-        drawLineMatching();
-
-    // Bare line map view.
-    if (command.showLineMap == 2)
-        drawMapLines();
-
-    // Line observation accumulation view.
-    if (command.showLineMap == 3)
-        drawLineAccumulation();
-
-    if (command.showPoseGraph > 0)
-        drawPoseGraph();
-
-    if (globalSnapQuality >= 0.75)
-        drawGlobalSnap();
-}
-
-void GeometricMap::drawLineMatching() const
-{
-    // First all map lines in light grey.
-    glLineWidth(5);
-    glColor3f(0.9,0.9,0.9); // light grey
-    ListIterator<TrackedLine> it = mapLines.begin();
-    while (it.hasNext())
-        it.next().draw();
-
-    glTranslated(0,0,0.001);
-
-    // The selection box.
-    Box selectionBox(inputPose.pos(), config.slamSelectionBoxSize, -config.slamSelectionBoxSize, -config.slamSelectionBoxSize, config.slamSelectionBoxSize);
-    GLlib::setColor(drawUtil.lightGrey);
-    glLineWidth(1);
-    //selectionBox.draw();
-
-    // The selection box line set in grey.
-    glLineWidth(5);
-    glColor3f(0.7,0.7,0.7); // grey
-    it = mapLines.begin();
-    while (it.hasNext())
     {
-        if (selectionBox.intersects(it.cur()))
-            it.cur().draw();
-        it.next();
-    }
+        // 0 - nothing
+        // 1 - map polygon
+        // 2 - observed neighborhood
+        // 3 - both
 
-    glTranslated(0,0,0.001);
-
-    // The active map line set in black.
-    glLineWidth(5);
-    glColor3f(0.3,0.3,0.3); // black
-    ListIterator<TrackedLine*> it2 = activeMapLines.begin();
-    while (it2.hasNext())
-        it2.next()->draw();
-
-    glTranslated(0,0,0.001);
-
-    // The input pose.
-    GLlib::drawNoseCircle(inputPose, drawUtil.black, 0.5*config.agentRadius);
-
-    // The input lines in blue relative to inputPose.
-    glLineWidth(5);
-    glColor3f(0,0,0.8); // blue
-    glPushMatrix();
-    glMultMatrixd(inputPose.getMatrix());
-    for (uint i = 0; i < inputLines.size(); i++)
-        inputLines[i].draw();
-    glPopMatrix();
-
-    glTranslated(0,0,0.001);
-
-    // Prospected input lines in red.
-    glPushMatrix();
-    glMultMatrixd(localSnappedPose.getMatrix());
-    glLineWidth(5);
-    glColor3f(1,0,0); // red
-    for (uint j = 0; j < inputLines.size(); j++)
-        inputLines[j].draw();
-    glPopMatrix();
-}
-
-void GeometricMap::drawMapLines() const
-{
-    // All map lines in black.
-    glColor3f(0,0,0); // black
-    glLineWidth(5);
-    ListIterator<TrackedLine> it = mapLines.begin();
-    while (it.hasNext())
-    {
-        const TrackedLine& l = it.next();
-        l.draw();
-        if (l.seenP1)
-            GLlib::drawFilledCircle(l.p1(), drawUtil.brush.color(), 0.03);
-        if (l.seenP2)
-            GLlib::drawFilledCircle(l.p2(), drawUtil.brush.color(), 0.03);
-    }
-}
-
-void GeometricMap::drawLineAccumulation() const
-{
-    // The accumulated lines in thin black.
-    glLineWidth(1);
-    glColor3f(0,0,0); // black
-    ListIterator<TrackedLine> it = mapLines.begin();
-    while (it.hasNext())
-    {
-        const TrackedLine& l = it.next();
-        for (uint j = 0; j < l.lineObservations.size(); j++)
-            l.lineObservations[j].draw();
-    }
-
-    glTranslatef(0,0,0.001);
-
-    // All map lines in thick blue.
-    glLineWidth(7);
-    //glColor3i(127,127,255); // blue
-    glColor3f(0.5,0.5,1); // blue
-    it = mapLines.begin();
-    while (it.hasNext())
-        it.next().draw();
-
-    glTranslatef(0,0,0.001);
-
-    // The seen vertices with black dots.
-    glColor3f(0,0,0); // black
-    it = mapLines.begin();
-    while (it.hasNext())
-    {
-        const TrackedLine& l = it.next();
-        for (uint j = 0; j < l.lineObservations.size(); j++)
+        if (command.showPolygonMap == 1 || command.showPolygonMap == 3)
         {
-            const TrackedLine& line = l.lineObservations[j];
-            if (line.seenP1)
-                GLlib::drawFilledCircle(line.p1(), drawUtil.brush.color(), 0.0075);
-            if (line.seenP2)
-                GLlib::drawFilledCircle(line.p2(), drawUtil.brush.color(), 0.0075);
+            polygonMap.draw(drawUtil.pen, drawUtil.lightGreen, 0.3);
+            glTranslated(0, 0, 0.002);
+        }
+
+        if (closestPoseGraphNode != 0 && command.showPolygonMap > 1)
+        {
+            closestPoseGraphNode->observedNeighborhood.draw(drawUtil.pen, drawUtil.lightGreen, 0.8);
+            glTranslated(0, 0, 0.002);
         }
     }
 
-    glTranslatef(0,0,0.001);
-
-    // The map line seen vertices.
-    it = mapLines.begin();
-    while (it.hasNext())
+    // Line matching view.
+    if (command.showLineMap == 1)
     {
-        const TrackedLine& l = it.next();
-        if (l.seenP1)
-            GLlib::drawFilledCircle(l.p1(), QColor(255,127,255), 0.03);
-        if (l.seenP2)
-            GLlib::drawFilledCircle(l.p2(), QColor(255,127,255), 0.03);
-    }
-}
+        // First all map lines in light grey.
+        glLineWidth(5);
+        glColor3f(0.9,0.9,0.9); // light grey
+        ListIterator<TrackedLine> it = mapLines.begin();
+        while (it.hasNext())
+            it.next().draw();
 
-void GeometricMap::drawGlobalSnap() const
-{
-    glPushMatrix();
-    glTranslated(0, 0, 0.01);
-    GLlib::drawNoseCircle(globalSnappedPose, Qt::red, 0.5*config.agentRadius);
-    glPopMatrix();
-}
+        glTranslated(0,0,0.001);
 
-void GeometricMap::drawPoseGraph() const
-{
-    if (command.showPoseGraph == 0)
-        return;
-
-    QColor activeColor(qRgba(0, 255, 0, 255));
-    QColor inactiveColor(qRgba(0, 255, 0, 200));
-    inactiveColor.setRgba(qRgba(0, 255, 0, 200));
-
-    // The seen line connections of all nodes.
-    if (command.showPoseGraph >= 3)
-    {
+        // The selection box.
+        Box selectionBox(inputPose.pos(), config.slamSelectionBoxSize, -config.slamSelectionBoxSize, -config.slamSelectionBoxSize, config.slamSelectionBoxSize);
+        GLlib::setColor(drawUtil.lightGray);
         glLineWidth(1);
-        GLlib::setColor(drawUtil.lightGrey);
+        //selectionBox.draw();
+
+        // The selection box line set in grey.
+        glLineWidth(5);
+        glColor3f(0.7,0.7,0.7); // grey
+        it = mapLines.begin();
+        while (it.hasNext())
+        {
+            if (selectionBox.intersects(it.cur()))
+                it.cur().draw();
+            it.next();
+        }
+
+        glTranslated(0,0,0.001);
+
+        // The active map line set in black.
+        glLineWidth(5);
+        glColor3f(0.3,0.3,0.3); // black
+        ListIterator<TrackedLine*> it2 = activeMapLines.begin();
+        while (it2.hasNext())
+            it2.next()->draw();
+
+        glTranslated(0,0,0.001);
+
+        // The input pose.
+        GLlib::drawNoseCircle(inputPose, drawUtil.black, 0.5*config.agentRadius);
+
+        // The input lines in blue relative to inputPose.
+        glLineWidth(5);
+        glColor3f(0,0,0.8); // blue
+        glPushMatrix();
+        glMultMatrixd(inputPose.getMatrix());
+        for (uint i = 0; i < inputLines.size(); i++)
+            inputLines[i].draw();
+        glPopMatrix();
+
+        glTranslated(0,0,0.001);
+
+        // Prospected input lines in red.
+        glPushMatrix();
+        glMultMatrixd(localSnappedPose.getMatrix());
+        glLineWidth(5);
+        glColor3f(1,0,0); // red
+        for (uint j = 0; j < inputLines.size(); j++)
+            inputLines[j].draw();
+        glPopMatrix();
+    }
+
+    // Bare line map view.
+    if (command.showLineMap == 2)
+    {
+        // All map lines in black.
+        glColor3f(0,0,0); // black
+        glLineWidth(5);
+        ListIterator<TrackedLine> it = mapLines.begin();
+        while (it.hasNext())
+            it.next().draw();
+    }
+
+    // Line observation accumulation view.
+    if (command.showLineMap == 3)
+    {
+        // The accumulated lines in thin black.
+        glLineWidth(1);
+        glColor3f(0,0,0); // black
+        ListIterator<TrackedLine> it = mapLines.begin();
+        while (it.hasNext())
+        {
+            const TrackedLine& l = it.next();
+            for (uint j = 0; j < l.lineObservations.size(); j++)
+                l.lineObservations[j].draw();
+        }
+
+        glTranslatef(0,0,0.001);
+
+        // All map lines in thick blue.
+        glLineWidth(7);
+        //glColor3i(127,127,255); // blue
+        glColor3f(0.5,0.5,1); // blue
+        it = mapLines.begin();
+        while (it.hasNext())
+            it.next().draw();
+
+        glTranslatef(0,0,0.001);
+
+        // The seen vertices with black dots.
+        glColor3f(0,0,0); // black
+        it = mapLines.begin();
+        while (it.hasNext())
+        {
+            const TrackedLine& l = it.next();
+            for (uint j = 0; j < l.lineObservations.size(); j++)
+            {
+                const TrackedLine& line = l.lineObservations[j];
+                if (line.seenP1)
+                    GLlib::drawFilledCircle(line.p1(), drawUtil.brush.color(), 0.0075);
+                if (line.seenP2)
+                    GLlib::drawFilledCircle(line.p2(), drawUtil.brush.color(), 0.0075);
+            }
+        }
+
+        glTranslatef(0,0,0.001);
+
+        // The map line seen vertices.
+        it = mapLines.begin();
+        while (it.hasNext())
+        {
+            const TrackedLine& l = it.next();
+            if (l.seenP1)
+                GLlib::drawFilledCircle(l.p1(), QColor(255,127,255), 0.03);
+            if (l.seenP2)
+                GLlib::drawFilledCircle(l.p2(), QColor(255,127,255), 0.03);
+        }
+    }
+
+    if (command.showPoseGraph > 0)
+    {
+        QColor activeColor(qRgba(0, 255, 0, 255));
+        QColor inactiveColor(qRgba(0, 255, 0, 200));
+        inactiveColor.setRgba(qRgba(0, 255, 0, 200));
+
+        // The seen line connections of all nodes.
+        if (command.showPoseGraph >= 3)
+        {
+            glLineWidth(1);
+            GLlib::setColor(drawUtil.lightGray);
+            ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
+            while (it.hasNext())
+                it.next().drawSeenLineConnections();
+
+            glTranslated(0, 0, 0.001);
+        }
+
+        // The seen line connections of the nearby nodes.
+        if (command.showPoseGraph >= 2 && closestPoseGraphNode != 0)
+        {
+            LinkedList<PoseGraphNode*> nearbyNodes = closestPoseGraphNode->gatherNeighborhood(config.slamPoseGraphNeighborhoodSize);
+            ListIterator<PoseGraphNode*> it = nearbyNodes.begin();
+            glLineWidth(1);
+            GLlib::setColor(drawUtil.lightGray);
+            while (it.hasNext())
+                it.next()->drawSeenLineConnections();
+
+            glTranslated(0, 0, 0.001);
+        }
+
+        // All nodes.
         ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
         while (it.hasNext())
-            it.next().drawSeenLineConnections();
+        {
+            glLineWidth(1);
+            GLlib::setColor(drawUtil.grey);
+            ListIterator<PoseGraphNode*> nit = it.cur().neighbours.begin();
+            while (nit.hasNext())
+                Line(it.cur().pose.pos(), nit.next()->pose.pos()).draw();
+            it.next().draw(inactiveColor, 0.5*config.agentRadius);
+        }
 
         glTranslated(0, 0, 0.001);
+
+        if (closestPoseGraphNode != 0)
+        {
+            // The neighborhood of the closest node.
+            closestPoseGraphNode->drawNeighborhood(config.slamPoseGraphNeighborhoodSize, activeColor, 0.6*config.agentRadius);
+
+            // Mark the closest node with a red circle.
+            GLlib::drawCircle(closestPoseGraphNode->pose, drawUtil.red, 0.8*config.agentRadius, 0.02);
+        }
     }
 
-    // The seen line connections of the nearby nodes.
-    if (command.showPoseGraph >= 2 && closestPoseGraphNode != 0)
+    if (globalSnapQuality >= 0.75)
     {
-        LinkedList<PoseGraphNode*> nearbyNodes = closestPoseGraphNode->gatherNeighborhood(config.slamPoseGraphNearbyNodes);
-        ListIterator<PoseGraphNode*> it = nearbyNodes.begin();
-        glLineWidth(1);
-        GLlib::setColor(drawUtil.lightGrey);
-        while (it.hasNext())
-            it.next()->drawSeenLineConnections();
-
-        glTranslated(0, 0, 0.001);
-    }
-
-    // All nodes.
-    ListIterator<PoseGraphNode> it = poseGraphNodes.begin();
-    while (it.hasNext())
-    {
-        glLineWidth(1);
-        GLlib::setColor(drawUtil.grey);
-        ListIterator<PoseGraphNode*> nit = it.cur().neighbours.begin();
-        while (nit.hasNext())
-            Line(it.cur().pose.pos(), nit.next()->pose.pos()).draw();
-        it.next().draw(inactiveColor, 0.5*config.agentRadius);
-    }
-
-    glTranslated(0, 0, 0.001);
-
-    if (closestPoseGraphNode != 0)
-    {
-        // The neighborhood of the closest node.
-        closestPoseGraphNode->drawNeighborhood(config.slamPoseGraphNearbyNodes, activeColor, 0.6*config.agentRadius);
-
-        // Mark the closest node with a red circle.
-        GLlib::drawCircle(closestPoseGraphNode->pose, drawUtil.red, 0.8*config.agentRadius, 0.02);
-    }
-}
-
-// Draws the polygon map.
-void GeometricMap::drawPolygonMap() const
-{
-    if (command.showPolygonMap == 0)
-        return;
-
-    // 0 - nothing
-    // 1 - map polygon
-    // 2 - observed neighborhood
-    // 3 - both
-
-    if (command.showPolygonMap == 1 || command.showPolygonMap == 3)
-    {
-        polygonMap.draw(drawUtil.pen, drawUtil.lightGreen, 0.3);
-        glTranslated(0, 0, 0.002);
-    }
-
-    if (closestPoseGraphNode != 0 && command.showPolygonMap > 1)
-    {
-        closestPoseGraphNode->observedNeighborhood.draw(drawUtil.pen, drawUtil.lightGreen, 0.8);
-        glTranslated(0, 0, 0.002);
+        glPushMatrix();
+        glTranslated(0, 0, 0.01);
+        GLlib::drawNoseCircle(globalSnappedPose, Qt::red, 0.5*config.agentRadius);
+        glPopMatrix();
     }
 }
 

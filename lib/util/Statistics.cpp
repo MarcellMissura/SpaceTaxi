@@ -56,7 +56,7 @@ double Statistics::softmin(const Vector<double>& list)
     return softmin;
 }
 
-// Returns the sofmax of the values in the list.
+// Returns the softmax of the values in the list.
 double Statistics::softmax(const Vector<double>& list)
 {
     if (list.isEmpty())
@@ -591,7 +591,8 @@ const Vector<Vector<uint> >& Statistics::cluster(const Vector<double>& list, dou
 
 // Clusters a vector of doubles with a fast sweep algorithm in O(N log N).
 // A vector of vectors is returned, one vector for each cluster containing the *index* of the
-// element in the list belonging to this cluster.
+// element in the list belonging to this cluster. This could be faster than DBScan
+// if done properly, but it is not done properly yet.
 const Vector<Vector<uint> >& Statistics::clusterSorted(const Vector<double>& list, double eps)
 {
     //qDebug() << "clustering" << list;
@@ -625,7 +626,8 @@ const Vector<Vector<uint> >& Statistics::clusterSorted(const Vector<double>& lis
 
 // Clusters a vector of angles with the DBScan algorithm using eps as the distance threshold.
 // A vector of vectors is returned, one vector for each cluster containing the *index* of the
-// element in the list belonging to this cluster.
+// element in the list belonging to this cluster. The difference between clustering angles and
+// clustering doubles is that multitudes of PI count as the same angle.
 const Vector<Vector<uint> >& Statistics::clusterAngles(const Vector<double>& list, double eps)
 {
     bool clustered[list.size()];
@@ -688,7 +690,7 @@ const Vector<Vector<uint> >& Statistics::clusterAngles(const Vector<double>& lis
 
 // Clusters a vector of Vec2 with the DBScan algorithm using eps as the distance threshold.
 // A vector of vectors is returned, one vector for each cluster containing the *index* of the
-// element in list belonging to this cluster.
+// element in list belonging to the cluster.
 const Vector<Vector<uint> > &Statistics::cluster(const Vector<Vec2>& list, double eps)
 {
     bool clustered[list.size()];
@@ -726,6 +728,53 @@ const Vector<Vector<uint> > &Statistics::cluster(const Vector<Vec2>& list, doubl
             cluster << N[k];
             for (uint j = 0; j < list.size(); j++)
                 if (!clustered[j] && (list[j]-list[N[k]]).norm() < eps)
+                    N << j;
+        }
+
+        clusters << cluster;
+    }
+
+    return clusters;
+}
+
+// Clusters a vector of Pose2D with the DBScan algorithm using eps as the distance threshold.
+// A vector of vectors is returned, one vector for each cluster containing the *index* of the
+// element in list belonging to the cluster.
+const Vector<Vector<uint> > &Statistics::cluster(const Vector<Pose2D>& list, double eps)
+{
+    bool clustered[list.size()];
+    for (uint i = 0; i < list.size(); i++)
+        clustered[i] = false;
+
+    thread_local Vector<Vector<uint> > clusters;
+    thread_local Vector<uint> cluster;
+    thread_local Vector<uint> N;
+    clusters.clear();
+    cluster.clear();
+    N.clear();
+    for (uint i = 0; i < list.size(); i++)
+    {
+        if (clustered[i])
+            continue;
+
+        cluster.clear();
+        cluster << i;
+        clustered[i] = true;
+
+        N.clear();
+        for (uint j = i+1; j < list.size(); j++)
+            if (!clustered[j] && list[i].dist(list[j]) < eps)
+                N << j;
+
+        for (uint k = 0; k < N.size(); k++)
+        {
+            if (clustered[N[k]])
+                continue;
+
+            clustered[N[k]] = true;
+            cluster << N[k];
+            for (uint j = 0; j < list.size(); j++)
+                if (!clustered[j] && list[j].dist(list[N[k]]) < eps)
                     N << j;
         }
 

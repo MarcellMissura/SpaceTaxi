@@ -15,11 +15,12 @@ HEADERS += lib/util/Timer.h \
     lib/util/Logger.h \
     lib/util/FileLoader.h \
     lib/util/Statistics.h \
-    lib/util/ColorUtil.h \
+    lib/util/DrawUtil.h \
     lib/util/RGBPixel.h \
     lib/util/PriorityQueue.h \
     lib/util/LinkedList.h \
     lib/util/Vector.h \
+    lib/util/RingBuffer.h \
     lib/util/AdjacencyMatrix.h \
     lib/util/fresnelnr.h \
     lib/util/GLlib.h \
@@ -32,7 +33,7 @@ SOURCES += \
     lib/util/Grid.cpp \
     lib/util/Logger.cpp \
     lib/util/Statistics.cpp \
-    lib/util/ColorUtil.cpp \
+    lib/util/DrawUtil.cpp \
     lib/util/RGBPixel.cpp \
     lib/util/FileLoader.cpp \
     lib/util/AdjacencyMatrix.cpp \

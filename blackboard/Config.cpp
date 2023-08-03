@@ -49,6 +49,7 @@ Config::Config()
     agentAngularDamping = 3.0;
     agentFriction = 0.3;
 
+    laserMaxRayLength = 6; // Bounded length of the layer rays.
     laserNumber = 512; // How many sensor rays.
     laserAngleRange = 2.0; // The opening angle of the sensor field.
     laserLength = 6; // The maximum length of the simulated laser rays.
@@ -58,7 +59,9 @@ Config::Config()
     laserSegmentDistanceThreshold = 0.15;
     laserDouglasPeuckerEpsilon = 0.02;
     laserSmoothingMinSegmentSize = 3;
-    laserSmoothingPasses = 1;
+    laserSmoothingSpatialPasses = 1;
+    laserTriangleLegLength = 0.17; // The side length of the triangle.
+    laserTriangleAngle = 2.3; // The angle at the tip of the triangle marker.
 
     // ray model
     raysAngleRange = -PI2;
@@ -140,11 +143,12 @@ Config::Config()
     UPD_Kd_lin = -1;
     UPD_Kp_rot = 100;
     UPD_Kd_rot = -10;
+    UPD_targetOrientationThreshold = 0.4;
 
     // Line slam.
     slamSeenCornerMinAngle = 0.785;
     slamVisibilityPolygonShrinking = 0.20;
-    slamVisibilityPolygonMaxDistance = 5.0;
+    slamVisibilityPolygonBound = 7.0;
     slamMaxPoseDiff = 0.25;
     slamMergeMaxLineDist = 0.106;
     slamMergeMinOverlap = 0.15;
@@ -157,7 +161,7 @@ Config::Config()
     slamClusteringTransformEps = 0.1;
     slamPairingMinOverlapPercent = 0.75;
     slamPoseGraphNodeDist = 0.5;
-    slamPoseGraphNearbyNodes = 5;
+    slamPoseGraphNeighborhoodSize = 3;
 }
 
 // The init() method should be called after construction.
@@ -209,16 +213,19 @@ void Config::init()
     registerMember("agent.friction", &agentFriction, 10.0);
 
     // laser sensor
+    registerMember("laser.maxRayLength", &laserMaxRayLength, 10.0);
     registerMember("laser.number", &laserNumber, 1000);
     registerMember("laser.angleRange", &laserAngleRange, PI);
     registerMember("laser.length", &laserLength, 50.0);
     registerMember("laser.lengthBound", &laserLengthBound, 10.0);
-    registerMember("laser.minLineLength", &laserMinLineLength, 1.0);
-    registerMember("laser.maxLineDistance", &laserMaxLineDistance, 10.0);
     registerMember("laser.segmentDistanceThreshold", &laserSegmentDistanceThreshold, 1.0);
     registerMember("laser.douglasPeuckerEpsilon", &laserDouglasPeuckerEpsilon, 0.1);
+    registerMember("laser.smoothingPasses", &laserSmoothingSpatialPasses, 100);
     registerMember("laser.minSegmentSize", &laserSmoothingMinSegmentSize, 100);
-    registerMember("laser.smoothingPasses", &laserSmoothingPasses, 100);
+    registerMember("laser.minLineLength", &laserMinLineLength, 1.0);
+    registerMember("laser.maxLineDistance", &laserMaxLineDistance, 10.0);
+    registerMember("laser.triangleLegLength", &laserTriangleLegLength, 1.0);
+    registerMember("laser.triangleAngle", &laserTriangleAngle, PI);
 
     // ray model
     registerMember("rayModel.number", &raysNumber, 100.00);
@@ -243,8 +250,6 @@ void Config::init()
     registerMember("lineSlam.seenCornerMinAngle", &slamSeenCornerMinAngle, PI2);
     registerMember("lineSlam.minObservationCount", &slamMinObservationCount, 100.0);
     registerMember("lineSlam.maxPoseDiff", &slamMaxPoseDiff, 0.5);
-    registerMember("lineSlam.visibilityPolygonShrinking", &slamVisibilityPolygonShrinking, 1.0);
-    registerMember("lineSlam.visibilityPolygonMax", &slamVisibilityPolygonMaxDistance, 10.0);
     registerMember("lineSlam.mergeMaxLineDist", &slamMergeMaxLineDist, 0.2);
     registerMember("lineSlam.mergeMinOverlap", &slamMergeMinOverlap, 0.25);
     registerMember("lineSlam.selectionBoxSize", &slamSelectionBoxSize, 10.0);
@@ -255,7 +260,9 @@ void Config::init()
     registerMember("lineSlam.clusteringOrthoEps", &slamClusteringOrthoEps, 0.5);
     registerMember("lineSlam.clusteringTransformEps", &slamClusteringTransformEps, 0.5);
     registerMember("lineSlam.poseGraphNodeDist", &slamPoseGraphNodeDist, 2.0);
-    registerMember("lineSlam.poseGraphNearbyNodes", &slamPoseGraphNearbyNodes, 100.0);
+    registerMember("lineSlam.poseGraphNeighborhoodSize", &slamPoseGraphNeighborhoodSize, 100.0);
+    registerMember("lineSlam.visibilityPolygonShrinking", &slamVisibilityPolygonShrinking, 1.0);
+    registerMember("lineSlam.visibilityPolygonBound", &slamVisibilityPolygonBound, 10.0);
 
     // Path planning
     registerMember("prediction.predictFactor", &predictFactor, 1.0);

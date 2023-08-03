@@ -12,24 +12,16 @@
 
 class GeometricMap
 {
-
-public:
-
-    // These are public so that the labels can be drawn in the OpenGL widget.
-
-    Pose2D inputPose; // The assumed pose in the map given to us last (input).
-    Vector<TrackedLine> inputLines; // The lines observed in the inputPose (input).
+    Pose2D inputPose; // The assumed pose in the map given to us last (odometry input).
+    Vector<TrackedLine> inputLines; // The lines observed in the inputPose (laser input).
 
     LinkedList<TrackedLine> mapLines; // These lines make up the actual line map.
     LinkedList<PoseGraphNode> poseGraphNodes; // The nodes of the pose graph.
     GeometricModel polygonMap; // The polygons of the polygon map.
 
-private:
-
     Pose2D localSnappedPose; // The corrected pose in the map (output).
     Pose2D globalSnappedPose; // The result of the global snap. (output)
     Pose2D mediumSnappedPose; // The result of the medium snap. (output)
-    Pose2D savedSnappedPose; // hack for the bad frames in the dataset
     double globalSnapQuality; // Quality indicator for the global snap.
     double mediumSnapQuality; // Quality indicator for the medium snap.
 
@@ -50,12 +42,13 @@ public:
 
     Pose2D slam(const Pose2D &inputPose, const Vector<TrackedLine> &inputLines, const Polygon& visPol);
 
-    void printMemoryUsage() const;
+    const GeometricModel& getGeometricModel() const;
     void exportMap() const;
+    void printMemoryUsage() const;
 
     // Drawing methods.
     void draw() const;
-    void draw(QPainter* painter, const QPen &pen, const QBrush &brush, double opacity=0.5) const;
+    void draw(QPainter* painter) const;
 
     void streamOut(QDataStream &out) const;
     void streamIn(QDataStream &in);
@@ -80,7 +73,7 @@ private:
     void addLine(const TrackedLine& l);
 
     // Active line set.
-    void gatherActiveMapLines(const Pose2D& pose);
+    void gatherActiveMapLines(PoseGraphNode *closestNode);
     LinkedList<TrackedLine*> gatherRecentMapLines() const;
     LinkedList<TrackedLine*> boxSelectMapLines(const Box& box) const;
     LinkedList<TrackedLine *> gatherNearbyMapLines(const Pose2D &pose) const;
@@ -105,14 +98,6 @@ private:
     // Loop closing functions.
     void closeLoop(const Pose2D& localSnap, const Pose2D &mediumSnap);
     void optimizeGraph(PoseGraphNode *rootNode, PoseGraphNode *leafNode, const Pose2D &offset);
-
-    // Drawing functions.
-    void drawGlobalSnap() const;
-    void drawLineMatching() const;
-    void drawMapLines() const;
-    void drawLineAccumulation() const;
-    void drawPoseGraph() const;
-    void drawPolygonMap() const;
 };
 
 QDebug operator<<(QDebug dbg, const GeometricMap &w);

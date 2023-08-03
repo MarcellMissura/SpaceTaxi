@@ -64,7 +64,7 @@ public:
     Vec2 intersection(const Line& l) const;
     Pose2D intersection(const Vector<Vec2>& path) const;
 
-    void draw(QPainter* painter) const;
+    void draw(QPainter* painter, const QPen &pen=QPen(), const QBrush &brush=Qt::NoBrush, double opacity=1.0) const;
     void draw() const;
 
     void streamOut(QDataStream& out) const;

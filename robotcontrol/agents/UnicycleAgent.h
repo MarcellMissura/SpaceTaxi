@@ -1,5 +1,6 @@
 #ifndef UNICYCLEAGENT_H_
 #define UNICYCLEAGENT_H_
+
 #include "UnicycleObstacle.h"
 #include "lib/geometry/GeometricModel.h"
 #include "lib/geometry/GridModel.h"

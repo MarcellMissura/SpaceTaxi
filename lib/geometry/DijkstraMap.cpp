@@ -1,6 +1,6 @@
 #include "DijkstraMap.h"
 #include "GridModel.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "lib/util/Vec3u.h"
 

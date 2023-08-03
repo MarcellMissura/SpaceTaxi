@@ -1,6 +1,6 @@
 #include "PoseGraphNode.h"
 #include "lib/util/GLlib.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 PoseGraphNode::PoseGraphNode()
 {
@@ -46,6 +46,12 @@ bool PoseGraphNode::isLeaf() const
     return (neighbours.size() < 2);
 }
 
+// Returns a reference to the map lines seen from this node.
+const LinkedList<TrackedLine *> &PoseGraphNode::getSeenLines() const
+{
+    return seenMapLines;
+}
+
 // Returns pointers to the graph nodes that can be reached within a range=depth of hops from this node.
 LinkedList<PoseGraphNode *> PoseGraphNode::gatherNeighborhood(uint depth)
 {
@@ -73,6 +79,87 @@ LinkedList<TrackedLine *> PoseGraphNode::gatherNearbyLines(uint depth)
     return nl;
 }
 
+// Draws the pose graph node as a nose circle on QPainter.
+void PoseGraphNode::draw(QPainter* painter, const QPen& pen, const QBrush& brush, double radius) const
+{
+    drawUtil.drawNoseCircle(painter, pose, pen, brush, radius);
+}
+
+// Draws the id of the pose graph node as a label on QPainter.
+void PoseGraphNode::drawLabel(QPainter *painter, const QPen &pen, double opacity) const
+{
+    painter->save();
+    QFont font;
+    font.setFamily("Arial");
+    font.setPointSize(1);
+    painter->setFont(font);
+    painter->setPen(pen);
+    painter->setOpacity(opacity);
+    Vec2 c = pose.pos();
+    painter->translate(c.x + 0.03, c.y + 0.04);
+    painter->scale(0.1, -0.1);
+    painter->drawText(QPointF(), QString::number(id));
+    painter->restore();
+}
+
+// Draws the pose graph node as a nose circle in OpenGL.
+void PoseGraphNode::draw(QColor color, double radius) const
+{
+    GLlib::drawNoseCircle(pose, color, radius);
+}
+
+// Draws the seen line connections of this node on QPainter.
+void PoseGraphNode::drawSeenLineConnections(QPainter* painter, const QPen& pen) const
+{
+    ListIterator<TrackedLine*> it = seenMapLines.begin();
+    while (it.hasNext())
+        Line(pose.pos(), it.next()->center()).draw(painter, pen);
+}
+
+// Draws the seen line connections of this node in OpenGL.
+void PoseGraphNode::drawSeenLineConnections() const
+{
+    ListIterator<TrackedLine*> it = seenMapLines.begin();
+    while (it.hasNext())
+        Line(pose.pos(), it.next()->center()).draw();
+}
+
+// Draws the neighborhood of this node on QPainter. The neighborhood are the
+// nodes that are reachable from this node through the graph up to a distance of "depth".
+void PoseGraphNode::drawNeighborhood(QPainter* painter, uint depth, const QPen& pen, const QBrush& brush, double radius) const
+{
+    if (depth > 0)
+    {
+        ListIterator<PoseGraphNode*> it = neighbours.begin();
+        while (it.hasNext())
+        {
+            Line(pose.pos(), it.next()->pose.pos()).draw();
+            it.cur()->drawNeighborhood(painter, depth-1, pen, brush, radius);
+        }
+    }
+
+    draw(painter, pen, brush, radius);
+}
+
+// Draws the neighborhood of this node in OpenGL. The neighborhood are the
+// nodes that are reachable from this node through the graph up to a distance of "depth".
+void PoseGraphNode::drawNeighborhood(uint depth, QColor color, double radius) const
+{
+    if (depth > 0)
+    {
+        glLineWidth(2);
+        GLlib::setColor(drawUtil.black);
+        ListIterator<PoseGraphNode*> it = neighbours.begin();
+        while (it.hasNext())
+        {
+            Line(pose.pos(), it.next()->pose.pos()).draw();
+            it.cur()->drawNeighborhood(depth-1, color, radius);
+        }
+    }
+
+    draw(color, radius);
+}
+
 // Writes the LineMap into a data stream.
 void PoseGraphNode::streamOut(QDataStream &out) const
 {
@@ -91,46 +178,21 @@ void PoseGraphNode::streamIn(QDataStream &in)
     //in >> seenMapLines;
 }
 
-void PoseGraphNode::draw(QColor color, double radius) const
+QDataStream& operator<<(QDataStream& out, const PoseGraphNode &o)
 {
-    GLlib::drawNoseCircle(pose, color, radius);
+    o.streamOut(out);
+    return out;
 }
 
-void PoseGraphNode::drawSeenLineConnections() const
+QDataStream& operator>>(QDataStream& in, PoseGraphNode &o)
 {
-    ListIterator<TrackedLine*> it = seenMapLines.begin();
-    while (it.hasNext())
-        Line(pose.pos(), it.next()->center()).draw();
-}
-
-void PoseGraphNode::drawNeighborhood(uint depth, QColor color, double radius) const
-{
-    if (depth > 0)
-    {
-        glLineWidth(2);
-        GLlib::setColor(drawUtil.black);
-        ListIterator<PoseGraphNode*> it = neighbours.begin();
-        while (it.hasNext())
-        {
-            Line(pose.pos(), it.next()->pose.pos()).draw();
-            it.cur()->drawNeighborhood(depth-1, color, radius);
-        }
-    }
-
-    draw(color, radius);
+    o.streamIn(in);
+    return in;
 }
 
 QDebug operator<<(QDebug dbg, const PoseGraphNode &n)
 {
-    Vector<uint> lids;
-    ListIterator<TrackedLine*> lit = n.seenMapLines.begin();
-    while (lit.hasNext())
-        lids << lit.next()->id;
-    Vector<uint> nids;
-    ListIterator<PoseGraphNode*> nit = n.neighbours.begin();
-    while (nit.hasNext())
-        nids << nit.next()->id;
-    dbg << "id:" << n.id << "pose:" << n.pose << "lines seen:" << &lids << "neighbors:" << &nids;
+    dbg << "id:" << n.id << "pose:" << n.pose << "lines seen:" << n.seenMapLines.size() << "neighbors:" << n.neighbours.size();
     return dbg;
 }
 
@@ -146,16 +208,4 @@ QDebug operator<<(QDebug dbg, const PoseGraphNode* n)
         nids << nit.next()->id;
     dbg << "id:" << n->id << "pose:" << n->pose << "lines seen:" << &lids << "neighbors:" << &nids;
     return dbg;
-}
-
-QDataStream& operator<<(QDataStream& out, const PoseGraphNode &o)
-{
-    o.streamOut(out);
-    return out;
-}
-
-QDataStream& operator>>(QDataStream& in, PoseGraphNode &o)
-{
-    o.streamIn(in);
-    return in;
 }

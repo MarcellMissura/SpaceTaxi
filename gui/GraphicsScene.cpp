@@ -2,7 +2,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 // The GraphicsScene is a two dimensional scene where drawable objects are located and
 // painted on a widget. The scene is always a part of a QGraphicsWidget widget.
@@ -37,5 +37,5 @@ void GraphicsScene::init()
     // Set the scene rect in order to have the view zoomed to the right distance that shows
     // all included obstacles. The world width and height only need to be approximate.
     setSceneRect(-0.2*state.world.width, -0.2*state.world.height, 1.3*state.world.width, 1.3*state.world.height);
-    //addRect(0, 0, state.world.width, state.world.height, colorUtil.pen, colorUtil.brushLightGray);
+    //addRect(0, 0, state.world.width, state.world.height, drawUtil.pen, drawUtil.brushLightGray);
 }

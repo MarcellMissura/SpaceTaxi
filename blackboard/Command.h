@@ -4,9 +4,9 @@
 // The global command object contains user input from the GUI.
 struct Command
 {
-    bool debug;
     bool joystick;
     bool keyboard;
+
     double ax;
     double ay;
 
@@ -24,26 +24,37 @@ struct Command
     bool showWorldPolygons;
     bool showWorldMap;
     bool showWorldPath;
-    int showLidar;
+    int showLaser;
     int showLineMap;
+    bool showMotionPlan;
     bool showVisibilityPolygon;
     int showPoseGraph;
     int showPose;
     int showPolygonMap;
+    bool showLabels;
+    bool showRuler;
+    bool showOdometry;
 
+    bool slamEnabled;
+    bool mapUpdateEnabled;
     bool globalLocalization;
     bool keepLineObservations;
     bool keepPoseHistory;
-    bool mapUpdateEnabled;
-    bool laserPointSmoothing;
-
-    bool learn;
+    bool laserSpatialFilter;
+    bool laserTemporalFilter;
+    bool laserParticleRemoval;
+    bool useOdomAsPrior;
     bool emergencyBrakeReflex;
     bool stucknessReflex;
     bool useTimeAbort;
     bool useDynamicPath;
     bool useClosing;
+    bool selectPose;
+    bool selectTarget;
+    bool learn;
+    bool draw;
     bool ghostMode;
+
     int predictionType; // Unicycle, Holonomic, None
     int pathPlanningMethod; // None, A*, LazyT*, Full, Naive, Minimal, Dijkstra
     int trajectoryPlanningMethod; // PD, DWA, Deep DWA, Aborting A*

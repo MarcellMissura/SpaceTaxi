@@ -1,9 +1,9 @@
 #ifndef TRACKEDLINE_H
 #define TRACKEDLINE_H
 
+#include "lib/geometry/Line.h"
 #include "lib/util/Vector.h"
 #include "lib/util/Pose2D.h"
-#include "lib/geometry/Line.h"
 class PoseGraphNode;
 
 class TrackedLine : public Line
@@ -39,6 +39,9 @@ public:
 
     double lineLineDist(const TrackedLine& l, bool debug=false) const;
     double linePoseDist(const TrackedLine& l, const Pose2D& inputPose, bool debug=false) const;
+
+    void draw() const;
+    void draw(QPainter* painter, const QPen &pen, double opacity=1.0) const;
 
     void streamOut(QDataStream& out) const;
     void streamIn(QDataStream& in);

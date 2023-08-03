@@ -29,11 +29,17 @@ public:
     bool isJunction() const;
     bool isLeaf() const;
 
+    const LinkedList<TrackedLine*>& getSeenLines() const;
+
     LinkedList<PoseGraphNode*> gatherNeighborhood(uint depth=1);
     LinkedList<TrackedLine*> gatherNearbyLines(uint depth=1);
 
+    void draw(QPainter* painter, const QPen& pen=QPen(), const QBrush& brush=QBrush(), double radius=0.1) const;
+    void drawLabel(QPainter* painter, const QPen& pen=QPen(), double opacity=1.0) const;
     void draw(QColor color = QColor("yellow"), double radius=0.1) const;
+    void drawSeenLineConnections(QPainter* painter, const QPen& pen=QPen()) const;
     void drawSeenLineConnections() const;
+    void drawNeighborhood(QPainter* painter, uint depth=1, const QPen& pen=QPen(), const QBrush& brush=QBrush(), double radius=0.1) const;
     void drawNeighborhood(uint depth=1, QColor color = QColor("yellow"), double radius=0.1) const;
 
     void streamOut(QDataStream &out) const;

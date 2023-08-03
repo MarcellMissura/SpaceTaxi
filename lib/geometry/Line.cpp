@@ -1,5 +1,5 @@
 #include "Line.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "blackboard/Config.h"
 #include "GL/gl.h"
 #include <cmath>
@@ -773,12 +773,34 @@ bool Line::isHorizontal() const
 }
 
 // Draws the line with a QPainter.
-void Line::draw(QPainter *painter) const
+void Line::draw(QPainter *painter, const QPen& pen, double opacity) const
 {
     if (p1() == p2())
         return;
+    painter->save();
+    painter->setPen(pen);
+    painter->setOpacity(opacity);
     QLineF l(vp1.x,vp1.y,vp2.x,vp2.y);
     painter->drawLine(l);
+    painter->restore();
+}
+
+// Draws a label for the line on QPainter.
+void Line::drawLabel(QPainter *painter, const QPen &pen, double opacity, double rotation) const
+{
+    painter->save();
+    QFont font;
+    font.setFamily("Arial");
+    font.setPointSize(1);
+    painter->setFont(font);
+    painter->setPen(pen);
+    painter->setOpacity(opacity);
+    Vec2 c = center();
+    painter->translate(c.x + 0.03, c.y + 0.04);
+    painter->rotate(RAD_TO_DEG*rotation);
+    painter->scale(0.1, -0.1);
+    painter->drawText(QPointF(), QString::number(id));
+    painter->restore();
 }
 
 // Draws the line in an OpenGL context.

@@ -2,7 +2,7 @@
 #include "blackboard/State.h"
 #include "blackboard/Config.h"
 #include "Box.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "clipper2/clipper.h"
@@ -1078,10 +1078,10 @@ Vector<Polygon> Polygon::triangulation(bool debug) const
             bool isInCone2 = Line(v2,v4).isRightOf(v3) ? (v2-v3).isLeftOf(v1-v3) && (v4-v3).isRightOf(v1-v3) : !((v2-v3).isRightOf(v1-v3) && (v4-v3).isLeftOf(v1-v3));
             earDetected = diagonal.isRightOf(v2) && isInCone1 && isInCone2 && !workingCopy.intersects(diagonal, true);
             if (debug)
-            qDebug() << counter << "eartip:" << v2 << "diag:" << diagonal << "isRightOf(v2):" << diagonal.isRightOf(v2)
-                     <<  "isInCone:" << isInCone1 << isInCone2
-                       << "intersects()" << workingCopy.intersects(diagonal, true)
-                       << "earDetected:" << earDetected;
+                qDebug() << counter << "eartip:" << v2 << "diag:" << diagonal << "isRightOf(v2):" << diagonal.isRightOf(v2)
+                         <<  "isInCone:" << isInCone1 << isInCone2
+                           << "intersects()" << workingCopy.intersects(diagonal, true)
+                           << "earDetected:" << earDetected;
             if (earDetected) // Ear detected.
             {
                 trigs << Polygon(v1, v2, v3);
@@ -1098,7 +1098,8 @@ Vector<Polygon> Polygon::triangulation(bool debug) const
 
         if (!earDetected)
         {
-            qDebug() << state.frameId << "Polygon::triangulate(): Ear detection failed!" << workingCopy.size();
+            if (debug)
+                qDebug() << state.frameId << "Polygon::triangulate(): Ear detection failed!" << workingCopy.size();
             //qDebug() << workingCopy;
             //trigs.clear();
             //trigs << workingCopy;
@@ -1108,7 +1109,8 @@ Vector<Polygon> Polygon::triangulation(bool debug) const
 
     if (workingCopy.size() != 3)
     {
-        qDebug() << "Polygon::triangulate(): The exit size is not 3!";
+        if (debug)
+            qDebug() << "Polygon::triangulate(): The exit size is not 3!";
         return trigs;
     }
 
@@ -2439,7 +2441,7 @@ void Polygon::drawLabel(QPainter *painter) const
 {
     painter->save();
     painter->translate(centroid());
-    painter->scale(0.5, -0.5);
+    painter->scale(0.3, -0.3);
     painter->setOpacity(0.8);
     painter->drawText(QPointF(), QString::number(getId()));
     painter->restore();

@@ -2,6 +2,8 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
+#include "lib/util/DrawUtil.h"
+#include "lib/util/GLlib.h"
 
 TrackedLine::TrackedLine() : Line()
 {
@@ -257,6 +259,39 @@ double TrackedLine::linePoseDist(const TrackedLine &l, const Pose2D &inputPose, 
                  << "overlap:" << overlap << (min(l.length(), length()) - overlap) << "cost:" << cost;
 
     return cost;
+}
+
+// Draws the tracked line in OpenGL including the seen corners.
+void TrackedLine::draw() const
+{
+    glBegin(GL_LINES);
+    glVertex2d(p1().x, p1().y);
+    glVertex2d(p2().x, p2().y);
+    glEnd();
+    if (seenP1)
+        GLlib::drawFilledCircle(p1(), drawUtil.brush.color(), 0.03);
+    if (seenP2)
+        GLlib::drawFilledCircle(p2(), drawUtil.brush.color(), 0.03);
+
+}
+
+// Draws the tracked line on a QPainter including the seen corners.
+// Pen, brush, and opacity already need to be set.
+void TrackedLine::draw(QPainter *painter, const QPen& pen, double opacity) const
+{
+    if (p1() == p2())
+        return;
+    double r = pen.width()*0.00375;
+    painter->save();
+    painter->setPen(pen);
+    painter->setBrush(QBrush(pen.color()));
+    painter->setOpacity(opacity);
+    painter->drawLine(QLineF(p1().x, p1().y, p2().x, p2().y));
+    if (seenP1)
+        painter->drawEllipse(p1(), r, r);
+    if (seenP2)
+        painter->drawEllipse(p2(), r, r);
+    painter->restore();
 }
 
 // Maps the TrackedLine l from the coordinate frame of Pose2D p to world coordinates.

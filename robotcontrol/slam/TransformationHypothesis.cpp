@@ -127,7 +127,7 @@ bool TransformationHypothesis::computeTransform(LinePair& lpi_, LinePair &lpj_, 
         if (debug)
         {
             qDebug() << "Pairs" << lpi_.inputLine->id << lpi_.mapLine->id << "and" << lpj_.inputLine->id << lpj_.mapLine->id
-                     << "discarded due to insufficient overlap." << lpi.percentualOverlap() << lpj.percentualOverlap();
+                     << "discarded due to insufficient overlap." << lpi.percentualOverlap() << lpj.percentualOverlap() << "lengths:" << lpi.inputLine->length() << lpi.mapLine->length() << lpj.inputLine->length() << lpj.mapLine->length();
         }
         return false;
     }
@@ -227,16 +227,21 @@ bool TransformationHypothesis::computeTranslation(LinePair& lpi_, LinePair &lpj_
     lpi.inputPose.translate(trans);
     lpj.inputPose.translate(trans);
 
-    // Finally, validate the hypothesis based on the overlap after the transformation.
-    // A significant portion (ca. 75%) of the input line must be covered. The map line
-    // does not need to be covered significantly. There are cases where the robot would
-    // look through a door and see only a small portion of a long line in the corridor.
+    // Finally, validate the hypothesis based on the percentual overlap after the transformation.
+    // A significant portion (ca. 80%) of the input line must be covered for the hypothesis to be
+    // accepted. The map line, however, does not need to be covered significantly. There are cases
+    // where the robot would look through a door and see only a small portion of a long line in the
+    // corridor. The expected overlap depends on the lengths of the paired lines. When the input
+    // line is shorter than the map line, the expected overlap is 100%. When the input line is longer
+    // than the map line, this happens in cases when the robot is exploring, the expected overlap is
+    // the length of the map line. We can discard hypotheses that don't manage to fullfill 80% of the
+    // expected overlap.
     if (lpi.percentualOverlap() < config.slamPairingMinOverlapPercent || lpj.percentualOverlap() < config.slamPairingMinOverlapPercent)
     {
         if (debug)
         {
             qDebug() << "Pairs" << lpi_.inputLine->id << lpi_.mapLine->id << "and" << lpj_.inputLine->id << lpj_.mapLine->id
-                     << "discarded due to insufficient overlap." << lpi.percentualOverlap() << lpj.percentualOverlap();
+                     << "discarded due to insufficient overlap." << lpi.percentualOverlap() << lpj.percentualOverlap() << "lengths:" << lpi.inputLine->length() << lpi.mapLine->length() << lpj.inputLine->length() << lpj.mapLine->length();
         }
         return false;
     }

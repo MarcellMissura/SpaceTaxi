@@ -23,6 +23,7 @@ public:
     ~LinePair(){}
 
     double angleDiff() const;
+    double lengthDiff() const;
     double ortho() const;
     double overlap() const;
     double lineLineDist() const;

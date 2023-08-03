@@ -246,7 +246,7 @@ void SpaceTaxi::buildMenu()
     showLidarAction->setToolTip(tr("Toggles the lidar model."));
     showLidarAction->setShortcut(QKeySequence(tr("L")));
     showLidarAction->setCheckable(true);
-    showLidarAction->setChecked(command.showLidar);
+    showLidarAction->setChecked(command.showLaser);
     connect(showLidarAction, SIGNAL(triggered()), this, SLOT(toggleLidar()));
 
     QAction* showRayModelAction = viewMenu->addAction(tr("&Ray Model"));
@@ -872,15 +872,6 @@ void SpaceTaxi::toggleKeyboard()
         messageIn("Keyboard control disabled.");
 }
 
-void SpaceTaxi::toggleDebug()
-{
-    command.debug = !command.debug;
-    if (command.debug)
-        messageIn("Debug is enabled.");
-    else
-        messageIn("Debug is disabled.");
-}
-
 void SpaceTaxi::toggleTrajectoryTrace()
 {
     command.showTrajectoryTrace = !command.showTrajectoryTrace;
@@ -945,7 +936,7 @@ void SpaceTaxi::toggleRayModel()
 
 void SpaceTaxi::toggleLidar()
 {
-    command.showLidar = (command.showLidar+1) % 3;
+    command.showLaser = (command.showLaser+1) % 3;
     update();
 }
 

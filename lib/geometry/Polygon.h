@@ -177,7 +177,7 @@ public:
     IntersectionPoint rayIntersection(const Line& ray) const;
     IntersectionPoint pathIntersection(const Vector<Vec2>& path) const;
 
-    void draw(QPainter* painter, const QPen &pen, const QBrush &brush, double opacity=0.5) const;
+    void draw(QPainter* painter, const QPen &pen, const QBrush &brush, double opacity=1.0) const;
     void drawLabel(QPainter* painter) const;
     void draw(const QPen &pen, const QBrush &color, double alpha=1.0) const;
 

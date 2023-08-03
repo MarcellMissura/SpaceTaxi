@@ -1,8 +1,8 @@
 #ifndef GLLIB
 #define GLLIB
-#include "lib/util/Vec3.h"
-#include "lib/util/Vec2.h"
-#include "lib/util/Pose2D.h"
+#include "Vec3.h"
+#include "Vec2.h"
+#include "Pose2D.h"
 #include <GL/glu.h>
 
 namespace GLlib

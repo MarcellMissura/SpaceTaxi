@@ -1,7 +1,7 @@
 ﻿#include "PathAStar.h"
 #include "blackboard/State.h"
 #include "lib/util/StopWatch.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 
 // The PathAStar class implements a plain vanilla 8-neighbour
 // A* search in a grid. The grid structure must be given through

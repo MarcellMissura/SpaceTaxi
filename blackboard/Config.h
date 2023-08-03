@@ -25,16 +25,19 @@ struct Config
     double agentFriction; // Friction applies only when bodies touch.
 
     // Laser
+    double laserMaxRayLength; // Bounded length of the layer rays. Every point beyond this is considered unsafe.
     double laserNumber; // How many sensor rays.
     double laserAngleRange; // The opening angle of the sensor field.
     double laserLength; // The maximum length of the simulated laser rays.
     double laserLengthBound; // Bounded length of the layer rays.
-    double laserMinLineLength; // Minimum length of extracted lines.
-    double laserMaxLineDistance; // Maximum distance up to which lines are detected.
     double laserSegmentDistanceThreshold; // If neighbouring points are further apart than this, they don't belong to the same segment.
     double laserDouglasPeuckerEpsilon; // The epsilon parameter for the Douglas Peucker algorithm.
     double laserSmoothingMinSegmentSize; // Clusters this small will be removed.
-    double laserSmoothingPasses; // Number of smoothing passes.
+    double laserSmoothingSpatialPasses; // Number of low pass passes.
+    double laserMinLineLength; // Minimum length of extracted lines.
+    double laserMaxLineDistance; // Maximum distance up to which lines are detected.
+    double laserTriangleLegLength; // The diameter of the triangle marker.
+    double laserTriangleAngle; // The angle at the tip of the triangle marker.
 
     // ray model
     double raysNumber;
@@ -116,10 +119,9 @@ struct Config
     double UPD_Kd_lin;
     double UPD_Kp_rot;
     double UPD_Kd_rot;
+    double UPD_targetOrientationThreshold;
 
     // Line slam.
-    double slamVisibilityPolygonShrinking; // By how much is the vis polygon offseted (shrunk) for deleting lines.
-    double slamVisibilityPolygonMaxDistance; // To what distance is the reduced visibility polygon bounded.
     double slamMinObservationCount; // How many times must a map line have been seen before it can participate in pairing.
     double slamMergeMaxLineDist; // The line-line-dist must be at most this much when merging two lines.
     double slamMergeMinOverlap; // The overlap must be at least this much when merging two lines.
@@ -133,8 +135,9 @@ struct Config
     double slamClusteringTransformEps; // The epsilon parameter for the DBScan clustering of hypotheses.
     double slamPairingMinOverlapPercent; // When computing a hypothesis, two pairs must overlap at least by this much for the hypothesis to be valid.
     double slamPoseGraphNodeDist; // How much pose distance between the last node and a newly created node.
-    double slamPoseGraphNearbyNodes; // How many nodes starting from the one nearest to the agent are considered to be nearby.
-
+    double slamPoseGraphNeighborhoodSize; // How many nodes starting from the one nearest to the agent are considered to be nearby.
+    double slamVisibilityPolygonShrinking; // By how much is the vis polygon offseted (shrunk) for deleting lines.
+    double slamVisibilityPolygonBound; // To what distance is the reduced visibility polygon bounded.
 
     Config();
     ~Config(){}

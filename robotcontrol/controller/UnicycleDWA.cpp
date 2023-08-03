@@ -2,7 +2,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "lib/geometry/Collision.h"
 #include "lib/geometry/VisibilityGraph.h"

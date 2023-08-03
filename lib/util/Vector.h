@@ -2,7 +2,7 @@
 #define VECTOR_H
 #include <QDataStream>
 #include <QDebug>
-#include "lib/util/LinkedList.h"
+#include "LinkedList.h"
 
 // The Vector class is a memory-preserving container of objects that are arranged in a contiguous
 // space in memory. Since memory allocation is an expensive operation, the Vector class has been
@@ -48,7 +48,8 @@ public:
 
     // Reserves capacity for k number of objects. It does not change the size of the Vector.
     // Since the capacity of the Vector grows automatically with the number of inserted items,
-    // reserve() should only be used if you know the expected size in advance.
+    // reserve() should only be used if you know the expected size in advance. In that case,
+    // you can use reserve() in order to avoid reallocating the vectoring.
     void reserve(uint k) {d.reserve(k);}
 
     // Returns the size of the Vector, i.e. the number of objects in the Vector. This is not the same as the capacity.

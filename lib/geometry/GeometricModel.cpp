@@ -2,7 +2,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 
 // The GeometricModel is a representation of a polygonal scene.
@@ -767,33 +767,45 @@ GeometricModel GeometricModel::operator+(const Pose2D &o)
 // of pol. If the winding is CW, the polygon is taken as a member of the
 // deeper blocked space layer and united with the children that are
 // holes of the freespace polygons in the higher layer.
-// This functions is currently used by GeometricMap for uniting one
+// This function is currently used by GeometricMap for uniting one
 // visibility polygon with the observed neighborhood of a pose node.
 void GeometricModel::unite(const Polygon &pol)
 {
     polygons << pol;
+    polygons << rootPolygons;
     polygons = Polygon::unify(polygons);
+    rootPolygons.clear();
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+    {
+        if (polyIt.cur().isCCW())
+        {
+            rootPolygons << polyIt.cur();
+            polygons.remove(polyIt);
+        }
+        else
+        {
+            polyIt.next();
+        }
+    }
     return;
 }
 
 // Unites this geometric scene with the given GeometricModel.
-// A union operation is performed on the polygons of this model combined
-// with the polygons of gm. The obstacles are only concatenated.
-// The winding of each polygon determines the result of the union.
-// If the winding is CCW, the polygon is taken as a member of the
-// freespace layer and united with the freespace polygons where the
-// child polygons on the blocked space layer can become holes of pol.
-// If the winding is CW, the polygon is taken as a member of the
-// deeper blocked space layer and united with the children that are
-// holes of the freespace polygons in the higher layer.
-// This function is used by the GeometricMap to unite an observed
-// neighborhood of a pose graph node with the entire polygon map.
+// A union operation is performed on the polygons of this model
+// combined with the polygons of gm. The winding of each polygon
+// determines the result of the union. After the union, CCW polygons
+// are sorted into the root polygons and CW polygons become blocked
+// space polygons. This function is used by the GeometricMap to unite
+// an observed neighborhood of a pose graph node with the entire
+// polygon map.
 void GeometricModel::unite(const GeometricModel &gm)
 {
-    polygons << gm.getPolygons();
     polygons << rootPolygons;
-    rootPolygons.clear();
+    polygons << gm.getPolygons();
+    polygons << gm.getRootPolygons();
     polygons = Polygon::unify(polygons);
+    rootPolygons.clear();
     ListIterator<Polygon> polyIt = polygons.begin();
     while (polyIt.hasNext())
     {
@@ -825,7 +837,8 @@ void GeometricModel::dilate(double delta)
 }
 
 // Removes everything from the scene that's not inside the box.
-// Polygons are clipped and obstacles are removed.
+// Polygons are clipped and obstacles are removed. This function
+// is used, for example, to create the local map from the world map.
 void GeometricModel::clip(const Box &box)
 {
     ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
@@ -880,7 +893,8 @@ void GeometricModel::clip(const Box &box)
 }
 
 // Returns true if the point p is inside one of the root polygons
-// and does not intersect any blocked space polgons.
+// and does not intersect any blocked space polgons, dilated polygons
+// or the hull polygon of an obstacle.
 bool GeometricModel::isInFreeSpace(const Vec2 &p, bool debug) const
 {
     bool iifs = false;
@@ -937,7 +951,7 @@ GeometricModel GeometricModel::predicted(double dt) const
 }
 
 // Computes a collisionless prediction of the future state of the geometric model.
-// The time of prediction is determine for each obstacle individually depending on
+// The time of prediction is determined for each obstacle individually depending on
 // their distance to the observer. The obstacles are moved according to their motion
 // model by their prediction time, but no collisions are resolved.
 void GeometricModel::autoPredict(bool debug)
@@ -1026,6 +1040,7 @@ const Polygon& GeometricModel::rootPointCollisionCheck(const Vec2 &p, bool debug
 
 // Checks if the point p intersects with one of the dilated polygons or the hullPolygon
 // of one of the obstacles. If there is a collision, it returns the involved polygon.
+// Otherwise it returns an empty polygon.
 const Polygon& GeometricModel::dilatedPointCollisionCheck(const Vec2 &p, bool debug) const
 {
     ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
@@ -1050,8 +1065,10 @@ const Polygon& GeometricModel::dilatedPointCollisionCheck(const Vec2 &p, bool de
     return sinkPolygon;
 }
 
-// Checks if the line l intersects with a dilated polygon or the hull polygon of
-// an obstacle in the geometric model. If there is a collision, it returns the involved polygon.
+// Checks if the line l intersects with a root polygon, a dilated polygon or the hull
+// polygon of an obstacle in the geometric model. If there is a collision, it returns
+// the involved polygon. Otherwise it returns an empty polygon. This function is mostly
+// used by Minimal Construct for path finding.
 const Polygon& GeometricModel::dilatedLineCollisionCheck(const Line &l, bool debug) const
 {
     if (debug)
@@ -1087,9 +1104,9 @@ const Polygon& GeometricModel::dilatedLineCollisionCheck(const Line &l, bool deb
     return sinkPolygon;
 }
 
-// Checks if the Polygon p intersects with any real object,
-// that is a polygon or an obstacle. It returns the polygon
-// of the first found touched object.
+// Checks if the Polygon p intersects with any real object, that is a polygon
+// or an obstacle. It returns the polygon of the first found touched object or
+// an empty polygon if there is no collision.
 const Polygon& GeometricModel::polygonCollisionCheck(const Polygon &p, bool debug) const
 {
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
@@ -1148,10 +1165,7 @@ Collision GeometricModel::trajectoryCollisionCheck(const Hpm2D &kf) const
     while (polyIt.hasNext())
     {
         const UnicycleObstacle& obst = obstIt.next();
-
-        HolonomicObstacle hol = obst;
-        hol.transform();
-        double ct = hol.intersects(kf);
+        double ct = obst.intersects(kf);
         if (ct >= 0 && (ct < col.dt || col.dt < 0))
         {
             col.dt = ct;
@@ -1365,7 +1379,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
     while (dilatedPolyIt.hasNext())
     {
         const Polygon& pol = dilatedPolyIt.next();
-        pol.draw(painter, pen, dilatedPolygonBrush, 0.5);
+        pol.draw(painter, pen, dilatedPolygonBrush, 0.5); // dilated brush
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
         if (config.debugLevel > 4)
             pol.drawLabel(painter);
@@ -1377,7 +1391,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
     while (polyIt.hasNext())
     {
         const Polygon& pol = polyIt.next();
-        pol.draw(painter, pen, polygonBrush, 0.5);
+        pol.draw(painter, pen, polygonBrush, 0.5); // polygon brush
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
         if (config.debugLevel > 4)
             pol.drawLabel(painter);
@@ -1423,7 +1437,7 @@ void GeometricModel::draw(const QPen &pen, const QBrush &brush, double opacity) 
     while (polyIt.hasNext())
     {
         const Polygon& pol = polyIt.next();
-        pol.draw(pen, drawUtil.lightGrey, 1.0);
+        pol.draw(pen, drawUtil.lightGray, 1.0);
         glTranslated(0, 0, 0.001);
     }
 

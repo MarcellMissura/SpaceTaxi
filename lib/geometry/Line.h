@@ -120,7 +120,8 @@ public:
     bool operator() (const Line* l1, const Line* l2) {return (l1->length() >= l2->length());}
     bool operator() (const Line& l1, const Line& l2) {return (l1.length() >= l2.length());}
 
-    void draw(QPainter* painter) const;
+    void draw(QPainter* painter, const QPen &pen=QPen(), double opacity=1.0) const;
+    void drawLabel(QPainter* painter, const QPen &pen=QPen(), double opacity=1.0, double rotation=0) const;
     void draw() const;
     void streamOut(QDataStream& out) const;
     void streamIn(QDataStream& in);

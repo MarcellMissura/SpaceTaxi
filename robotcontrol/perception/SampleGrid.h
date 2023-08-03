@@ -5,9 +5,9 @@
 #include "lib/util/Vec2u.h"
 #include "lib/util/Vec3.h"
 #include "lib/util/OLS.h"
-#include <QPainter>
 #include "lib/geometry/Polygon.h"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <QPainter>
 
 // A sample s = (p,n) is a point p and a normal n that together
 // desribe a plane. A sample is gained from the RGB-D image, so

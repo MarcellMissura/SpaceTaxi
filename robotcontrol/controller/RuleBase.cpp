@@ -1,7 +1,7 @@
 #include "RuleBase.h"
 #include "blackboard/Config.h"
 #include "blackboard/Command.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include <QFile>
 
 RuleBase::RuleBase()
@@ -167,8 +167,6 @@ const Rule& RuleBase::getRule(uint idx) const
 // Draws the a visualization of the rule base controller on a QPainter.
 void RuleBase::draw(QPainter *painter) const
 {
-    painter->save();
-
     // The rays of the best matching rule.
     if (!command.showRayModel)
     {
@@ -177,44 +175,20 @@ void RuleBase::draw(QPainter *painter) const
         {
             Vec2 ray = base.rotated(-config.raysAngleRange + i*2*config.raysAngleRange/(config.raysNumber-1));
             ray.normalize(bestRule.rays[i]);
+            painter->save();
             painter->setBrush(drawUtil.brushRed);
             painter->setPen(drawUtil.penRedThin);
             painter->drawLine(QPointF(), ray);
             painter->drawEllipse(ray, 0.03, 0.03);
+            painter->restore();
         }
     }
 
     // The target (input) of the best matching rule drawn in magenta.
-    QPolygonF cross = drawUtil.getCrossPolygon();
-    painter->save();
-    painter->translate(bestRule.target);
-    painter->scale(0.08, 0.08); // determines the size of the cross
-    painter->rotate(45);
-    painter->setPen(drawUtil.pen);
-    painter->setBrush(drawUtil.brushMagenta);
-    painter->setOpacity(0.8);
-    painter->drawPolygon(cross);
-    painter->setOpacity(1.0);
-    painter->setBrush(drawUtil.brush);
-    painter->drawEllipse(QPointF(), 0.1, 0.1);
-    painter->restore();
+    drawUtil.drawCross(painter, bestRule.target, drawUtil.pen, drawUtil.brushMagenta, 0.08);
 
     // The carrot (output) of the best matching rule drawn in yellow.
-    cross = drawUtil.getCrossPolygon();
-    painter->save();
-    painter->translate(bestRule.carrot);
-    painter->scale(0.06, 0.06); // determines the size of the cross
-    painter->rotate(45);
-    painter->setPen(drawUtil.pen);
-    painter->setBrush(drawUtil.brushYellow);
-    painter->setOpacity(0.8);
-    painter->drawPolygon(cross);
-    painter->setOpacity(1.0);
-    painter->setBrush(drawUtil.brush);
-    painter->drawEllipse(QPointF(), 0.1, 0.1);
-    painter->restore();
-
-    painter->restore();
+    drawUtil.drawCross(painter, bestRule.carrot, drawUtil.pen, drawUtil.brushYellow, 0.06);
 }
 
 

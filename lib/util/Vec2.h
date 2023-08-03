@@ -43,6 +43,11 @@ public:
         return c;
     }
 
+    Vec2 operator-() const
+    {
+        return Vec2(-x,-y);
+    }
+
 public:
 
     void scale(double s)

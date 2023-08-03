@@ -2,7 +2,7 @@
 #define GRID_H_
 #include <QString>
 #include <QPainter>
-#include "lib/util/Vector.h"
+#include "Vector.h"
 
 // This is a generic DIM dimensional uniform grid construction class.
 // Grid nodes are evenly distributed along each axis of the bounded

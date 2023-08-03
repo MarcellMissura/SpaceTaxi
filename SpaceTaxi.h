@@ -95,7 +95,6 @@ public slots:
 
 	void toggleJoystick();
     void toggleKeyboard();
-    void toggleDebug();
     void toggleMap(int mapId);
     void toggleGeometricModel();
     void toggleSimulationDebug();

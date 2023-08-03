@@ -21,13 +21,17 @@ public:
 public:
 
     bool isNull() const;
+    void setNull();
     void setZero();
+    bool isNan() const;
+    void setNan();
 
     Vec2 pos() const;
     void setPos(const Vec2& p);
     void setPos(double x, double y);
     void set(const Vec2& p, const Vec2& to);
     void set(const Vec2& p, double rot);
+    void set(double x, double y, double theta);
     double orientation() const;
     void setOrientation(double a);
     double heading() const;

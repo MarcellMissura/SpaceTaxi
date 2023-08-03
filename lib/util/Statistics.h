@@ -1,9 +1,9 @@
 #ifndef STATISTICS_H_
 #define STATISTICS_H_
 
-#include "lib/util/Vector.h"
-#include "lib/util/Vec2.h"
-#include "lib/util/Pose2D.h"
+#include "Vector.h"
+#include "Vec2.h"
+#include "Pose2D.h"
 
 class Statistics
 {
@@ -44,6 +44,7 @@ public:
     static const Vector<Vector<uint> >& clusterSorted(const Vector<double>& list, double eps);
     static const Vector<Vector<uint> >& clusterAngles(const Vector<double>& list, double eps);
     static const Vector<Vector<uint> >& cluster(const Vector<Vec2>& list, double eps);
+    static const Vector<Vector<uint> >& cluster(const Vector<Pose2D>& list, double eps);
     static const Vector<uint>& voting(const Vector<double>& list, double eps);
     static const Vector<uint>& voting(const Vector<Pose2D>& list, double eps);
     static const Vector<uint>& consensusSet(const Vector<double>& list, double eps);

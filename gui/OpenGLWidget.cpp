@@ -3,7 +3,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
-#include "util/GLlib.h"
+#include "lib/util/GLlib.h"
 
 // The OpenGLWidget offers a 3D view where basically anything can be visualized.
 // It's based on the QGLViewer library that offers great possibilities to create
