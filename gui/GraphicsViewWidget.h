@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QGraphicsView>
 #include "MessageQueue.h"
-#include "util/StopWatch.h"
+#include "lib/util/StopWatch.h"
 
 class GraphicsViewWidget : public QGraphicsView
 {

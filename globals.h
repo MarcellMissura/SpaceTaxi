@@ -8,35 +8,41 @@ const double PI = 3.1415926535897932384626433832795;
 const double PII = 2.0*PI;
 const double PI2 = 1.5707963267948965579989817342721; // pi half
 const double PI4 = 0.78539816339744830961566084581988; // pi quarter
+const double PI23 = 2.094395102; // two thirds pi
+const double PI34 = 3.0*PI/4.0; // three quaters pi
 const double PI32 = 4.71238898038468985769396507492; // three half pi
 const double SPI = 1.7724538509055160272981674833411; // sqrt of pi
 const double RAD_TO_DEG =  180.0 / PI;
 const double DEG_TO_RAD =  PI / 180.0;
-const double EPSILON = 1.0E-6;
+const double EPSILON = 1.0E-5;
 
 // Min max bound trio.
 template <typename T>
-inline const T &min(const T &a, const T &b) { return (a < b) ? a : b; }
+static const T &min(const T &a, const T &b) { return (a < b) ? a : b; }
 template <typename T>
-inline const T &max(const T &a, const T &b) { return (a < b) ? b : a; }
+static const T &max(const T &a, const T &b) { return (a < b) ? b : a; }
 template <typename T>
-inline const T &bound(const T &l, const T &val, const T &u){ return max(l, min(u, val)); }
+static const T &min(const T &a, const T &b, const T &c) { return min(min(a,b),c); }
+template <typename T>
+static const T &max(const T &a, const T &b, const T &c) { return max(max(a,b),c); }
+template <typename T>
+static const T &bound(const T &l, const T &val, const T &u){ return max(l, min(u, val)); }
 
 // Returns the sign of the argument. +1 if the argument is positive,
 // -1 if the argument is negative, and 0 if the argument is zero.
 template <typename T>
-inline int sgn0(const T a) { return (fabs(a) < EPSILON ? 0 : a < 0 ? -1 : 1); }
+static int sgn0(const T a) { return (fabs(a) < EPSILON ? 0 : a < 0 ? -1 : 1); }
 
 // Returns the sign of the argument. +1 if the argument is positive,
 // -1 if the argument is negative.
 template <typename T>
-inline int sgn(const T a) { return (a < 0 ? -1 : 1); }
+static int sgn(const T a) { return (a < 0 ? -1 : 1); }
 
 // Maps the argument to an angle expressed in radians between -PI and PI.
-inline double picut(double x) { return  x < 0 ? fmod(x-PI, PII)+PI : fmod(x+PI, PII)-PI;}
+static double picut(double x) { return  x < 0 ? fmod(x-PI, PII)+PI : fmod(x+PI, PII)-PI;}
 
 // A possibly faster version of picut, but the runtime grows with the input.
-inline double fpicut(double x)
+static double fpicut(double x)
 {
     while (x > PI) x -= PII;
     while (x < -PI) x += PII;
@@ -44,21 +50,38 @@ inline double fpicut(double x)
 }
 
 // An even faster picut version that assumes the angle to be given in [-PII, PII].
-inline double ffpicut(double x) { return  x > PI ? x-PII : x < -PI ? x+PII : x;}
-
+static double ffpicut(double x) { return  x > PI ? x-PII : x < -PI ? x+PII : x;}
 
 // Maps the argument to an angle expressed in radians between 0 and 2*PI.
-inline double pi2cut(double x) { return fmod(fabs(x), PII);}
+static double pi2cut(double x)
+{
+    while (x < 0) x += PII;
+    while (x > PII) x -= PII;
+    return x;
+}
 
 // A half picut version that maps to an angle range between [-PI/2, PI/2] and assumes
-// the angle to be given in [-PI, PI].
-inline double pihalfcut(double x) { return  x > PI2 ? x-PI2 : x < -PI2 ? x+PI2 : x;}
+// the angle to be given in [-PI, PI]. This function makes most sense for an angle between lines.
+static double pihalfcut(double x) { return  x > PI2 ? x-PI : x < -PI2 ? x+PI : x;}
 
-// A better version of modulo (%) that wraps rather than retuning a number < 0.
-inline int mod(int x, int y) { return x >= 0 ? x%y : (x%y)+y;}
+// Returns an interpolated angle between from and to by an amount of frac.
+// The resulting angle is from + frac*(to-from) interpolated along the smaller portion
+// of the circle and mapped to the range [-PI, PI].
+static double interpolateAngle(double from, double to, double frac)
+{
+    double pto = fpicut(to);
+    double pfrom = fpicut(from);
+    double diff = pto - pfrom;
+    if (diff > PI) diff = diff-PII;
+    else if (diff < -PI) diff = diff+PII;
+    return ffpicut(pfrom + frac*diff);
+}
+
+// A better version of modulo (%) that wraps rather than returning a number < 0.
+static int mod(int x, int y) { return x >= 0 ? x%y : ((x%y)+y)%y;}
 
 // This is a 20x faster sine implementation with just a tiny error.
-inline double fsin(double x)
+static double fsin(double x)
 {
     // This algorithm is taken from http://mooooo.ooo/chebyshev-sine-approximation/
     // "Approximating sin(x) to 5 ULP with Chebyshev polynomials" by Collin Wallace
@@ -87,13 +110,13 @@ inline double fsin(double x)
 }
 
 // This is a 20x faster cosine implementation with just a tiny error.
-inline double fcos(double x)
+static double fcos(double x)
 {
     return fsin(x+PI2);
 }
 
 // A twice as fast version of atan2 but with a small error.
-inline double fatan2(double y, double x)
+static double fatan2(double y, double x)
 {
     // This formula is taken from http://www-labs.iro.umontreal.ca/~mignotte/IFT2425/Documents/EfficientApproximationArctgFunction.pdf
     // Sreeraman Rajan et al., Efficient Approximations for the Arctangent Function
@@ -144,7 +167,7 @@ inline double fatan2(double y, double x)
 }
 
 // An unsuccessful approximation of the exp function.
-inline double fexp(double x)
+static double fexp(double x)
 {
     x = 1.0 + x / 1024;
     x *= x; x *= x; x *= x; x *= x;

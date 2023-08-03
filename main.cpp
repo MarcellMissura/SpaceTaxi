@@ -1,4 +1,4 @@
-#include "spacetaxi.h"
+#include "SpaceTaxi.h"
 #include "Experimenter.h"
 
 #include <QApplication>

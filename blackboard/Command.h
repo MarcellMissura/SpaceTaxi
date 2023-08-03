@@ -12,23 +12,33 @@ struct Command
 
     bool showBody;
     bool showTargets;
-    bool showGeometricModel;
-    int showSensedGrid;
+    bool showSensedPolygons;
+    bool showSensedGrid;
     bool showDijkstraMap;
     bool showRayModel;
     bool showTrajectoryTrace;
-    bool showPlanTrace;
     bool showSimulationDebugDraw;
     bool showWorldVisibilityGraph;
     bool showLocalVisibilityGraph;
     bool showDropOffPoints;
-    bool showWorldObstacles;
+    bool showWorldPolygons;
     bool showWorldMap;
-    bool showExpandedWorldMap;
     bool showWorldPath;
+    int showLidar;
+    int showLineMap;
+    bool showVisibilityPolygon;
+    int showPoseGraph;
+    int showPose;
+    int showPolygonMap;
+
+    bool globalLocalization;
+    bool keepLineObservations;
+    bool keepPoseHistory;
+    bool mapUpdateEnabled;
+    bool laserPointSmoothing;
 
     bool learn;
-    bool forceFieldReflex;
+    bool emergencyBrakeReflex;
     bool stucknessReflex;
     bool useTimeAbort;
     bool useDynamicPath;
@@ -43,7 +53,9 @@ struct Command
 
     enum { NoPath, GridAStar, LazyThetaStar, FullConstruct, NaiveConstruct, MinimalConstruct,
            Dijkstra, PD, DWA, RuleBase, STAA, Keyboard, Arc, B0, Fresnel,
-           Euklidean, PathEuklidean, RTR, RTR_MAX, RTR_MIN, PathRTR, GraphDijkstra, GridDijkstra, ReedShepp, Unicycle, Holonomic, None };
+           Euklidean, PathEuklidean, RTR, RTR_MAX, RTR_MIN, PathRTR, GraphDijkstra, GridDijkstra,
+           Unicycle, Holonomic, None,
+           Static, Dynamic };
 	Command();
 };
 

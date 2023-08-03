@@ -1,6 +1,7 @@
 #include "GraphicsViewWidget.h"
-#include "blackboard/Config.h"
 #include "blackboard/State.h"
+#include "blackboard/Config.h"
+#include "blackboard/Command.h"
 
 GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
     : QGraphicsView(parent)
@@ -158,6 +159,9 @@ void GraphicsViewWidget::updateMouse(QPoint mousePos)
 // These are drawn on top of the graphics scene.
 void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
 {
+    StopWatch sw;
+    sw.start();
+
     // Draw the world overlay.
     state.world.draw(painter);
 
@@ -195,7 +199,7 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
             if (state.world.unicycleAgents.first().sensedGrid.contains(locMouse))
             {
                 Vec2u mni = state.world.unicycleAgents.first().sensedGrid.getNodeIndex(locMouse);
-                double v = state.world.unicycleAgents.first().dilatedSensedGrid.getAt(mni);
+                double v = state.world.unicycleAgents.first().sensedGrid.getAt(mni);
                 painter->drawText(mouse + QPoint(10, 18), "grid:    [" + QString::number(mni.x) + ", " + QString::number(mni.y) + "] v:" + QString::number(v));
             }
         }
@@ -212,15 +216,17 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
                           "  stucks: " + QString::number(state.uniTaxi.stucks) +
                           "  closes: " + QString::number(state.uniTaxi.closes));
         if (state.iterationTime > 0)
-            painter->drawText(QPoint(width()-55, height()-10), "x" + QString::number((config.rcIterationTime*1000.0)/state.iterationTime).left(4));
+            painter->drawText(QPoint(width()-55, height()-10), "x" + QString::number((1000.0/command.frequency)/state.iterationTime).left(4));
     }
+
+    state.drawTime = sw.elapsedTimeMs();
 }
 
 // The axes and the grid are drawn on the background.
 void GraphicsViewWidget::drawBackground(QPainter *painter, const QRectF &rect)
 {
     // Draw the world underlay.
-    state.world.preDraw(painter);
+    state.world.drawBackground(painter);
 
     painter->setRenderHint(QPainter::Antialiasing, false);
     QPen pen(QColor(100, 10, 10));

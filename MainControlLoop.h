@@ -1,8 +1,8 @@
 #ifndef MAINCONTROLLOOP_H
 #define MAINCONTROLLOOP_H
 
-#include "util/StopWatch.h"
-#include "util/Timer.h"
+#include "lib/util/StopWatch.h"
+#include "lib/util/Timer.h"
 #include <QTimer>
 
 class MainControlLoop : public QObject
@@ -21,7 +21,7 @@ public:
     ~MainControlLoop();
 
     void init();
-    bool isRunning();
+    bool isRunning() const;
 
 public slots:
     void start();
@@ -29,9 +29,6 @@ public slots:
     void step();
     void reset();
 
-signals:
-    void messageOut(QString);
-    void configChangedOut();
 };
 
 #endif

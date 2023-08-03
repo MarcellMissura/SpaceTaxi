@@ -6,12 +6,12 @@
 
 struct Config
 {
-    double rcIterationTime;
     double speedUp;
     double bufferSize;
     double debugLevel;
 
     // agent
+    double agentRadius;
     double agentHeight;
     double agentWidth;
     double agentLinearAccelerationLimit;
@@ -24,25 +24,36 @@ struct Config
     double agentAngularDamping; // General angular damping applied in the phys sim at all times.
     double agentFriction; // Friction applies only when bodies touch.
 
+    // Laser
+    double laserNumber; // How many sensor rays.
+    double laserAngleRange; // The opening angle of the sensor field.
+    double laserLength; // The maximum length of the simulated laser rays.
+    double laserLengthBound; // Bounded length of the layer rays.
+    double laserMinLineLength; // Minimum length of extracted lines.
+    double laserMaxLineDistance; // Maximum distance up to which lines are detected.
+    double laserSegmentDistanceThreshold; // If neighbouring points are further apart than this, they don't belong to the same segment.
+    double laserDouglasPeuckerEpsilon; // The epsilon parameter for the Douglas Peucker algorithm.
+    double laserSmoothingMinSegmentSize; // Clusters this small will be removed.
+    double laserSmoothingPasses; // Number of smoothing passes.
+
     // ray model
     double raysNumber;
     double raysAngleRange;
     double raysLength;
 
     // geometric model
-    double gmPolygonExpansionMargin; // By how much are the dynamic polygons expanded.
+    double gmDilationRadius; // By how much are static polygons expanded.
+    double gmAgentDilation; // By how much are the dynamic polygons expanded.
+    double gmDouglasPeuckerEpsilon;
 
     // grid model
-    double gridDouglasPeuckerEpsilon; // Polygon contour smoothing strength.
-    double gridMinimumSegmentSize; // Ignore contours with pieces less than this.
-    double gridBlurRadius;
-    double gridWorldDilationRadius;
-    double gridSensedDilationRadius;
     double gridWidth; // Grid model area definition.
     double gridHeight; // Grid model area definition.
     double gridOffset; // Grid model offset in x direction.
     double gridCellSize; // The size of one cell in the grid model, e.g. 0.05 m.
-    double gridClosedCellSize; // The size of one cell in the closed grid.
+    double gridClosedCellSize; // The size of one cell in the closed grid (STAA).
+    double gridBlurRadius; // The size of the costmap.
+    double gridSensedDilationRadius; // By how much is the sensed grid dilated.
 
     // world
     double worldDropOffRadius;
@@ -55,27 +66,23 @@ struct Config
     double simpleDropOffPoints;
     double uRadius;
     double uDropOffPoints;
-
-    double outdoorWidth;
-    double outdoorHeight;
-    double outdoorObstaclesNr;
-    double outdoorObstaclesMinWidth;
-    double outdoorObstaclesMaxWidth;
-    double outdoorObstaclesMinHeight;
-    double outdoorObstaclesMaxHeight;
-    double outdoorCarsNr;
-
+    double tunnelCorridorWidth;
     double clutterWidth;
     double clutterHeight;
     double clutterObstacles;
     double clutterObstaclesSizeMin;
     double clutterObstaclesSizeMax;
     double clutterDropOffPoints;
-
     double officeRoomSize; // width and height of one room in meters
     double officeWallThickness; // in percent of one room unit
     double officeDoorWidth; // in percent of one room unit
     double officeRooms; // number of rooms per building
+    double wareHouseAisleWidth;
+
+    // Path planning
+    double predictFactor; // How strongly does the prediction time increase with distance.
+    double predictMaxPredictTime; // How much time to predict at most.
+    double predictIgnoreHorizon; // From what ETA are obstacles ignored.
 
     // RuleBase controller
     double rbRayDistanceThreshold;
@@ -85,28 +92,22 @@ struct Config
     // ST Aborting A* search
     double staaNotches; // Samples per dimension in the action set.
     double staaExpansionLimit; // Abort after this many expansions.
-    double staaTimeLimit; // Abort condition in Milliseconds.
     double staaDt; // How much time passes between expansions.
     double staaFinishedThreshold; // The goal condition.
     double staaGridCostWeight; // Weighting factor for the grid value.
     double staaProximityCostWeight; // Weighting factor for the proximity to dynamic obstacles.
     double staaPolygonGrowth; // The agent polygon is grown a little bit.
-    double staaCollisionGridDilation;
-    double staaSidePreference; // -1 to 1 preference for the left or the right side.
-    double staaPredictionTimeLimit; // How far into the future are we allowed to predict.
     double staaStucknessWeight; // Tunes the reaction to a stuck state.
+    double staaInflationFactor; // The heuristic inflation gives more weight to the target.
 
     // Dynamic Window Approach
     double DWA_carrotOffset; // How far to set the carrot along the path.
     double DWA_notches;
     double DWA_time;
-    double DWA_depth;
     double DWA_samples;
-    double DWA_fraction;
     double DWA_gridClearance;
     double DWA_geometricClearance;
-    double DWA_targetDistance;
-    double DWA_targetAngle;
+    double DWA_carrotDistance;
     double DWA_backwardsPenalty;
 
     // Unicycle PD controller.
@@ -116,11 +117,23 @@ struct Config
     double UPD_Kp_rot;
     double UPD_Kd_rot;
 
-    // Gui config
-    double colorContrast;
-    double transparency;
-    double scale;
-    double sampleFactor; // grid density and such
+    // Line slam.
+    double slamVisibilityPolygonShrinking; // By how much is the vis polygon offseted (shrunk) for deleting lines.
+    double slamVisibilityPolygonMaxDistance; // To what distance is the reduced visibility polygon bounded.
+    double slamMinObservationCount; // How many times must a map line have been seen before it can participate in pairing.
+    double slamMergeMaxLineDist; // The line-line-dist must be at most this much when merging two lines.
+    double slamMergeMinOverlap; // The overlap must be at least this much when merging two lines.
+    double slamMaxPoseDiff; // Maximum norm of a pose diff the local snap is allowed to output.
+    double slamSeenCornerMinAngle; // There has to be at least this much angle between neighbouring lines for a corner to be detected.
+    double slamSelectionBoxSize; // The radius of the selection box for the medium snap.
+    double slamPairingMaxLengthDeviation; // An input line cannot be longer than an associated map line by more than this.
+    double slamPairingMaxPoseDist; // Pairs cannot have a line-pose-distance larger than this between them when building nearest pairs.
+    double slamClusteringAngleEps; // How much are two angles allowed to differ before they are considered the same.
+    double slamClusteringOrthoEps; // Epsilon for computing ortho clusters when computing a consensus set.
+    double slamClusteringTransformEps; // The epsilon parameter for the DBScan clustering of hypotheses.
+    double slamPairingMinOverlapPercent; // When computing a hypothesis, two pairs must overlap at least by this much for the hypothesis to be valid.
+    double slamPoseGraphNodeDist; // How much pose distance between the last node and a newly created node.
+    double slamPoseGraphNearbyNodes; // How many nodes starting from the one nearest to the agent are considered to be nearby.
 
 
     Config();

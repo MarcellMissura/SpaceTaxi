@@ -1,10 +1,10 @@
 #ifndef WORLD_H_
 #define WORLD_H_
 
-#include "agents/Agent.h"
-#include "agents/UnicycleAgent.h"
-#include "util/Vector.h"
-#include "Box2D/Box2D.h"
+#include "robotcontrol/agents/Agent.h"
+#include "robotcontrol/agents/UnicycleAgent.h"
+#include "lib/util/Vector.h"
+#include "lib/Box2D/Box2D.h"
 
 class World : public b2ContactListener
 {
@@ -19,13 +19,12 @@ public:
     int numAgents;
     double simulationTimeStep;
 
-    GeometricModel polygons;
-    GeometricModel staticObstacles; // core map obstacles
-    GeometricModel expandedStaticObstacles; // minimally grown map obstacles by inradius
+    GeometricModel polygons; // Convex polygons that make up a map.
+    GeometricModel worldMap; // inflated world obstacles
     Vector<UnicycleAgent> unicycleAgents;
     Vector<Vec2> dropOffPoints;
 
-    void setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency=0);
+    void setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency);
 
 public:
 
@@ -37,20 +36,12 @@ public:
     void step();
     void stepAgents();
 
-    void save() const;
-    void load();
-
-    void setMap(int m=1, int agents=1);
+    void setMap(int m=1, int numAgents=1);
     QString getMapName(uint map) const;
 
-    const Vector<Obstacle> &getStaticObstacles() const;
+    const Vector<Polygon> &getStaticObstacles() const;
     Vector<UnicycleObstacle> getUnicycleObstacles(int excludeId=-1) const;
     const Vector<Vec2>& getDropOffPoints() const;
-
-    void BeginContact(b2Contact* contact);
-    void EndContact(b2Contact *contact);
-    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold){}
-    void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse){}
 
     void physicsTransformIn();
     void physicsTransformOut();
@@ -58,23 +49,25 @@ public:
 
     void logObstaclesToTxt();
 
-    void preDraw(QPainter *painter) const;
     void draw(QPainter *painter) const;
-
-    void streamOut(QDataStream& out) const;
-    void streamIn(QDataStream& in);
+    void drawBackground(QPainter *painter) const;
 
 private:
 
-    void addAgents();
+    void BeginContact(b2Contact* contact);
+    void EndContact(b2Contact *contact);
+    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold){}
+    void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse){}
+
+    void addAgents(uint numAgents=1);
     void buildSimulation();
     void buildVoid();
     void buildSimple();
     void buildUTrap();
-    void buildOutdoor();
     void buildApartment();
-    void buildWarehouse();
+    void buildTunnel();
     void buildOffice();
+    void buildWarehouse();
     void buildClutter();
     void buildFromFile();
 

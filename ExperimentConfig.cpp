@@ -57,8 +57,6 @@ QString ExperimentConfig::getHeuristicName() const
         type = "Dij";
     if (heuristic == command.PathEuklidean)
         type = "PEuk";
-    if (heuristic == command.ReedShepp)
-        type = "Ree";
     return type;
 }
 

@@ -1,84 +1,64 @@
 #include "State.h"
-#include "globals.h"
 #include "Config.h"
-#include <QMutexLocker>
 #include <QFile>
 #include <QDataStream>
 
 /*
- * The State is a globally accessible, bufferable object with built in introspection
- * capabilities. It's a blackboard.
+ * The State is a blackboard for data sharing between the components of the framework.
+ * It is a globally accessible object (read and write) with built in introspection
+ * capabilities.
  *
  * The primary function of the state is to provide a central and easily accessible place
- * for the storage of variables and objects, such as raw sensor values, higher level
- * sensors values, outputs of behaviors, and debug values. The state has globally
- * accessible public members, because it is needed and used everywhere in the framework.
- * Anywhere in the code, just write for example state.time to access the current time,
- * providing the state header is included with #include "framework/State.h". Since all
- * relevant state members are public, we can abandon the cumbersome maintenance of getters
- * and setters. The member of the sate change quite frequently anyways. The typical use
- * case for the state is of course data sharing. Most frequently a main control loop would
- * execute some kind of a controller or simulation and write data into the state, which is
- * then read and visualized by a gui component.
+ * for the storage of variables and objects, such as sensor values, maps, debug values and
+ * motor commands. The state has globally accessible public members, because it is needed
+ * and used everywhere in the framework. Anywhere in the code, just include "blackboard/State.h"
+ * and you can immediately access the State object. For example, try state.time to access the
+ * current time. All relevant state members are public and there are no cumbersome getters and
+ * setters. The typical use case for the state is that a robot interface reads sensor data and
+ * writes them into state, a robot control reads those data and computes intermediate results,
+ * for example a map, and writes motor commands into the state. The gui reads data from the
+ * State and visualizes it on the screen and the robot interface reads the motor commands and
+ * sends them to the robot.
  *
- * The state object is not thread safe. Access to the state object is not mutexed or
- * synchronized in any way. The reason why this still works is due to the following facts.
- * 1. No state member is written from two different threads. The main control loop writes
- * and sometimes reads into the state while the GUI only ever reads state members.
- * Therefore, it cannot happen that two threads try to concurrently write the same state
- * member, where there result would be undefined. On x86 read and write operations on
- * up to 8 aligned bytes (such as doubles) are atomic. That means that a half
- * written double does not exist, which would be an undefined number that can do bad
- * things to your robot. 2. It is possible, however, that structures such a vectors or images
- * are partially overwritten by one thread, while another thread is reading it. Atomic doubles
- * prevent the appearance of corrupt numbers, but it can happen that for example half of a
- * vector is read, then the vector is overwritten with new data, and then the second half is
- * read, which means one would have a slightly corrupted image. As we expect sensor values
- * to change continuously, and sensor values are the only input to the system after all, this
- * is usually not a problem that would result in system failure.
+ * To add your own custom member to the state, the header, the constructor, and the init() method
+ * have to be modified. The header to declare the variable, the constructor to initialize it, and
+ * the init() method to register a human readible name with a reference to the member variable
+ * for automatic plotting in the graph widget.
  *
- * The state object is bufferable. This means that upon calling state.buffer(), the state
- * object will add a copy of itself into an internal history with bounded length. To access
- * a historical state object use for example state[-1].supportLegSign, which would tell you
- * on which leg the robot was standing one buffered state before the current one. You can
- * provide positive numbers as well, they are the same as using negative ones. Of course,
- * the state is buffered once in each cycle. The few private members the state object needed
- * for keeping the history and to implement the introspection features are static so that
- * they don't get copied when the state is buffered into history.
+ * The state object is not thread safe as such. Access to the members of the state object is not
+ * mutexed or synchronized in any way. Most of the time this is sufficient and works perfectly
+ * fine. If you need thread safety, you can use the setMember() and getMember() functions instead
+ * of the direct access.
  *
- * The introspection capabilities are used for visualization. All state members can be displayed
- * as time series on a graph. To select which variables you want to see, you want to click on
- * their names, so they need to be associated with a string (key). Unlike Java, C++ does not
- * have a native introspection interface, so the class meta data (keys) have to be provided
- * manually. For each state member, the header, the constructor, and the init() method have to
- * be modified. The header to declare the variable, the constructor to initialize it, and the
- * init() method to register a key and a reference to the member variable. Of course it is
- * displeasing having to go through these places just to create a state member, but at least it's
- * all in one object and there is an easy pattern to follow. On the upside, what you get for the
- * extra effort is index based and key based read access to the state members, such as state(0),
- * which would be the program time, or state("txAction.pose.leftLegPose.hip.y") for the commanded
- * position of the left hip y servo. These access methods are used by the GUI to automatically
- * generate visualizations of the state. The introspection interface and the history can be
- * combined. Here are some examples.
+ * The state object can keep a history of itself. Upon calling state.buffer(), the state
+ * object will add a copy of itself into an internal ring buffer with bounded length. You can
+ * access a historical state object by index. For example state[0].frameId tell you the id of
+ * the oldest state object on record. state[state.size()-1] accesses the latest state object
+ * on record. Note that there is "the state object", which you can access by using state.something,
+ * and there is the state history that you can access using an index such as state[0].something.
+ * The few private members the state object needs for keeping the history and to implement some
+ * introspection features are static so that they don't get copied when the state is buffered
+ * into history. You can also declare members as static in order to avoid the buffering of certain
+ * members, e.g. a point cloud or a camera image, that can fill up your memory really fast. The
+ * state history can be save()-ed to a file. When calling state.save(), you should find an action
+ * in the menu in any instance of this framework, the entire state history will be written
+ * into data/statehistory.dat. At a later time, you can load the state history again with
+ * state.load() and step through the state history with the arrow keys for offline processing.
  *
- * state[-10](4) gives you the step counter from 10 cycles ago, because the step counter is the 4th
- * member of State counting from 0.
- *
- * state[11]("fusedAngle.x") gives you the lateral fused angle 11 cycles ago.
- *
- * But the best way is to simply refer to the state members directly such as state.time, or
- * state[10].debug if you wanted to read the debug values ten frames ago.
+ * The state history and the introspection capabilities are used by the visualization components
+ * of the framework.
  */
 
 State state;
 
 // These members are static so that buffering into history does not create copies.
-QMutex State::mutex;
+QMutex State::mutex(QMutex::Recursive);
 int State::stateIndexOffset = 0;
+int State::bufferOffset = 0;
 QStringList State::memberNames;
-QList<quint64> State::memberOffsets;
-QList<QString> State::memberTypes;
-QList<State> State::history;
+Vector<quint64> State::memberOffsets;
+Vector<QString> State::memberTypes;
+Vector<State> State::history;
 
 World State::world;
 
@@ -91,13 +71,14 @@ State::State()
     frameId = 0;
     time = 0;
     realTime = 0;
-
+    bufferTime = 0;
     iterationTime = 0;
     executionTime = 0;
     pathTime = 0;
     senseTime = 0;
     actTime = 0;
     trajectoryTime = 0;
+    drawTime = 0;
 
     aasExpansions = 0;
     aasClosed = 0;
@@ -106,6 +87,8 @@ State::State()
     aasProcessed = 0;
     aasFinished = 0;
     aasDried = 0;
+    aasDepth = 0;
+    aasScore = 0;
 }
 
 State::~State()
@@ -113,11 +96,12 @@ State::~State()
 
 }
 
-// The init() method should be called after construction of the state object.
+// The init() method is called after construction of the state object.
 // Here, all state object members are registered to build a descriptor meta
 // structure that allows index and key based access to the member values.
-// If you don't want to see a certain state member on the gui, there is no
-// need to register it.
+// This enables the framework to place the state member in a tree structure
+// and plot them in the graph widget. If you don't want to plot a certain
+// state member, there is no need to register it.
 void State::init()
 {
     registerMember("time", &time);
@@ -127,8 +111,10 @@ void State::init()
     registerMember("time.executionTime", &executionTime);
     registerMember("time.sense", &senseTime);
     registerMember("time.act", &actTime);
+    registerMember("time.buffer", &bufferTime);
     registerMember("time.pathTime", &pathTime);
     registerMember("time.trajectory", &trajectoryTime);
+    registerMember("time.draw", &drawTime);
 
     registerMember("uniAgent.x", &uniTaxi.x);
     registerMember("uniAgent.y", &uniTaxi.y);
@@ -137,19 +123,20 @@ void State::init()
     registerMember("uniAgent.w", &uniTaxi.w);
     registerMember("uniAgent.a", &uniTaxi.a);
     registerMember("uniAgent.b", &uniTaxi.b);
-    registerMember("uniAgent.isTooClose", &uniTaxi.isTooClose);
     registerMember("uniAgent.closes", &uniTaxi.closes);
     registerMember("uniAgent.collisions", &uniTaxi.collisions);
     registerMember("uniAgent.score", &uniTaxi.score);
     registerMember("uniAgent.stucks", &uniTaxi.stucks);
 
     registerMember("STAA*.expansions", &aasExpansions);
+    registerMember("STAA*.processed", &aasProcessed);
     registerMember("STAA*.closed", &aasClosed);
     registerMember("STAA*.collided", &aasCollided);
+    registerMember("STAA*.depth", &aasDepth);
     registerMember("STAA*.open", &aasOpen);
-    registerMember("STAA*.processed", &aasProcessed);
     registerMember("STAA*.dried", &aasDried);
     registerMember("STAA*.finished", &aasFinished);
+    registerMember("STAA*.score", &aasScore);
 
 //	qDebug() << memberNames;
 //	qDebug() << memberTypes;
@@ -159,91 +146,142 @@ void State::init()
 // Clears the state history.
 void State::clear()
 {
-	QMutexLocker locker(&mutex);
-	history.clear();
+    QMutexLocker locker(&mutex);
+    history.clear();
+    frameId = 0;
+    time = 0;
+    bufferOffset = 0;
 }
 
 // Saves the entire state history to a file.
 void State::save() const
 {
-	QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
-	QFile file("data/statehistory.dat");
-	file.open(QIODevice::WriteOnly);
-	QDataStream out(&file);
+    QFile file("data/statehistory.dat");
+    file.open(QIODevice::WriteOnly);
+    QDataStream out(&file);
 
-	for (int i = 0; i < history.size(); i++)
-	{
-		QByteArray ba((char *)(&(history[i])), sizeof(State));
-		out << ba;
-	}
+    for (int i = 0; i < history.size(); i++)
+    {
+        QByteArray ba((char *)(&(history[i])), sizeof(State));
+        out << ba;
+    }
 
-	file.close();
+    file.close();
 }
 
-// Loads the passed data into the state history.
+// Loads the saved state history from file.
 void State::load(QString fileName)
 {
-	QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
-	history.clear();
+    if (fileName == "")
+        fileName = "statehistory.dat";
+    QFile file("data/" + fileName);
+    file.open(QIODevice::ReadOnly);
+    QDataStream in(&file);
 
-	if (fileName == "")
-		fileName = "statehistory.dat";
-	QFile file("data/" + fileName);
-	file.open(QIODevice::ReadOnly);
-	QDataStream in(&file);
+    history.clear();
+    bufferOffset = 0;
 
-	QByteArray ba;
-	while (!in.atEnd())
-	{
-		in >> ba;
-		history << *(State*)(ba.data());
-	}
+    QByteArray ba;
+    int count = 0;
+    while (!in.atEnd() && count < config.bufferSize)
+    {
+        in >> ba;
+        history << *(State*)(ba.data());
+        ++count;
+    }
 
-	file.close();
+    //history.reverse(); // when you need to revert the order
 
-	if (!history.isEmpty())
-		*this = history.first();
+    file.close();
+
+    // Renumber the frames just in case.
+    for (uint i = 0; i < history.size(); i++)
+        history[i].frameId = i;
+
+    if (!history.isEmpty())
+        *this = history.last();
 }
 
-// Appends the current state values to the history.
+// Appends the current state to the state history.
+// The maxLength parameter defines how many states are kept in history.
 void State::buffer(int maxLength)
 {
     QMutexLocker locker(&mutex);
-    history.push_front(*this);
-    while (maxLength > 0 && history.size() > maxLength)
-        history.pop_back();
+
+    // No buffer size set.
+    if (maxLength <= 0)
+    {
+        history.push_back(*this);
+        return;
+    }
+
+    // The buffer is smaller than the maximum size.
+    if (history.size() < maxLength)
+    {
+        history.push_back(*this);
+        return;
+    }
+
+    // Append to ring buffer.
+    history[bufferOffset] = *this;
+    bufferOffset = (bufferOffset + 1) % history.size();
+
+    // Shed the oldest states if the maxLength has been reduced.
+    while (maxLength < history.size())
+    {
+        history.removeAt(bufferOffset);
+        if (bufferOffset >= history.size())
+            bufferOffset=0;
+    }
+
+    return;
+}
+
+// Writes the current state directly to file.
+void State::bufferToFile() const
+{
+    QMutexLocker locker(&mutex);
+
+    QFile file("data/statehistory.dat");
+    file.open(QIODevice::Append);
+    QDataStream out(&file);
+    out << time;
+    //out << timeDiff;
+    //out << robot;
+    file.close();
 }
 
 // Returns the amount of buffered historical state objects.
 int State::size() const
 {
-	QMutexLocker locker(&mutex);
-	return history.size();
+    QMutexLocker locker(&mutex);
+    return history.size();
 }
 
 // Returns a historical state object.
-// i = 0 returns the current state.
-// i = -1 (or 1) returns the state object from the iteration before and so on.
-// To get the oldest known state you must request i = (+/-)state.size().
-// Yes, unlike usual arrays, this operator handles items indices from 0 to state.size()!
-// If abs(i) > state.size() the oldest known state object is returned.
+// i = 0 returns the oldest state in the buffer.
+// i = 1 returns the state object one after that.
+// To get the most recent state, request i = state.size()-1.
+// Out of bounds requests will wrap.
 State& State::operator[](int i)
 {
-	QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
-    if (i == 0 || history.empty())
-		return *this;
+    if (history.empty())
+        return *this;
 
-    i = qMin(qAbs(i), history.size()) - 1;
-	return history[i];
+    uint idx = mod(i+bufferOffset, history.size());
+    return history[idx];
 }
 
 // Returns the value of the ith member of this object.
 double State::operator()(int i) const
 {
-	return getMember(i);
+    return getMember(i);
 }
 
 // Returns the value of the member that was registered with the given key.
@@ -251,13 +289,13 @@ double State::operator()(int i) const
 // Index based access is faster than key based access.
 double State::operator()(QString key) const
 {
-	return getMember(key);
+    return getMember(key);
 }
 
 // Returns the value of the ith member of this object.
 double State::getMember(int i) const
 {
-//	QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
 	if (memberTypes[i].startsWith('i'))
         return (double)(*((int*)((quint64)this+memberOffsets[i])));
@@ -273,6 +311,8 @@ double State::getMember(int i) const
 // Index based access is faster than key based access.
 double State::getMember(QString key) const
 {
+    QMutexLocker locker(&mutex);
+
 	int memberIndex = 0;
 	bool memberFound = false;
     while (!memberFound)
@@ -288,7 +328,7 @@ double State::getMember(QString key) const
 // Sets the ith member to value v.
 void State::setMember(int i, double v)
 {
-//	QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
     if (memberTypes[i].startsWith('i'))
         *((int*)((quint64)this+memberOffsets[i])) = (int)v;
@@ -305,6 +345,8 @@ void State::setMember(int i, double v)
 // Index based access is faster than key based access.
 void State::setMember(QString key, double v)
 {
+    QMutexLocker locker(&mutex);
+
     int memberIndex = 0;
     bool memberFound = false;
     while (!memberFound)
@@ -318,16 +360,16 @@ void State::setMember(QString key, double v)
 }
 
 // Returns the floor state index for the given time t.
-// This is needed to find the state history index for a real time t.
+// This is needed to find the state history index for a real time t for plotting.
 int State::findIndex(double t)
 {
-    int stateIndex = qBound(1, int( double(state.size()-1) - t/config.rcIterationTime + stateIndexOffset), state.size()-1);
-    while (stateIndex < state.size()-1 && state[stateIndex].time > t)
+    int stateIndex = stateIndexOffset;
+    while (stateIndex < state.size()-1 && state[stateIndex].time <= t)
     {
         stateIndex++;
         stateIndexOffset++;
     }
-    while (stateIndex > 1 && state[stateIndex-1].time <= t)
+    while (stateIndex > 0 && state[stateIndex-1].time > t)
     {
         stateIndex--;
         stateIndexOffset--;

@@ -3,12 +3,12 @@
 #include "blackboard/State.h"
 #include "blackboard/Config.h"
 #include "blackboard/Command.h"
-#include "util/Logger.h"
-#include "util/StopWatch.h"
-#include "util/Statistics.h"
-#include "geometry/Box.h"
-#include "pml/poc.h"
-#include "pml/lip.h"
+#include "lib/util/Logger.h"
+#include "lib/util/StopWatch.h"
+#include "lib/util/Statistics.h"
+#include "lib/geometry/Box.h"
+#include "lib/pml/poc.h"
+#include "lib/pml/lip.h"
 #include <QtConcurrent/QtConcurrent>
 
 // Fitness experiment
@@ -171,6 +171,7 @@ void Experimenter::trajectoryExperiments()
         int activeThreads = threads;
         for (uint i = 0; i < threads; i++)
         {
+            qDebug() << "checking thread" << i << results[i].isFinished();
             if (results[i].isFinished())
             {
                 if (caseIndex < cases.size())
@@ -206,7 +207,7 @@ void Experimenter::trajectoryExperiments()
 void Experimenter::generateCases(int runs, int frames)
 {
     Vector<uint> agents; // Number of agents to try.
-    agents << 1 << 2 << 3 << 4 << 5;
+    agents << 1; //<< 2 << 3 << 4 << 5;
     Vector<uint> maps; // Maps to try.
     maps << 4 << 6 << 7; // 0 void, 1 simple, 2 U, 3 outdoor, 4 apartment, 5 warehouse, 6 office, 7 clutter
     Vector<uint> controllers; // Types of controllers to try.
@@ -326,8 +327,8 @@ void Experimenter::processCase(ExperimentConfig &ex)
         //qDebug() << " Starting run" << r << "case" << ex.id << "seed:" << ex.seed << "check:" << check;
         //progressLogger << " Starting run" << r << "case" << ex.id << "seed:" << ex.seed << "check:" << check;
         //progressLogger++;
-        world.setMap(ex.map, ex.agents);
         world.setParams(ex.trajectoryPlanningMethod, ex.trajectoryType, ex.predict, ex.heuristic, ex.frequency);
+        world.setMap(ex.map, ex.agents);
 
         Vector<UnicycleAgent> agentsAtStart = world.unicycleAgents;
         //qDebug() << "Run" << r << "case" << ex.id << "seed:" << ex.seed << "unicycles at start:" << agentsAtStart;
@@ -353,7 +354,7 @@ void Experimenter::processCase(ExperimentConfig &ex)
 //            }
 
             // Log static path failed frames.
-            if (!world.unicycleAgents[0].staticWorldPathSuccess)
+            if (!world.unicycleAgents[0].worldPathSuccess)
             {
                 qDebug() << "  Static path fail in case" << ex << "run" << r << "frame" << k << "seed:" << ex.seed;
                 qDebug() << "    agents right now:" << world.unicycleAgents;
@@ -365,7 +366,7 @@ void Experimenter::processCase(ExperimentConfig &ex)
             trajectoryTimes << world.unicycleAgents[0].trajectoryTime;
             expansions << world.unicycleAgents[0].shortTermAbortingAStar.expansions;
 
-            if (!world.unicycleAgents[0].staticWorldPathSuccess)
+            if (!world.unicycleAgents[0].worldPathSuccess)
                 staticPathFails++;
 
             if (!world.unicycleAgents[0].dynamicPathSuccess)
@@ -705,202 +706,6 @@ void Experimenter::postProcessTrajectoryExperiments()
     return;
 }
 
-
-void Experimenter::geometricModelTest()
-{
-    const uint iterations = 100000;
-
-    GridModel sensedGrid;
-    GridModel dilatedSensedGrid;
-    GeometricModel staticGeometricModel;
-    GeometricModel expandedStaticGeometricModel;
-    DynamicGeometricModel dynamicGeometricModel;
-    DynamicGeometricModel expandedDynamicGeometricModel;
-    GeometricModel unifiedGeometricModel;
-
-    sensedGrid.setDim(2);
-    sensedGrid.setN(Vec2u(config.gridHeight/config.gridCellSize+1, config.gridWidth/config.gridCellSize+1));
-    sensedGrid.setMin(Vec2(-config.gridHeight/2+config.gridOffset, -config.gridWidth/2));
-    sensedGrid.setMax(Vec2(config.gridHeight/2+config.gridOffset, config.gridWidth/2));
-    sensedGrid.init();
-    dilatedSensedGrid = sensedGrid;
-
-    World world;
-    world.init();
-    world.setMap(4, 5);
-    Pose2D pose = world.getUnicycleObstacles()[0].pose();
-
-    StopWatch sw;
-    sw.start();
-
-    GeometricModel transformedWorldPolygons;
-    transformedWorldPolygons.setObstacles(world.getStaticObstacles());
-    transformedWorldPolygons -= pose; // Transform from world to local coordinates.
-    transformedWorldPolygons.transform();
-    sensedGrid.computeOccupancyGrid(transformedWorldPolygons.getObstacles());
-    staticGeometricModel.setFromGrid(sensedGrid);
-    dilatedSensedGrid = sensedGrid;
-    dilatedSensedGrid.dilate(config.gridSensedDilationRadius);
-    expandedStaticGeometricModel.setFromGrid(dilatedSensedGrid);
-    dilatedSensedGrid.dilate(config.gridBlurRadius);
-    dilatedSensedGrid.blur(config.gridBlurRadius);
-
-    // Compute the dynamic geometric model from the unicycle agents in the world.
-    // Only the ones located in the area of the sensed grid are added to the model.
-    dynamicGeometricModel.clear();
-    expandedDynamicGeometricModel.clear();
-    Vector<UnicycleObstacle> uo = world.getUnicycleObstacles(world.getUnicycleObstacles()[0].getId());
-    for (uint i = 0; i < uo.size(); i++)
-    {
-        uo[i] -= pose; // Transform from world to local coordinates.
-        if (sensedGrid.contains(uo[i].pos()))
-        {
-            expandedDynamicGeometricModel.addObstacle(uo[i]);
-            dynamicGeometricModel.addObstacle(uo[i]);
-        }
-    }
-    dynamicGeometricModel.transform(); // why?
-    expandedDynamicGeometricModel.grow(0.4); // less growth for STAA*
-    expandedDynamicGeometricModel.transform(); // why?
-
-
-    unifiedGeometricModel.clear();
-    unifiedGeometricModel.setObstacles(world.getStaticObstacles());
-    unifiedGeometricModel -= pose; // Convert to local coordinates.
-    unifiedGeometricModel.transform();
-    unifiedGeometricModel.addObstacles(expandedStaticGeometricModel.getObstacles());
-
-    double time = sw.elapsedTimeMs();
-    qDebug() << "Sensing:" << time;
-
-
-    qDebug() << "Spawning" << iterations << "polygons.";
-
-    // Generate random points.
-    Vector<Vec2> points(iterations);
-    for (int i = 0; i < iterations; i++)
-    {
-        double x = Statistics::uniformSample(0, world.width);
-        double y = Statistics::uniformSample(0, world.height);
-        points[i].set(x,y);
-    }
-
-    // Generate random agent polygons.
-    Vector<Polygon> polygons;
-    for (int i = 0; i < iterations; i++)
-    {
-        // Set up the polygon that describes the agent.
-        double w = 0.5*config.agentWidth;
-        double h = 0.5*config.agentHeight;
-        Polygon p;
-        p.addVertex(Vec2(-w, h));
-        p.addVertex(Vec2(-w, -h));
-        p.addVertex(Vec2(w, -0.8*h));
-        p.addVertex(Vec2(w, 0.8*h));
-        p.setConvex();
-        p.setPos(points[i]);
-        p.setRotation(Statistics::uniformSample(-PI, PI));
-        //p.transform();
-        polygons << p;
-    }
-
-    // Generate random unicycles.
-    Vector<Unicycle> unicycles;
-    for (int i = 0; i < iterations; i++)
-    {
-        Unicycle u;
-        u.setPose(polygons[i].pose());
-        u.a = 1;
-        u.b = 1;
-        u.dt = 0.5;
-        unicycles << u;
-    }
-
-    uint collided = 0;
-
-    // Point collision check in the occupancy grid.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (sensedGrid.contains(points[i]) && sensedGrid.isOccupied(points[i]))
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Point in grid check:" << time/iterations << "ms";
-
-    // Polygon collision check in the occupancy grid.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (sensedGrid.polygonCollisionCheck(polygons[i]))
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Polygon in grid check:" << time/iterations << "ms";
-
-    // Static point collision check with the unified model.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (unifiedGeometricModel.pointCollisionCheck(points[i]) >= 0)
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Static point collision check in geometric model:" << time/iterations << "ms";
-
-    // Static polygon collision check with the unified model.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (unifiedGeometricModel.polygonCollisionCheck(polygons[i]) >= 0)
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Static polygon collision check in geometric model:" << time/iterations << "ms";
-
-    // Dynamic point collision check with the dynamic model.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (dynamicGeometricModel.dynamicPointCollisionCheck(points[i], 0.1) >= 0)
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Dynamic point collision check in geometric model:" << time/iterations << "ms";
-
-    // Dynamic Polygon collision check with the dynamic model.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-        if (dynamicGeometricModel.dynamicPolygonCollisionCheck(polygons[i], 0.1) >= 0)
-            collided++;
-    time = sw.elapsedTimeMs();
-    qDebug() << "Dynamic polygon check in geometric model:" << time/iterations << "ms";
-
-
-    // Dynamic trajectory collision check.
-    sw.start();
-    for (uint i = 0; i < iterations; i++)
-    {
-        Collision col = dynamicGeometricModel.trajectoryCollisionCheck(unicycles[i]);
-        if (col.dt >= 0)
-            collided++;
-    }
-    time = sw.elapsedTimeMs();
-    qDebug() << "Dynamic trajectory check in geometric model:" << time/iterations << "ms";
-
-    // Path planning test.
-    sw.start();
-    for (uint i = 0; i < iterations-1; i++)
-    {
-        const Vector<Vec2>& pp = unifiedGeometricModel.computePath(points[i], points[i+1]);
-        if (pp.isEmpty())
-            collided++;
-    }
-    time = sw.elapsedTimeMs();
-    qDebug() << "Path planning test in geometric model:" << time/(iterations-1) << "ms";
-
-    sw.start();
-    for (uint i = 0; i < iterations-1; i++)
-    {
-        const Vector<Vec2>& pp = dilatedSensedGrid.computePath(points[i], points[i+1]);
-        if (pp.isEmpty())
-            collided++;
-    }
-    time = sw.elapsedTimeMs();
-    qDebug() << "Path planning test in grid model:" << time/(iterations-1) << "ms";
-}
-
-
 // Tests and prints the runtimes of geometric operations.
 void Experimenter::geometryRuntimeTests()
 {
@@ -940,7 +745,7 @@ void Experimenter::geometryRuntimeTests()
         int points = Statistics::uniformSample(3, 16);
         Polygon p;
         p.setPos(Vec2::random());
-        p.setRotation(Statistics::randomNumber());
+        p.setOrientation(Statistics::randomNumber());
         for (int j = 0; j < points; j++)
             p << Vec2::random();
         polygons << p;
@@ -1386,12 +1191,13 @@ void Experimenter::predictionAccuracyTest()
     u.b = 0;
     u.w = -6;
 
+    double rcIterationTime = 0.1;
     for (int i = 0; i < dataPoints; i++)
     {
-        h.predict(config.rcIterationTime);
-        u.predict(config.rcIterationTime);
+        h.predict(rcIterationTime);
+        u.predict(rcIterationTime);
 
-        logger << i*config.rcIterationTime;
+        logger << i*rcIterationTime;
         logger << u.pos() << h.pos();
         logger++;
     }

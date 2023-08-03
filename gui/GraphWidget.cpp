@@ -1,7 +1,7 @@
 #include "GraphWidget.h"
 #include <math.h>
 #include "blackboard/State.h"
-#include "util/ColorUtil.h"
+#include "lib/util/ColorUtil.h"
 
 // The GraphWidget shows plotted data of the members that have been
 // registered in state.
@@ -60,11 +60,11 @@ void GraphWidget::init()
 		// Assign randomly distributed colors.
 		// Bias blue for "left" data and red for "right" data.
 		if (key.contains("eft"))
-			curve.color = colorUtil.sampleBlueColor();
+			curve.color = drawUtil.sampleBlueColor();
 		else if (key.contains("ight"))
-			curve.color = colorUtil.sampleRedColor();
+			curve.color = drawUtil.sampleRedColor();
 		else
-			curve.color = colorUtil.sampleUniformColor();
+			curve.color = drawUtil.sampleUniformColor();
 
 		// Restore scaling and translation from the QSettings.
 		if (settings.contains("curvesettings/" + key))
@@ -83,7 +83,7 @@ void GraphWidget::init()
 void GraphWidget::resampleColors()
 {
 	for (int i = 0; i < curves.size(); i++)
-        curves[i].color = ColorUtil::sampleUniformColor();
+        curves[i].color = DrawUtil::sampleUniformColor();
 	update();
 }
 
@@ -129,7 +129,7 @@ void GraphWidget::exportData()
 	out << "\n";
 
 	// Print the data.
-	for (int t = startIndex; t > endIndex; t--)
+    for (int t = startIndex; t <= endIndex; t++)
 	{
 		foreach (int id, idsOfTheCurvesToShow)
 			out << state[t](id) << " ";
@@ -172,7 +172,6 @@ void GraphWidget::swipeFadeOut()
 	lastSwipeFadeOutTimeStamp = stopWatch.programTime();
 	update();
 }
-
 
 void GraphWidget::keyReleaseEvent(QKeyEvent *event)
 {
@@ -445,7 +444,7 @@ void GraphWidget::paintEvent(QPaintEvent*)
 	{
 		pen.setColor(QColor("grey"));
 		painter.setPen(pen);
-        x = qBound(state[state.size()-1].time, mappedMouse.x()+state.time, state.time);
+        x = qBound(state[0].time, mappedMouse.x()+state.time, state.time);
 		painter.drawLine(QPointF(x, boundingBox.bottom()), QPointF(x, boundingBox.top()));
 	}
 
@@ -459,7 +458,7 @@ void GraphWidget::paintEvent(QPaintEvent*)
 		// Draw the mouse marker on the curve.
 		if (mousePresent)
 		{
-            x = qBound(state[state.size()-1].time, mappedMouse.x()+state.time, state.time);
+            x = qBound(state[0].time, mappedMouse.x()+state.time, state.time);
 			y = qBound(boundingBox.bottom(), curves[id].transformedValueAt(x), boundingBox.top());
 			painter.drawEllipse(QPointF(x,y), (4.0+2.0*curves[id].highlight)*screenScale.x(), (4.0+2.0*curves[id].highlight)*screenScale.y());
 		}
@@ -483,7 +482,7 @@ void GraphWidget::paintEvent(QPaintEvent*)
 		// Draw the mouse marker value.
 		if (mousePresent)
 		{
-            x = qBound(state[state.size()-1].time-state.time, mappedMouse.x(), state.time-state.time);
+            x = qBound(state[0].time-state.time, mappedMouse.x(), state.time-state.time);
             y = curves[id].transformedValueAt(mappedMouse.x()+state.time);
 			mp = screenTransform.map(QPointF(x, y)) + QPointF(10,-4);
 			mp.ry() = qBound((double)(fontHeight), mp.y(), (double)(height()-1));
@@ -501,7 +500,7 @@ void GraphWidget::paintEvent(QPaintEvent*)
 	// Show the current time on the bottom.
 	if (mousePresent)
 	{
-        x = qBound(state[state.size()-1].time-state.time, mappedMouse.x(), state.time-state.time);
+        x = qBound(state[0].time-state.time, mappedMouse.x(), state.time-state.time);
 		y = -height();
 		mp = screenTransform.map(QPointF(x, y)) + QPointF(10,0);
 		mp.ry() = qBound((double)(fontHeight), mp.y(), (double)(height()-4));

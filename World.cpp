@@ -3,14 +3,14 @@
 #include "blackboard/Command.h"
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
-#include "util/Statistics.h"
-#include "util/ColorUtil.h"
-#include "util/Vec2.h"
-#include "util/StopWatch.h"
-#include "geometry/Box.h"
+#include "lib/util/Statistics.h"
+#include "lib/util/ColorUtil.h"
+#include "lib/util/Vec2.h"
+#include "lib/util/StopWatch.h"
+#include "lib/util/Logger.h"
+#include "lib/geometry/Box.h"
 #include <QFile>
 #include <QDataStream>
-#include "util/Logger.h"
 
 // The world object acts as central repository for all agents
 // and obstacles. The world also contains a Box2D simulation
@@ -27,43 +27,45 @@
 // placed onto the State blackboard where it's globally accessible
 // and everything in the world is public for easy access.
 // The world can rebuild itself in different configurations. Use
-// the setWorld() function to instantly switch to a new map.
+// the setMap(mapId) function to instantly switch to a new map.
 
 QMutex World::mutex;
 
 World::World() : b2ContactListener()
 {
-    width = 10; // width of the world in meters
-    height = 10; // height of the world in meters
-    mapId = 4;
+    width = 10; // width of the world in meters, will be overwritten when loading a map
+    height = 10; // width of the world in meters, will be overwritten when loading a map
+    mapId = 3;
     numAgents = 1;
-    simulationTimeStep = config.rcIterationTime;
+    simulationTimeStep = 1.0/command.frequency; // Default 10 Hz.
+    box2DSim.SetContactListener(this);
 }
 
 void World::init()
 {
-    box2DSim.SetContactListener(this);
-    numAgents = max(config.unicycleAgents, 1.0);
+    state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
     reset();
 }
 
-// Rebuilds the world from scratch using the current mapId.
+// Rebuilds the world from scratch using the currently set mapId and number of agents parameter.
 void World::reset()
 {
     //QMutexLocker locker(&mutex);
 
     // Clear all data structures.
-    dropOffPoints.clear();
-    polygons.clear();
-    staticObstacles.clear();
-    unicycleAgents.clear();
+    polygons.clear(); // The raw polygons the map is made of.
+    worldMap.clear(); // The expanded static obstacles as percieved by the agents.
+    unicycleAgents.clear(); // The moving unicycle agents.
+    dropOffPoints.clear(); // The drop off points (pois).
 
     // Reset the obstacle ids.
     // This is so that when a new map is built, the ids are counted again from 0.
-    Obstacle::resetId();
+    Polygon::resetId();
 
-    // Build the map. These build routines fill the static obstacles list
-    // with obstacles that are generated programmatically.
+    // Build the map. These build routines fill the "polygons" GeometricModel
+    // with convex polygons that are generated programmatically. The convexity
+    // is important for the Box2D simulation.
+
     if (mapId == 0)
         buildVoid();
     else if (mapId == 1)
@@ -71,68 +73,27 @@ void World::reset()
     else if (mapId == 2)
         buildUTrap();
     else if (mapId == 3)
-        buildOutdoor();
+        buildTunnel();
     else if (mapId == 4)
         buildApartment();
     else if (mapId == 5)
-        buildWarehouse();
-    else if (mapId == 6)
         buildOffice();
+    else if (mapId == 6)
+        buildWarehouse();
     else if (mapId == 7)
         buildClutter();
+
     polygons.transform(); // The static polygons of the map come out transformed.
 
-
-    // Compute a core and an expanded geometric model of the static obstacles.
-    // This is the world map the robot builds for itself (some day) and an
-    // expanded version of it that's dilated at least by the minimal radius of
-    // the robot for path planning. The expansion is computed by first converting
-    // the polygons of the map to grid, using a dilate operation, and converting
-    // the grid back to polygons.
-    double dilation = config.gridWorldDilationRadius;
-    Box bb = polygons.getBoundingBox();
-    GridModel worldGrid;
-    worldGrid.setDim(2);
-    worldGrid.setN(Vec2u(bb.width()/config.gridCellSize+1, bb.height()/config.gridCellSize+1));
-    worldGrid.setMin(bb.bottomLeft()-Vec2(config.gridWorldDilationRadius));
-    worldGrid.setMax(bb.topRight()+Vec2(config.gridWorldDilationRadius));
-    worldGrid.init();
-    worldGrid.computeOccupancyGrid(polygons.getObstacles());
-    //staticObstacles.setFromGrid(worldGrid); // core
-    staticObstacles.setObstacles(polygons.getObstacles());
-    worldGrid.dilate(dilation); // This parameter defines the gap sensitivity of the path planner.
-
-    expandedStaticObstacles.setFromGrid(worldGrid); // expansion
-
-//    qDebug() << "Built map" << getMapName(mapId) << "with" << staticObstacles.getVertexCount()
-//             << "expanded:" << expandedStaticObstacles.getVertexCount()
-//             << "raw:" << polygons.getVertexCount()
-//             << "vertices.";
+    // Compute a dilated world map from the union of the polygons.
+    // This is the map the robot builds for itself.
+    worldMap.worldImport(polygons.getPolygons());
 
     // Add moving agents to the map.
     // The number of agents added depends on a configuration variable.
-    addAgents();
+    addAgents(numAgents);
 
-    // Hacky bugfix.
-    if (mapId == 7 || mapId == 3)
-    {
-        staticObstacles.buildFlatHierarchy();
-        expandedStaticObstacles.buildFlatHierarchy();
-    }
-
-    // Prune.
-    staticObstacles.prune(unicycleAgents[0].pos());
-    expandedStaticObstacles.prune(unicycleAgents[0].pos());
-    for (uint i = 0; i < unicycleAgents.size(); i++)
-    {
-        unicycleAgents[i].setWorldStaticObstacles(staticObstacles.getObstacles());
-        unicycleAgents[i].setWorldExpandedStaticObstacles(expandedStaticObstacles.getObstacles());
-    }
-
-    // Build the Box2D simulation using the polygonal obstacles generated so far.
-    // Most importantly, this is where the obstacles get their body pointer set.
-    // The simulation must be built from the polygons, because they need to be
-    // convex with a maximum vertex count of 16.
+    // Build the Box2D simulation using the generated obstacles.
     buildSimulation();
 }
 
@@ -150,6 +111,10 @@ void World::buildVoid()
         Vec2 v = b.rotated(phi);
         dropOffPoints.push_back(m+v);
     }
+
+    // Special experiment setup.
+    dropOffPoints.clear();
+    dropOffPoints << Vec2(1, 7.5) << Vec2(5, 5.5) << Vec2(9, 7.5) << Vec2(5, 11.5);
 }
 
 // A very simple setting with two drop off points and one obstacle in the middle.
@@ -171,7 +136,48 @@ void World::buildSimple()
         dropOffPoints.push_back(m+v);
     }
 
-    Obstacle ob;
+    double thickness = 0.1;
+    double dx,dy,x,y;
+
+    // Outer walls.
+    dx = thickness;
+    dy = width/2;
+    x = height/2;
+    y = 0;
+    Polygon p1(x, y, dx, dy);
+    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p1); // right
+
+    dx = thickness;
+    dy = width/2;
+    x = -height/2;
+    y = 0;
+    Polygon p2(x, y, dx, dy);
+    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p2); // left
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = -width/2;
+    Polygon p3(x, y, dx, dy);
+    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p3); // bottom
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = width/2;
+    Polygon p4(x, y, dx, dy);
+    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p4); // top
+
+    polygons.translate(width/2, height/2);
+    polygons.transform();
+
+
+    // The polygon in the middle.
+    Polygon ob;
     ob << Vec2(-10, 1.5)
        << Vec2(-10, -1.5)
        << Vec2(-7, -3)
@@ -182,7 +188,7 @@ void World::buildSimple()
        << Vec2(-7, 5);
     ob.scale(0.5, 0.5);
     ob.setPos(width/2, height/2);
-    polygons.addObstacle(ob);
+    polygons.addPolygon(ob);
 }
 
 // A locality trap with a U shaped obstacle.
@@ -192,95 +198,64 @@ void World::buildUTrap()
     height = 15;
 
     // drop off points
-    //dropOffPoints.push_back(Vec2(width/2, height/4));
-    //dropOffPoints.push_back(Vec2(width/2, 3*height/4));
-    dropOffPoints.push_back(Vec2(width/2, height/2+0.2));
+    dropOffPoints.push_back(Vec2(width/2, height/2));
+    dropOffPoints.push_back(Vec2(width/2, height/2-4.5));
 
-    // drop off points
-    Vec2 b(0,config.uRadius*qMin(width,height));
-    Vec2 m(width/2, height/2);
-    for (double phi = 0; phi < PII; phi += PII/config.uDropOffPoints)
-    {
-        Vec2 v = b.rotated(phi);
-        dropOffPoints.push_back(m+v);
-    }
+    double thickness = 0.1;
+    double dx,dy,x,y;
 
-    // Obstacles
-    double uOffset = -1.0;
+    // Outer walls.
+    dx = thickness;
+    dy = width/2;
+    x = height/2;
+    y = 0;
+    Polygon p1(x, y, dx, dy);
+    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p1); // right
+
+    dx = thickness;
+    dy = width/2;
+    x = -height/2;
+    y = 0;
+    Polygon p2(x, y, dx, dy);
+    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p2); // left
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = -width/2;
+    Polygon p3(x, y, dx, dy);
+    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p3); // bottom
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = width/2;
+    Polygon p4(x, y, dx, dy);
+    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p4); // top
+
+    polygons.translate(width/2, height/2);
+    polygons.transform();
+
+    // U Polygons
+    double uOffset = -2.5;
     double w = 0.5;
     double h = 3.5;
 
-    double x = width/2;
-    double y = height/2+uOffset;
-    polygons.addObstacle(Obstacle(x, y, h, w));
+    x = width/2;
+    y = height/2+uOffset;
+    polygons.addPolygon(Polygon(x, y, h, w));
 
     x = width/2+h-w;
     y = height/2+h-w+uOffset;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    polygons.addPolygon(Polygon(x, y, w, h));
 
     x = width/2-h+w;
     y = height/2+h-w+uOffset;
-    polygons.addObstacle(Obstacle(x, y, w, h));
-}
-
-// An "outdoor" example with randomized obstacles.
-void World::buildOutdoor()
-{
-    width = config.outdoorWidth;
-    height = config.outdoorHeight;
-
-    // drop off points
-    dropOffPoints.push_back(Vec2(width/10, height/3));
-    dropOffPoints.push_back(Vec2(width/2, height/10));
-    dropOffPoints.push_back(Vec2(9*width/10, height/3));
-    dropOffPoints.push_back(Vec2(width/10, 2*height/3));
-    dropOffPoints.push_back(Vec2(width/2, 9*height/10));
-    dropOffPoints.push_back(Vec2(9*width/10, 2*height/3));
-
-    // obstacles
-    for (int i = 0; i < config.outdoorObstaclesNr; i++)
-    {
-        Obstacle obs;
-        bool good = false;
-        while (!good)
-        {
-            obs.clear();
-            obs << Vec2(-config.outdoorObstaclesMinWidth, 0.5*config.outdoorObstaclesMinHeight)
-               << Vec2(-config.outdoorObstaclesMinWidth, -0.5*config.outdoorObstaclesMinHeight)
-               << Vec2(-0.7*config.outdoorObstaclesMinWidth, -config.outdoorObstaclesMinHeight)
-               << Vec2(0.7*config.outdoorObstaclesMinWidth, -config.outdoorObstaclesMinHeight)
-               << Vec2(config.outdoorObstaclesMinWidth, -0.5*config.outdoorObstaclesMinHeight)
-               << Vec2(config.outdoorObstaclesMinWidth, 0.5*config.outdoorObstaclesMinHeight)
-               << Vec2(0.7*config.outdoorObstaclesMinWidth, config.outdoorObstaclesMinHeight)
-               << Vec2(-0.7*config.outdoorObstaclesMinWidth, config.outdoorObstaclesMinHeight);
-
-            double sx = Statistics::uniformSample(1.0, config.outdoorObstaclesMaxWidth/config.outdoorObstaclesMinWidth);
-            double sy = Statistics::uniformSample(1.0, config.outdoorObstaclesMaxHeight/config.outdoorObstaclesMinHeight);
-            double x = Statistics::uniformSample(0, width);
-            double y = Statistics::uniformSample(0, height);
-            double theta = Statistics::uniformSample(-PI2, PI2);
-
-            obs.scale(sx, sy);
-            obs.translate(x, y);
-            obs.rotate(theta);
-            //obs.transform();
-
-            // Drop off point intersection test.
-            good = true;
-            for (int j = 0; j < dropOffPoints.size(); j++)
-            {
-                Obstacle copy = obs;
-                copy.grow(config.gridWorldDilationRadius);
-                if (copy.intersects(dropOffPoints[j], config.worldDropOffRadius))
-                {
-                    good = false;
-                    break;
-                }
-            }
-        }
-
-        polygons.addObstacle(obs);
-    }
+    polygons.addPolygon(Polygon(x, y, w, h));
 }
 
 void World::buildApartment()
@@ -288,6 +263,8 @@ void World::buildApartment()
     width = 10;
     height = 12;
     double thickness = 0.1;
+
+    // Docking ports.
 
     // drop off points
     dropOffPoints.push_back(Vec2(0.8, 3.3));
@@ -330,381 +307,381 @@ void World::buildApartment()
     dy = width/2;
     x = height/2;
     y = 0;
-    Obstacle p1(x, y, dx, dy);
+    Polygon p1(x, y, dx, dy);
     p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p1); // right
+    polygons.addPolygon(p1); // right
 
     dx = thickness;
     dy = width/2;
     x = -height/2;
     y = 0;
-    Obstacle p133(x, y, dx, dy);
+    Polygon p133(x, y, dx, dy);
     p133.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p133); // left
+    polygons.addPolygon(p133); // left
 
     dx = height/2;
     dy = thickness;
     x = 0;
     y = -width/2;
-    Obstacle p3(x, y, dx, dy);
+    Polygon p3(x, y, dx, dy);
     p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p3);
+    polygons.addPolygon(p3);
 
     dx = height/2;
     dy = thickness;
     x = 0;
     y = width/2;
-    Obstacle p4(x, y, dx, dy);
+    Polygon p4(x, y, dx, dy);
     p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p4);
+    polygons.addPolygon(p4);
 
     // Living room.
     dx = 1;
     dy = thickness;
     x = -height/2+dx;
     y = 0;
-    Obstacle p5(x, y, dx, dy);
+    Polygon p5(x, y, dx, dy);
     p5.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p5);
+    polygons.addPolygon(p5);
 
     dx = 1.75;
     dy = thickness;
     x = -0.75;
     y = 0;
-    Obstacle p6(x, y, dx, dy);
+    Polygon p6(x, y, dx, dy);
     p6.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p6);
+    polygons.addPolygon(p6);
 
     dx = thickness;
     dy = width/4;
     x = 1;
     y = -width/4;
-    Obstacle p7(x, y, dx, dy);
+    Polygon p7(x, y, dx, dy);
     p7.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p7);
+    polygons.addPolygon(p7);
 
     // Kitchen
     dx = 0.5;
     dy = thickness;
     x = -height/2+dx;
     y = 2;
-    Obstacle p8(x, y, dx, dy);
+    Polygon p8(x, y, dx, dy);
     p8.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p8);
+    polygons.addPolygon(p8);
 
     dx = 3;
     dy = thickness;
     x = -0.8;
     y = 2;
-    Obstacle p9(x, y, dx, dy);
+    Polygon p9(x, y, dx, dy);
     p9.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p9);
+    polygons.addPolygon(p9);
 
     dx = thickness;
     dy = 1.5;
     x = 0;
     y = 3.5;
-    Obstacle p10(x, y, dx, dy);
+    Polygon p10(x, y, dx, dy);
     p10.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p10);
+    polygons.addPolygon(p10);
 
     dx = thickness;
     dy = 0.85;
     x = -1.8;
     y = 2.85;
-    Obstacle p11(x, y, dx, dy);
+    Polygon p11(x, y, dx, dy);
     p11.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p11);
+    polygons.addPolygon(p11);
 
 
     dx = 1.3;
     dy = thickness;
     x = height/2-dx;
     y = 2;
-    Obstacle p12(x, y, dx, dy);
+    Polygon p12(x, y, dx, dy);
     p12.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p12);
+    polygons.addPolygon(p12);
 
     dx = 1.3;
     dy = thickness;
     x = height/2-dx;
     y = 0;
-    Obstacle p18(x, y, dx, dy);
+    Polygon p18(x, y, dx, dy);
     p18.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p18);
+    polygons.addPolygon(p18);
 
     dx = 1.7;
     dy = thickness;
     x = height/2-dx;
     y = -2;
-    Obstacle p13(x, y, dx, dy);
+    Polygon p13(x, y, dx, dy);
     p13.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p13);
+    polygons.addPolygon(p13);
 
     dx = 0.3;
     dy = thickness;
     x = 1.3;
     y = -2;
-    Obstacle p14(x, y, dx, dy);
+    Polygon p14(x, y, dx, dy);
     p14.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p14);
+    polygons.addPolygon(p14);
 
     dx = thickness;
     dy = 0.5;
     x = 3.5;
     y = 0;
-    Obstacle p15(x, y, dx, dy);
+    Polygon p15(x, y, dx, dy);
     p15.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p15);
+    polygons.addPolygon(p15);
 
     dx = thickness;
     dy = 0.25;
     x = 3.5;
     y = 1.75;
-    Obstacle p16(x, y, dx, dy);
+    Polygon p16(x, y, dx, dy);
     p16.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p16);
+    polygons.addPolygon(p16);
 
     dx = thickness;
     dy = 0.25;
     x = 3.5;
     y = -1.75;
-    Obstacle p17(x, y, dx, dy);
+    Polygon p17(x, y, dx, dy);
     p17.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
-    polygons.addObstacle(p17);
+    polygons.addPolygon(p17);
 
     // Couch 1
     dx = 0.45;
     dy = 1.0;
     x = -2.6;
     y = -3.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Couch 2
     dx = 1.0;
     dy = 0.45;
     x = -3.6;
     y = -1.8;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // TV
     dx = 0.1;
     dy = 0.8;
     x = -5.5;
     y = -3.7;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Couch table
     dx = 0.4;
     dy = 0.4;
     x = -4.2;
     y = -3.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Dining table
     dx = 0.5;
     dy = 0.8;
     x = -0.5;
     y = -2.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Chairs
     dx = 0.2;
     dy = 0.2;
     x = -0.5;
     y = -2.5 + 1.1;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = -0.5;
     y = -2.5 - 1.1;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = -0.5 + 0.8;
     y = -2.5 + 0.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = -0.5 + 0.8;
     y = -2.5 - 0.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = -0.5 - 0.8;
     y = -2.5 + 0.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = -0.5 - 0.8;
     y = -2.5 - 0.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Kitchen line
     dx = 0.35;
     dy = 1.35;
-    x = -5.5;
-    y = 3.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    x = -5.6;
+    y = 3.4;
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 1.35;
     dy = 0.35;
-    x = -4.5;
-    y = 4.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    x = -4.6;
+    y = 4.6;
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Kitchen shelf
     dx = 0.1;
     dy = 0.6;
     x = -2.05;
     y = 3.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.6;
     dy = 0.1;
     x = -2.6;
     y = 2.25;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Storage room shelf
     dx = 0.2;
-    dy = 1.35;
-    x = -0.35;
+    dy = 1.4;
+    x = -0.3;
     y = 3.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.5;
     dy = 0.15;
     x = -1.0;
     y = 2.25;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
 
     // Beds
     dx = 1.0;
     dy = 0.45;
     x = 1.1;
-    y = 4.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    y = 4.5;
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 1.0;
     dy = 0.45;
-    x = 4.85;
-    y = 4.4;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    x = 4.9;
+    y = 4.5;
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 1.0;
     dy = 0.45;
     x = 4.85;
     y = -2.6;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Desks with chairs
     dx = 0.3;
     dy = 0.6;
     x = 0.5;
     y = 3.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = 1.1;
     y = 3.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
 
     dx = 0.3;
     dy = 0.6;
     x = 5.6;
     y = 3.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = 5.0;
     y = 3.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
 
     dx = 0.6;
     dy = 0.3;
     x = 5.0;
     y = -4.6;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 0.2;
     x = 5.0;
     y = -4.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // More shelves.
     dx = 0.5;
     dy = 0.14;
     x = 3.2;
     y = -2.3;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.2;
     dy = 1.0;
     x = 1.35;
     y = -3.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.7;
     dy = 0.3;
     x = 3.0;
     y = -4.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.15;
     dy = 0.7;
     x = 1.3;
     y = -1.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     // Bathroom stuff.
     dx = 0.2;
     dy = 0.2;
     x = 5.7;
     y = -0.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.4;
     dy = 0.4;
     x = 5.5;
     y = -1.5;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.3;
     dy = 0.15;
     x = 4.4;
     y = -1.7;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
 
     dx = 0.2;
     dy = 0.2;
     x = 4.8;
     y = 1.7;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.3;
     dy = 0.7;
     x = 5.6;
     y = 1.0;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     dx = 0.3;
     dy = 0.15;
     x = 4.4;
     y = 0.3;
-    polygons.addObstacle(Obstacle(x, y, dx, dy));
+    polygons.addPolygon(Polygon(x, y, dx, dy));
 
     polygons.translate(width/2, height/2);
     polygons.transform();
@@ -720,110 +697,94 @@ void World::buildApartment()
 }
 
 // An indoor level with narrow doorways and corridors.
-void World::buildWarehouse()
+void World::buildTunnel()
 {
-    width = 100;
-    height = 65;
+    width = 75;
+    height = 60;
 
-    // drop off points
-    dropOffPoints.push_back(Vec2(width/7, height/4));
-    dropOffPoints.push_back(Vec2(6*width/7, 3*height/4));
+    // Drop off points
+    dropOffPoints.push_back(Vec2(width/6, height/5));
+    dropOffPoints.push_back(Vec2(width/6, 4*height/5));
 
-    dropOffPoints.push_back(Vec2(2.5*width/7, height/4));
-    dropOffPoints.push_back(Vec2(4.5*width/7, 3*height/4));
+    dropOffPoints.push_back(Vec2(3*width/6, height/5));
+    dropOffPoints.push_back(Vec2(3*width/6, 4*height/5));
 
-    dropOffPoints.push_back(Vec2(4.5*width/7, height/4));
-    dropOffPoints.push_back(Vec2(2.5*width/7, 3*height/4));
+    dropOffPoints.push_back(Vec2(5*width/6, height/5));
+    dropOffPoints.push_back(Vec2(5*width/6, 4*height/5));
 
-    dropOffPoints.push_back(Vec2(6*width/7, height/4));
-    dropOffPoints.push_back(Vec2(width/7, 3*height/4));
-
-    // Obstacles
+    // Polygons
     double w,h,x,y;
 
+    // Bottom row of inner walls.
     w = 1;
-    h = 10;
-    x = 25;
-    y = 19;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    h = height/4-4-config.tunnelCorridorWidth/4;
+    x = width/3;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
     w = 1;
-    h = 10;
-    x = 50;
-    y = 1+h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    h = height/4-4-config.tunnelCorridorWidth/4;
+    x = 2*width/3;
+    y = h+8+1;
+    polygons.addPolygon(Polygon(x, y, w, h));
+
+
+    // Top row of inner walls.
+    w = 1;
+    h = height/4-4-config.tunnelCorridorWidth/4;
+    x = width/3;
+    y = height-h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
     w = 1;
-    h = 10;
-    x = 75;
-    y = 19;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    h = height/4-4-config.tunnelCorridorWidth/4;
+    x = 2*width/3;
+    y = height-h-9;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
-    w = 1;
-    h = 10;
-    x = 25;
-    y = height-9-h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
 
-    w = 1;
-    h = 10;
-    x = 50;
-    y = height-1-h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
-
-    w = 1;
-    h = 10;
-    x = 75;
-    y = height-9-h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
-
-    w = 49;
+    // corridor bottom wall
+    w = width/2-7;
     h = 1;
-    x = 1+w;
-    y = 1+h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    x = w;
+    y = height/2-config.tunnelCorridorWidth/2;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
-    w = 43;
+    // corridor top wall
+    w = width/2-7;
     h = 1;
-    x = 1+w;
-    y = 28;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    x = w+14;
+    y = height/2+config.tunnelCorridorWidth/2;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
-    w = 43;
+
+    // bottom wall
+    w = width/2;
     h = 1;
-    x = width-w-1;
-    y = 37;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    x = w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
-    w = 49;
+    // top wall
+    w = width/2;
     h = 1;
-    x = 1+w;
-    y = 63;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    x = w;
+    y = height-h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
+    // left wall
     w = 1;
-    h = 13;
-    x = 1+w;
-    y = 1+h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    h = height/2;
+    x = w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
+    // right wall
     w = 1;
-    h = 13;
-    x = width-1-w;
-    y = 1+h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
-
-    w = 1;
-    h = 13;
-    x = 1+w;
-    y = height-1-h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
-
-    w = 1;
-    h = 13;
-    x = width-1-w;
-    y = height-1-h;
-    polygons.addObstacle(Obstacle(x, y, w, h));
+    h = height/2;
+    x = width-w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
 
     double scale = 0.24;
     polygons.transform();
@@ -835,13 +796,371 @@ void World::buildWarehouse()
     height *= scale;
 }
 
+// Builds an office building like map.
+void World::buildOffice()
+{
+    double roomSize = config.officeRoomSize; // width and height of one room in meters
+    double wallThickness = config.officeWallThickness; // in percent of one unit
+    double doorWidth = qMax(0.0, qMin(config.officeDoorWidth, 1.0-4.0*wallThickness)); // in percent of one unit
+    int rooms = qMax(config.officeRooms, 7.0); // number of rooms per unit
+
+    double w,h,x,y;
+
+    // Set the width and height of the map.
+    width = roomSize*rooms;
+    height = width;
+
+    double ss = 0.5 * (1.0 - doorWidth) / 2.0; // doorwall size
+
+    // Build a unit square (room).
+    Vector<Polygon> square;
+    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
+    square.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
+    square.push_back(Polygon(x, y, w, h));
+    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
+    square.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
+    square.push_back(Polygon(x, y, w, h));
+
+    // Make a unit down room.
+    Vector<Polygon> downRoom;
+    x = ss; y = wallThickness; w = ss; h = wallThickness; // bottom
+    downRoom.push_back(Polygon(x, y, w, h));
+    x = 1.0-ss; y = wallThickness; w = ss; h = wallThickness; // bottom
+    downRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
+    downRoom.push_back(Polygon(x, y, w, h));
+    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
+    downRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
+    downRoom.push_back(Polygon(x, y, w, h));
+
+    // Make a unit up room.
+    Vector<Polygon> upRoom;
+    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
+    upRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
+    upRoom.push_back(Polygon(x, y, w, h));
+    x = ss; y = 1.0-wallThickness; w = ss; h = wallThickness; // top
+    upRoom.push_back(Polygon(x, y, w, h));
+    x = 1.0-ss; y = 1.0-wallThickness; w = ss; h = wallThickness; // top
+    upRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
+    upRoom.push_back(Polygon(x, y, w, h));
+
+    // Make a unit left room.
+    Vector<Polygon> leftRoom;
+    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
+    leftRoom.push_back(Polygon(x, y, w, h));
+    y = ss; x = wallThickness; h = ss; w = wallThickness; // left
+    leftRoom.push_back(Polygon(x, y, w, h));
+    y = 1.0-ss; x = wallThickness; h = ss; w = wallThickness; // left
+    leftRoom.push_back(Polygon(x, y, w, h));
+    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
+    leftRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
+    leftRoom.push_back(Polygon(x, y, w, h));
+
+    // Make a unit right room.
+    Vector<Polygon> rightRoom;
+    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
+    rightRoom.push_back(Polygon(x, y, w, h));
+    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
+    rightRoom.push_back(Polygon(x, y, w, h));
+    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
+    rightRoom.push_back(Polygon(x, y, w, h));
+    y = ss; x = 1.0-wallThickness; h = ss; w = wallThickness; // right
+    rightRoom.push_back(Polygon(x, y, w, h));
+    y = 1.0-ss; x = 1.0-wallThickness; h = ss; w = wallThickness; // right
+    rightRoom.push_back(Polygon(x, y, w, h));
+
+
+    // Construct one section of office building.
+    Vector<Polygon> building;
+    Vector<Vec2> dop;
+
+    // Outer ring of rooms.
+
+    // bottom line
+    for (int k = 1; k < rooms-1; k++)
+    {
+        Vector<Polygon> room;
+        room << upRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(k, 0);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(0.5+k, 0.5);
+    }
+
+    // left line
+    for (int k = 1; k < rooms-1; k++)
+    {
+        Vector<Polygon> room;
+        room << rightRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(0, k);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(0.5, 0.5+k);
+    }
+
+    // top line
+    for (int k = 1; k < rooms-1; k++)
+    {
+        Vector<Polygon> room;
+        room << downRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(k, rooms-1);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(0.5+k, rooms-0.5);
+    }
+
+    // right line
+    for (int k = 1; k < rooms-1; k++)
+    {
+        Vector<Polygon> room;
+        room << leftRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(rooms-1, k);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(rooms-0.5, 0.5+k);
+    }
+
+    // Corner rooms.
+    x = 0.5; y = 0.5; w = 0.5; h = 0.5;
+    building.push_back(Polygon(x, y, w, h));
+    x = rooms-0.5; y = 0.5; w = 0.5; h = 0.5;
+    building.push_back(Polygon(x, y, w, h));
+    x = 0.5; y = rooms-0.5; w = 0.5; h = 0.5;
+    building.push_back(Polygon(x, y, w, h));
+    x = rooms-0.5; y = rooms-0.5; w = 0.5; h = 0.5;
+    building.push_back(Polygon(x, y, w, h));
+
+
+
+    // Inner ring of rooms.
+
+    // bottom line
+    for (int k = 3; k < rooms-3; k++)
+    {
+        Vector<Polygon> room;
+        room << downRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(k, 2);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(0.5+k, 2.5);
+    }
+
+    // left line
+    for (int k = 2; k < rooms-2; k++)
+    {
+        Vector<Polygon> room;
+        room << leftRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(2, k);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(2.5, 0.5+k);
+    }
+
+    // top line
+    for (int k = 3; k < rooms-3; k++)
+    {
+        Vector<Polygon> room;
+        room << upRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(k, rooms-3);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(0.5+k, rooms-2.5);
+    }
+
+    // right line
+    for (int k = 2; k < rooms-2; k++)
+    {
+        Vector<Polygon> room;
+        room << rightRoom;
+        for (int i = 0; i < room.size(); i++)
+        {
+            room[i].translate(rooms-3, k);
+            room[i].transform();
+        }
+
+        building << room;
+
+        dop << Vec2(rooms-2.5, 0.5+k);
+    }
+
+    // Center
+    x = 0.5*rooms; y = 0.5*rooms; w = 0.5*(rooms-6.0); h = w;
+    building.push_back(Polygon(x, y, w, h));
+
+
+    // Make the building.
+    for (int k = 0; k < building.size(); k++)
+        building[k].transform();
+    polygons.addPolygons(building);
+    dropOffPoints << dop;
+
+
+    // Scale all obstacles and drop off points by the room size.
+    polygons.scale(roomSize);
+    for (int i = 0; i < dropOffPoints.size(); i++)
+        dropOffPoints[i].scale(roomSize, roomSize);
+}
+
+void World::buildWarehouse()
+{
+    int shelves = 5;
+    double shelfWidth = 1;
+    double shelfHeight = 6;
+    double aisleWidth = config.wareHouseAisleWidth;
+    double avenueWidth = 3;
+    width = 2*avenueWidth + shelves*shelfWidth + (shelves-1)*aisleWidth;
+    height = 3*avenueWidth + 2*shelfHeight;
+
+    // Drop off points
+    for (uint i = 0; i < shelves; i++)
+    {
+        double d = config.gmDilationRadius-0.02;
+
+        Vec2 v;
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
+        v.y = height - avenueWidth - shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
+        v.y = height - avenueWidth - shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
+        v.y = height - avenueWidth - shelfHeight + shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
+        v.y = height - avenueWidth - shelfHeight + shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
+        v.y = avenueWidth + shelfHeight - shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
+        v.y = avenueWidth + shelfHeight - shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
+        v.y = avenueWidth + shelfHeight/4;
+        dropOffPoints.push_back(v);
+
+        v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
+        v.y = avenueWidth + shelfHeight/4;
+        dropOffPoints.push_back(v);
+    }
+
+    dropOffPoints.push_back(Vec2(avenueWidth/2, avenueWidth/2));
+    dropOffPoints.push_back(Vec2(width-avenueWidth/2, avenueWidth/2));
+    dropOffPoints.push_back(Vec2(width-avenueWidth/2, height-avenueWidth/2));
+    dropOffPoints.push_back(Vec2(avenueWidth/2, height-avenueWidth/2));
+
+    // Polygons
+    double w,h,x,y;
+
+    // Top row of shelves.
+    for (uint i = 0; i < shelves; i++)
+    {
+        w = shelfWidth/2;
+        h = shelfHeight/2;
+        x = avenueWidth+w + i*(shelfWidth+aisleWidth);
+        y = height - avenueWidth - h;
+        polygons.addPolygon(Polygon(x, y, w, h));
+    }
+
+    // Bottom row of shelves.
+    for (uint i = 0; i < shelves; i++)
+    {
+        w = shelfWidth/2;
+        h = shelfHeight/2;
+        x = avenueWidth+w + i*(shelfWidth+aisleWidth);
+        y = avenueWidth + h;
+        polygons.addPolygon(Polygon(x, y, w, h));
+    }
+
+
+    // bottom wall
+    w = width/2;
+    h = 0.25;
+    x = w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
+
+    // top wall
+    w = width/2;
+    h = 0.25;
+    x = w;
+    y = height-h;
+    polygons.addPolygon(Polygon(x, y, w, h));
+
+    // left wall
+    w = 0.25;
+    h = height/2;
+    x = w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
+
+    // right wall
+    w = 0.25;
+    h = height/2;
+    x = width-w;
+    y = h;
+    polygons.addPolygon(Polygon(x, y, w, h));
+
+    polygons.transform();
+}
+
 // A map with lots of little triangles.
 void World::buildClutter()
 {
     width = config.clutterWidth;
     height = config.clutterHeight;
 
-    // random drop off points
+    // Random drop off points
     for (int i = 0; i < config.clutterDropOffPoints; i++)
     {
         Vec2 v;
@@ -860,40 +1179,88 @@ void World::buildClutter()
                     break;
                 }
             }
+
+            if (v.x > width-(config.gmDilationRadius+config.worldDropOffRadius)
+                ||
+                v.x < (config.gmDilationRadius+config.worldDropOffRadius)
+                    ||
+                v.y > height-(config.gmDilationRadius+config.worldDropOffRadius)
+                    ||
+                v.y < (config.gmDilationRadius+config.worldDropOffRadius))
+                good = false;
         }
         dropOffPoints.push_back(v);
     }
 
-    // random obstacles
+    double thickness = 0.1;
+    double dx,dy,x,y;
+
+    // Outer walls.
+    dx = thickness;
+    dy = width/2;
+    x = height/2;
+    y = 0;
+    Polygon p1(x, y, dx, dy);
+    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p1); // right
+
+    dx = thickness;
+    dy = width/2;
+    x = -height/2;
+    y = 0;
+    Polygon p2(x, y, dx, dy);
+    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p2); // left
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = -width/2;
+    Polygon p3(x, y, dx, dy);
+    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p3); // bottom
+
+    dx = height/2;
+    dy = thickness;
+    x = 0;
+    y = width/2;
+    Polygon p4(x, y, dx, dy);
+    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
+    polygons.addPolygon(p4); // top
+
+    polygons.translate(width/2, height/2);
+    polygons.transform();
+
+    // Random polygons.
     for (int i = 0; i < config.clutterObstacles; i++)
     {
-        Obstacle obs;
+        Polygon pol;
         bool good = false;
         while (!good)
         {
-            // Starts with a unit octogon.
-            obs.setUnitOctogon();
-
-            // A random transformation.
+            // Determine a random transformation.
             double sx = Statistics::uniformSample(config.clutterObstaclesSizeMin, config.clutterObstaclesSizeMax);
             double sy = Statistics::uniformSample(config.clutterObstaclesSizeMin, config.clutterObstaclesSizeMax);
             double x = Statistics::uniformSample(sx, width-sx);
             double y = Statistics::uniformSample(sy, height-sy);
             double theta = Statistics::uniformSample(-PI, PI);
 
-            // Apply the transformation.
-            obs.scale(sx, sy);
-            obs.translate(x, y);
-            obs.rotate(theta);
-            obs.transform();
+            //qDebug() << "x:" << sx << x << width-sx << "y:" << sy << y << height-sy;
+
+            // Apply the random transformation to the unit octogon.
+            pol.setUnitOctogon();
+            pol.scale(sx, sy);
+            pol.translate(x, y);
+            pol.turn(theta);
+            pol.transform();
 
             // drop off point intersection test
             good = true;
+            Polygon o = pol;
+            o.grow(config.gmDilationRadius);
+            o.grow(config.worldDropOffRadius);
             for (int j = 0; j < dropOffPoints.size(); j++)
             {
-                Obstacle o = obs;
-                o.grow(config.gmPolygonExpansionMargin);
-                o.grow(config.worldDropOffRadius);
                 if (o.intersects(dropOffPoints[j]))
                 {
                     good = false;
@@ -902,7 +1269,7 @@ void World::buildClutter()
             }
         }
 
-        polygons.addObstacle(obs);
+        polygons.addPolygon(pol);
     }
 }
 
@@ -934,7 +1301,7 @@ void World::buildFromFile()
     }
     QTextStream in(&file);
 
-    Obstacle obst;
+    Polygon obst;
     while (!in.atEnd())
     {
         line = in.readLine();
@@ -943,7 +1310,7 @@ void World::buildFromFile()
 
         if (line.size() < 2)
         {
-            polygons.addObstacle(obst);
+            polygons.addPolygon(obst);
             obst.clear();
             continue;
         }
@@ -954,301 +1321,14 @@ void World::buildFromFile()
         obst << Vec2(x, y);
     }
 
-    polygons.addObstacle(obst);
+    polygons.addPolygon(obst);
 
     file.close();
 }
 
-// Builds an office building like map.
-void World::buildOffice()
-{
-    double roomSize = config.officeRoomSize; // width and height of one room in meters
-    double wallThickness = config.officeWallThickness; // in percent of one unit
-    double doorWidth = qMax(0.0, qMin(config.officeDoorWidth, 1.0-4.0*wallThickness)); // in percent of one unit
-    int rooms = qMax(config.officeRooms, 7.0); // number of rooms per unit
-
-    double w,h,x,y;
-
-    // Set the width and height of the map.
-    width = roomSize*rooms;
-    height = width;
-
-    double ss = 0.5 * (1.0 - doorWidth) / 2.0; // doorwall size
-
-    // Build a unit square (room).
-    Vector<Obstacle> square;
-    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
-    square.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
-    square.push_back(Obstacle(x, y, w, h));
-    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
-    square.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
-    square.push_back(Obstacle(x, y, w, h));
-
-    // Make a unit down room.
-    Vector<Obstacle> downRoom;
-    x = ss; y = wallThickness; w = ss; h = wallThickness; // bottom
-    downRoom.push_back(Obstacle(x, y, w, h));
-    x = 1.0-ss; y = wallThickness; w = ss; h = wallThickness; // bottom
-    downRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
-    downRoom.push_back(Obstacle(x, y, w, h));
-    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
-    downRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
-    downRoom.push_back(Obstacle(x, y, w, h));
-
-    // Make a unit up room.
-    Vector<Obstacle> upRoom;
-    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
-    upRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
-    upRoom.push_back(Obstacle(x, y, w, h));
-    x = ss; y = 1.0-wallThickness; w = ss; h = wallThickness; // top
-    upRoom.push_back(Obstacle(x, y, w, h));
-    x = 1.0-ss; y = 1.0-wallThickness; w = ss; h = wallThickness; // top
-    upRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
-    upRoom.push_back(Obstacle(x, y, w, h));
-
-    // Make a unit left room.
-    Vector<Obstacle> leftRoom;
-    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
-    leftRoom.push_back(Obstacle(x, y, w, h));
-    y = ss; x = wallThickness; h = ss; w = wallThickness; // left
-    leftRoom.push_back(Obstacle(x, y, w, h));
-    y = 1.0-ss; x = wallThickness; h = ss; w = wallThickness; // left
-    leftRoom.push_back(Obstacle(x, y, w, h));
-    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
-    leftRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = 1.0-wallThickness; h = 0.5; w = wallThickness; // right
-    leftRoom.push_back(Obstacle(x, y, w, h));
-
-    // Make a unit right room.
-    Vector<Obstacle> rightRoom;
-    x = 0.5; y = wallThickness; w = 0.5; h = wallThickness; // bottom
-    rightRoom.push_back(Obstacle(x, y, w, h));
-    y = 0.5; x = wallThickness; h = 0.5; w = wallThickness; // left
-    rightRoom.push_back(Obstacle(x, y, w, h));
-    x = 0.5; y = 1.0-wallThickness; w = 0.5; h = wallThickness; // top
-    rightRoom.push_back(Obstacle(x, y, w, h));
-    y = ss; x = 1.0-wallThickness; h = ss; w = wallThickness; // right
-    rightRoom.push_back(Obstacle(x, y, w, h));
-    y = 1.0-ss; x = 1.0-wallThickness; h = ss; w = wallThickness; // right
-    rightRoom.push_back(Obstacle(x, y, w, h));
-
-
-    // Construct one section of office building.
-    Vector<Obstacle> building;
-    Vector<Vec2> dop;
-
-    // Outer ring of rooms.
-
-    // bottom line
-    for (int k = 1; k < rooms-1; k++)
-    {
-        Vector<Obstacle> room;
-        room << upRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(k, 0);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(0.5+k, 0.5);
-    }
-
-    // left line
-    for (int k = 2; k < rooms-1; k++)
-    {
-        Vector<Obstacle> room;
-        room << rightRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(0, k);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(0.5, 0.5+k);
-    }
-
-    // top line
-    for (int k = 1; k < rooms-1; k++)
-    {
-        Vector<Obstacle> room;
-        room << downRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(k, rooms-1);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(0.5+k, rooms-0.5);
-    }
-
-    // right line
-    for (int k = 1; k < rooms-1; k++)
-    {
-        Vector<Obstacle> room;
-        room << leftRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(rooms-1, k);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(rooms-0.5, 0.5+k);
-    }
-
-    // Corner rooms.
-    x = 0.5; y = 0.5; w = 0.5; h = 0.5;
-    building.push_back(Obstacle(x, y, w, h));
-    x = rooms-0.5; y = 0.5; w = 0.5; h = 0.5;
-    building.push_back(Obstacle(x, y, w, h));
-    x = 0.5; y = rooms-0.5; w = 0.5; h = 0.5;
-    building.push_back(Obstacle(x, y, w, h));
-    x = rooms-0.5; y = rooms-0.5; w = 0.5; h = 0.5;
-    building.push_back(Obstacle(x, y, w, h));
-
-
-
-    // Inner ring of rooms.
-
-    // bottom line
-    for (int k = 3; k < rooms-3; k++)
-    {
-        Vector<Obstacle> room;
-        room << downRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(k, 2);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(0.5+k, 2.5);
-    }
-
-    // left line
-    for (int k = 2; k < rooms-2; k++)
-    {
-        Vector<Obstacle> room;
-        room << leftRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(2, k);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(2.5, 0.5+k);
-    }
-
-    // top line
-    for (int k = 3; k < rooms-3; k++)
-    {
-        Vector<Obstacle> room;
-        room << upRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(k, rooms-3);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(0.5+k, rooms-2.5);
-    }
-
-    // right line
-    for (int k = 2; k < rooms-2; k++)
-    {
-        Vector<Obstacle> room;
-        room << rightRoom;
-        for (int i = 0; i < room.size(); i++)
-        {
-            room[i].translate(rooms-3, k);
-            room[i].transform();
-        }
-
-        building << room;
-
-        dop << Vec2(rooms-2.5, 0.5+k);
-    }
-
-    // Center
-    x = 0.5*rooms; y = 0.5*rooms; w = 0.5*(rooms-6.0); h = w;
-    building.push_back(Obstacle(x, y, w, h));
-
-
-    // Make the building.
-    for (int k = 0; k < building.size(); k++)
-        building[k].transform();
-    polygons.addObstacles(building);
-    dropOffPoints << dop;
-
-
-    // Scale all obstacles and drop off points by the room size.
-    polygons.scale(roomSize);
-    for (int i = 0; i < dropOffPoints.size(); i++)
-        dropOffPoints[i].scale(roomSize, roomSize);
-}
-
-void World::logObstaclesToTxt()
-{
-    if (dropOffPoints.size() < 2)
-    {
-        qDebug() << "Not enough drop off points specified";
-        return;
-    }
-
-    Vector<Obstacle> polygons = expandedStaticObstacles.getObstacles();
-
-    qDebug() << "Writing the log.";
-
-    Logger log("data/polygons.txt");
-
-    // Write the start and goal states.
-    log << dropOffPoints[0];
-    log++;
-    log << dropOffPoints[1];
-    log++;
-    log++;
-
-    // Write the polygons.
-    unsigned int cornercounter = 0;
-    for (int i = 0; i < polygons.size(); i++)
-    {
-        ListIterator<Vec2> it = polygons[i].vertexIterator();
-        while (it.hasNext())
-        {
-            log << it.next();
-            log++;
-            cornercounter++;
-        }
-
-        log++;
-    }
-
-    qDebug() << "Polygons:" << polygons.size() << "corners:" << cornercounter << ".";
-}
-
-// (Re)Build the simulation by adding all the bodies of the obstacles,
-// cars, pedestrians, the passenger, and the taxi, to the Box2D simulation.
-// It clears first, so it can be used to rebuild the simulation from the bodies
-// in the word at any time. This function will rewrite the body pointers and
-// also the back reference from the body pointer to the world object.
+// (Re)Build the simulation by adding all agents and obstacles to the Box2D simulation.
+// The function clears the simulation first, so it can be used to rebuild the simulation
+// from scratch any time.
 void World::buildSimulation()
 {
     // Clear the simulation first. Clear the forces and destroy all bodies.
@@ -1261,33 +1341,36 @@ void World::buildSimulation()
         box2DSim.DestroyBody(b);
     }
 
-    // We set the gravity to zero since we a have a top down world.
+    // Set the gravity to zero for our top down world.
     box2DSim.SetGravity(b2Vec2(0.0f, 0));
 
-    // obstacles
-    for (int i = 0; i < polygons.size(); i++)
+    // Static polygons.
+    // The simulation environment must be built from the polygons, because
+    // in Box2D obstacles have to be convex with a vertex count of up to 16.
+    ListIterator<Polygon> polygonsIt = polygons.getPolygons().begin();
+    while (polygonsIt.hasNext())
     {
+        Polygon& pol = polygonsIt.next();
         b2BodyDef bodyDef;
         bodyDef.type = b2_staticBody;
         b2Body* body = box2DSim.CreateBody(&bodyDef);
         b2PolygonShape shape;
-        b2Vec2 vertices[polygons.getObstacle(i).size()];
-        ListIterator<Vec2> it = polygons.getObstacle(i).vertexIterator();
+        b2Vec2 vertices[pol.size()];
+        ListIterator<Line> it = pol.edgeIterator();
         int j = 0;
         while (it.hasNext())
         {
-            Vec2& v = it.next();
+            Vec2& v = it.next().p1();
             vertices[j++] = b2Vec2(v.x, v.y);
         }
-        shape.Set(vertices, polygons.getObstacle(i).size());
+        shape.Set(vertices, pol.size());
         body->CreateFixture(&shape, 0.0f);
-        body->id = polygons.getObstacle(i).getId();
-        body->SetUserData(&(polygons.getObstacle(i)));
-        polygons.getObstacle(i).setBody(body);
-        polygons.getObstacle(i).physicsTransformOut(); // If the obstacle comes in transformed state, is this even needed?
+        body->id = pol.getId();
+        body->SetUserData(0); // The static polygons don't get a body pointer.
     }
 
     // Unicycle agents.
+    // This is where the agents get their body pointer set.
     for (int i = 0; i < unicycleAgents.size(); i++)
     {
         b2BodyDef bodyDef;
@@ -1295,16 +1378,16 @@ void World::buildSimulation()
         bodyDef.linearDamping = config.agentLinearDamping;
         bodyDef.angularDamping = config.agentAngularDamping;
         bodyDef.position.Set(unicycleAgents[i].pos().x, unicycleAgents[i].pos().y);
-        bodyDef.angle = unicycleAgents[i].rotation();
+        bodyDef.angle = unicycleAgents[i].orientation();
         b2Body* body = box2DSim.CreateBody(&bodyDef);
 
         b2PolygonShape shape;
         b2Vec2 vertices[unicycleAgents[i].size()];
-        ListIterator<Vec2> it = unicycleAgents[i].vertexIterator();
+        ListIterator<Line> it = unicycleAgents[i].edgeIterator();
         int j = 0;
         while (it.hasNext())
         {
-            Vec2& v = it.next();
+            Vec2& v = it.next().p1();
             vertices[j++] = b2Vec2(v.x, v.y);
         }
         shape.Set(vertices, unicycleAgents[i].size());
@@ -1314,9 +1397,8 @@ void World::buildSimulation()
         fixtureDef.density = 1.0f;
         fixtureDef.friction = config.agentFriction; // This doesn't really do much.
 
-        // This is ghost mode.
-        // Dumb agents can't collide with each other.
-        if (command.ghostMode /*&& unicycleAgents[i].getAgentId() > 0*/) // uncomment the agent id > 0 check to enable collisions.
+        // This is ghost mode. Agents can't collide with each other.
+        if (command.ghostMode /*&& unicycleAgents[i].getAgentId() > 0*/) // uncomment the agent id > 0 check to enable collisions for bots only.
         {
             fixtureDef.filter.categoryBits = 0x0002;
             fixtureDef.filter.maskBits = 0x0001;
@@ -1337,48 +1419,6 @@ void World::buildSimulation()
     }
 }
 
-// Loads a binary saved world state.
-void World::load()
-{
-    QMutexLocker locker(&mutex);
-
-    QFile file("data/world.bin");
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        qDebug() << "World::load(): Could not open file" << file.fileName();
-        return;
-    }
-
-    QDataStream in(&file);
-    in >> mapId;
-    in >> staticObstacles;
-    in >> unicycleAgents;
-    file.close();
-
-    buildSimulation();
-
-    for (int i = 0; i < unicycleAgents.size(); i++)
-        if (!unicycleAgents[i].isActive())
-            unicycleAgents[i].deactivate();
-}
-
-// Saves the world in a binary file.
-void World::save() const
-{
-    QFile file("data/world.bin");
-    if (!file.open(QIODevice::WriteOnly))
-    {
-        qDebug() << "World::save(): Could not write to file" << file.fileName();
-        return;
-    }
-
-    QDataStream out(&file);
-    out << mapId;
-    out << staticObstacles;
-    out << unicycleAgents;
-    file.close();
-}
-
 // Calls the step() function of all agents. The step() functions compute
 // the controls for the respective agent. These controls will then be
 // applied to the physical body of the agent, e.g. as an acting force.
@@ -1397,9 +1437,12 @@ void World::stepAgents()
 // into the agents.
 void World::step()
 {
-    //QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutex);
 
     // Step the physical simulation.
+    // The amount of simulated time is determined by the selected frequency
+    // (10 Hz, 20 Hz, 30 Hz). For example, if 10 Hz has been selected, the
+    // simulated time is 100 ms.
     float32 timeStep = simulationTimeStep;
     int32 velocityIterations = 10;
     int32 positionIterations = 5;
@@ -1416,11 +1459,11 @@ void World::step()
     // a short amount of time.
     stepAgents();
 
-    // In ghost robot mode, the objects in the physical simulation don't collide and we
-    // have to care for the collisions manually.
+    // In ghost robot mode, the agents don't collide in the physical simulation
+    // and we have to care for the collisions manually.
     if (command.ghostMode)
     {
-        Polygon polMain;
+        Polygon polMain; // = unicycleAgents[0]; ???
         polMain.setVertices(unicycleAgents[0].getVertices());
         polMain.setPose(unicycleAgents[0].pose());
         polMain.transform();
@@ -1444,12 +1487,13 @@ void World::step()
 }
 
 // Returns a list of the static obstacles in the world.
-const Vector<Obstacle>& World::getStaticObstacles() const
+const Vector<Polygon>& World::getStaticObstacles() const
 {
-    return staticObstacles.getObstacles();
+    return worldMap.getPolygons();
 }
 
-// Returns a list of the unicycle agents in the world.
+// Returns a vector of the unicycle agents in the world.
+// Using the excludeId, a single unicycle agent can be excluded from the vector.
 Vector<UnicycleObstacle> World::getUnicycleObstacles(int excludeId) const
 {
     Vector<UnicycleObstacle> obst;
@@ -1460,19 +1504,6 @@ Vector<UnicycleObstacle> World::getUnicycleObstacles(int excludeId) const
                 obst << unicycleAgents[i];
     }
     return obst;
-}
-
-void World::setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency)
-{
-    for (int i = 0; i < unicycleAgents.size(); i++)
-        unicycleAgents[i].setParams(trajectoryPlanningMethod, trajectoryType, predictionType, heuristicType, frequency);
-
-    if (frequency == 10)
-        simulationTimeStep = 0.1;
-    else if (frequency == 20)
-        simulationTimeStep = 0.05;
-    else
-        simulationTimeStep = 0.03;
 }
 
 // Returns the drop off points.
@@ -1493,11 +1524,13 @@ void World::BeginContact(b2Contact* contact)
         // Default collision handlers.
         if (body1->id > 0)
         {
-            ((Obstacle*)(body1->GetUserData()))->collisionResponse((Obstacle*)(body2->GetUserData()));
+            if (body1->GetUserData() != 0)
+                ((Obstacle*)(body1->GetUserData()))->collisionResponse((Obstacle*)(body2->GetUserData()));
         }
         if (body2->id > 0)
         {
-            ((Obstacle*)(body2->GetUserData()))->collisionResponse((Obstacle*)(body1->GetUserData()));
+            if (body2->GetUserData() != 0)
+                ((Obstacle*)(body2->GetUserData()))->collisionResponse((Obstacle*)(body1->GetUserData()));
         }
     }
 }
@@ -1520,8 +1553,6 @@ void World::EndContact(b2Contact *contact)
 // of the main control loop.
 void World::physicsTransformIn()
 {
-//    for (int i = 0; i < staticObstacles.size(); i++)
-//        staticObstacles.getObstacle(i).physicsTransformIn(); // Not really needed is it?
     for (int i = 0; i < unicycleAgents.size(); i++)
         unicycleAgents[i].physicsTransformIn();
     for (int i = 0; i < unicycleAgents.size(); i++)
@@ -1537,34 +1568,130 @@ void World::physicsTransformOut()
     buildSimulation();
 }
 
-// Applies the forces to the world objects in the physical simulation through their body pointers.
-// This function is called in every iteration of the main control loop after the control
-// functions of the objects have been executed.
+// Applies the forces to the world objects in the physical simulation through their body
+// pointers. This function is called in every iteration of the main control loop after the
+// control functions of the objects have been executed.
 void World::physicsControl()
 {
     for (int i = 0; i < unicycleAgents.size(); i++)
         unicycleAgents[i].physicsControl();
-    for (int i = 0; i < staticObstacles.size(); i++)
-        staticObstacles.getObstacle(i).physicsControl();
 }
 
 // Switches to the map with the id w.
-// A seed can be forced by setting the parameter s to reproduce a specific sequence of maps.
-void World::setMap(int m, int agents)
+void World::setMap(int m, int numAgents)
 {
+    // Set the random seed here if you want to reproduce a specific run.
     //Statistics::setSeed(298438517); // set the seed here if you want to see a specific run
-    //qDebug() << "Seed set to" << 298438517 << "check:" << Statistics::randomNumber();
+    //qDebug() << "Seed set to" << Statistics::getSeed() << "check:" << Statistics::randomNumber();
     mapId = m;
-    numAgents = agents;
+    this->numAgents = numAgents;
     reset();
-    //qDebug() << "agents:" << unicycleAgents;
 }
 
-// Draws the world overlay on the QPainter.
-// The world overlay is additional visualization that is drawn on top of the GraphicsScene.
-// The GraphicsScene uses the Qt graphics framework to visualize the polygons in state.world.
-// The world overlay adds paths and trajectories, perception overlays, and the plan animation
-// feature.
+// Sets the world parameters that determine things like the trajectory planner of the agents
+// (PD, DWA, A*, RuleBase), the trajectory type being used (arc, B0, Fresnel), the prediction
+// type (linear, unicycle), the heuristic (MC, Dijkstra, Euklidean), and most importantly, the
+// control frequency (10 Hz, 20 Hz, 30Hz) and with that the time step of the physical simulation.
+void World::setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency)
+{
+    for (int i = 0; i < unicycleAgents.size(); i++)
+        unicycleAgents[i].setParams(trajectoryPlanningMethod, trajectoryType, predictionType, heuristicType, frequency);
+    simulationTimeStep = 1.0/frequency;
+}
+
+// Adds unicycle agents to the world. The agents start on a random
+// drop-off point which are assumed to be non-colliding.
+void World::addAgents(uint numAgents)
+{
+    if (dropOffPoints.size() < numAgents)
+    {
+        qDebug() << "Warning! Not enough drop off points to spawn all agents! dropOffPoints:" << dropOffPoints.size() << "agents:" << numAgents;
+        numAgents = dropOffPoints.size();
+    }
+
+    // Permute the drop off poinsts to be used as random starting positions for the agents.
+    Vector<Vec2> permutedDropOffPoints = dropOffPoints;
+    for (uint d = 0; d < dropOffPoints.size(); d++)
+        permutedDropOffPoints.swap(d, Statistics::randomInt(0, dropOffPoints.size()-1));
+
+    for (int i = 0; i < numAgents; i++)
+    {
+        UnicycleAgent ua;
+        ua.setAgentId(i); // The first main agent has the id 0.
+        ua.init(permutedDropOffPoints[i]);
+        ua.setPos(permutedDropOffPoints[i]);
+        ua.setOrientation(Statistics::uniformSample(-PI, PI));
+        ua.setWorldDropOffPoints(getDropOffPoints());
+        ua.setWorldMap(worldMap);
+        ua.setWorldPolygons(polygons);
+        unicycleAgents.push_back(ua); // Note that the because of the push the agent needs to be copyable.
+    }
+}
+
+// Returns a human readable map name.
+QString World::getMapName(uint map) const
+{
+    QString mapName;
+    if (map == 0)
+        mapName = "void";
+    if (map == 1)
+        mapName = "simple";
+    if (map == 2)
+        mapName = "u";
+    if (map == 3)
+        mapName = "apartment";
+    if (map == 4)
+        mapName = "warehouse";
+    if (map == 5)
+        mapName = "office";
+    if (map == 6)
+        mapName = "clutter";
+
+    return mapName;
+}
+
+void World::logObstaclesToTxt()
+{
+    if (dropOffPoints.size() < 2)
+    {
+        qDebug() << "Not enough drop off points specified";
+        return;
+    }
+
+    Vector<Polygon> polygons = worldMap.getPolygons();
+
+    qDebug() << "Writing the log.";
+
+    Logger log("data/polygons.txt");
+
+    // Write the start and goal states.
+    log << dropOffPoints[0];
+    log++;
+    log << dropOffPoints[1];
+    log++;
+    log++;
+
+    // Write the polygons.
+    unsigned int cornercounter = 0;
+    for (int i = 0; i < polygons.size(); i++)
+    {
+        ListIterator<Line> it = polygons[i].edgeIterator();
+        while (it.hasNext())
+        {
+            log << it.next().p1();
+            log++;
+            cornercounter++;
+        }
+
+        log++;
+    }
+
+    qDebug() << "Polygons:" << polygons.size() << "corners:" << cornercounter << ".";
+}
+
+// Draws the world on the QPainter.
+// The world visualization is drawn on top of the GraphicsScene. Right now, world.draw()
+// is used exclusively for all visualization and the GraphicsScene does nothing.
 void World::draw(QPainter *painter) const
 {
     QMutexLocker locker(&mutex);
@@ -1576,7 +1703,7 @@ void World::draw(QPainter *painter) const
     if (command.showSimulationDebugDraw)
     {
         painter->save();
-        painter->setPen(colorUtil.penBlueThick);
+        painter->setPen(drawUtil.penBlueThick);
         const b2Body* node = box2DSim.GetBodyList();
 
         while (node)
@@ -1606,27 +1733,13 @@ void World::draw(QPainter *painter) const
         painter->restore();
     }
 
-    // Draw the world map polygons.
-    // This is the assumed map the agent is making.
+    // Draw the world map. This is the map the agent is making.
     if (command.showWorldMap)
-    {
-        if (!staticObstacles.getObstacles().isEmpty() && staticObstacles.getObstacles()[0].type == Obstacle::FreeSpace)
-        {
-            painter->save();
-            painter->setPen(colorUtil.pen);
-            //painter->setBrush(colorUtil.brushLightGray);
-            painter->fillRect(0, 0, state.world.width, state.world.height, colorUtil.brushGray);
-            painter->drawRect(0, 0, state.world.width, state.world.height);
-            painter->restore();
-        }
-        if (command.showExpandedWorldMap)
-            expandedStaticObstacles.draw(painter, colorUtil.penDashed, colorUtil.brushLightGray, 0.5);
-        staticObstacles.draw(painter, colorUtil.pen, colorUtil.brush, 0.5);
-    }
+        worldMap.draw(painter, drawUtil.penDashed, drawUtil.brushWhite, QBrush(QColor::fromRgb(245,245,245)));
 
-    // The raw polygons.
-    if (command.showWorldObstacles)
-        polygons.draw(painter, colorUtil.pen, colorUtil.brush, 0.8);
+    // The raw world polygons.
+    if (command.showWorldPolygons)
+        polygons.draw(painter, drawUtil.pen, drawUtil.brush, Qt::NoBrush);
 
     // The drop off points.
     if (command.showDropOffPoints)
@@ -1636,7 +1749,7 @@ void World::draw(QPainter *painter) const
             painter->save();
             double r = config.worldDropOffRadius;
             painter->translate(dropOffPoints[i]);
-            painter->setPen(colorUtil.penThinDashed);
+            painter->setPen(drawUtil.penThinDashed);
             painter->drawEllipse(QPointF(), r, r);
             painter->scale(0.03, -0.03);
             if (i > 9)
@@ -1652,24 +1765,14 @@ void World::draw(QPainter *painter) const
         unicycleAgents[i].draw(painter);
 }
 
-// Draws the world underlay on the QPainter.
-// The world overlay is additional visualization that is drawn underneath the GraphicsScene.
-// The GraphicsScene uses the Qt graphics framework to visualize the polygons in state.world.
-// The world underlay adds paths and trajectories that are drawn underneath the agents.
-void World::preDraw(QPainter *painter) const
+// Draws the world background on the QPainter.
+// The world background is additional visualization that is drawn underneath (behind) the
+// GraphicsScene. The world background draws things that are underneath the agents. There
+// is not much point to it as all these things can be drawn in the draw() method just as
+// well *before* the agents are drawn.
+void World::drawBackground(QPainter *painter) const
 {
     QMutexLocker locker(&mutex);
-
-    // Plan trace.
-    // It draws a history of all plans in the state.
-    if (command.showPlanTrace)
-    {
-        painter->save();
-        painter->setPen(colorUtil.penRed);
-        for (int i = 0; i < state.size(); i++)
-            state[i].uniTaxi.drawPlan(painter);
-        painter->restore();
-    }
 
     // Trajectory trace.
     // When enabled, it shows the history of all taxi positions in the state.
@@ -1678,8 +1781,8 @@ void World::preDraw(QPainter *painter) const
         double s = 1.0/painter->transform().m11();
         painter->save();
 
-        painter->setPen(colorUtil.penBlueThick);
-        painter->setBrush(colorUtil.brushRed);
+        painter->setPen(drawUtil.penBlueThick);
+        painter->setBrush(drawUtil.brushRed);
         for (int i = 0; i < state.size(); i++)
             painter->drawEllipse(state[i].uniTaxi.pos(), s, s);
 
@@ -1687,61 +1790,9 @@ void World::preDraw(QPainter *painter) const
     }
 }
 
-// Adds unicycle agents to the world. The agents start on a random
-// drop-off point which are assumed to be non-colliding. The number
-// of agents to be added is set by setMap().
-void World::addAgents()
-{
-    if (dropOffPoints.size() < numAgents)
-    {
-        qDebug() << "Warning! Not enough drop off points to spawn all agents! dropOffPoints:" << dropOffPoints.size() << "agents:" << numAgents;
-        numAgents = dropOffPoints.size();
-    }
-    Vector<Vec2> permutedDropOffPoints = dropOffPoints;
-    for (uint d = 0; d < dropOffPoints.size(); d++)
-        permutedDropOffPoints.swap(d, Statistics::randomInt(0, dropOffPoints.size()-1));
-
-    int id = 0;
-    for (int i = 0; i < numAgents; i++)
-    {
-        UnicycleAgent ua;
-        ua.setAgentId(id++);
-        ua.init(permutedDropOffPoints[i]);
-        ua.setPos(permutedDropOffPoints[i]);
-        ua.setRotation(Statistics::uniformSample(-PI, PI));
-        ua.setWorldDropOffPoints(getDropOffPoints());
-        ua.setWorldStaticObstacles(staticObstacles.getObstacles());
-        ua.setWorldExpandedStaticObstacles(expandedStaticObstacles.getObstacles());
-        unicycleAgents.push_back(ua);
-    }
-}
-
-QString World::getMapName(uint map) const
-{
-    QString mapName;
-    if (map == 0)
-        mapName = "void";
-    if (map == 1)
-        mapName = "simple";
-    if (map == 2)
-        mapName = "u";
-    if (map == 3)
-        mapName = "outdoor";
-    if (map == 4)
-        mapName = "apartment";
-    if (map == 5)
-        mapName = "warehouse";
-    if (map == 6)
-        mapName = "office";
-    if (map == 7)
-        mapName = "clutter";
-
-    return mapName;
-}
-
 QDebug operator<<(QDebug dbg, const World &w)
 {
-    Vector<Obstacle> obst = w.staticObstacles.getObstacles();
+    Vector<Polygon> obst = w.worldMap.getPolygons();
     dbg << "Static Obstacles:" << "\n";
     for (int i = 0; i < obst.size(); i++)
         dbg << "   " << obst[i]  << "\n";
@@ -1754,34 +1805,3 @@ QDebug operator<<(QDebug dbg, const World &w)
     return dbg;
 }
 
-void World::streamOut(QDataStream& out) const
-{
-    out << width;
-    out << height;
-    out << mapId;
-    out << dropOffPoints;
-    out << staticObstacles;
-    out << unicycleAgents;
-}
-
-void World::streamIn(QDataStream& in)
-{
-    in >> width;
-    in >> height;
-    in >> mapId;
-    in >> dropOffPoints;
-    in >> staticObstacles;
-    in >> unicycleAgents;
-}
-
-QDataStream& operator<<(QDataStream& out, const World &w)
-{
-    w.streamOut(out);
-    return out;
-}
-
-QDataStream& operator>>(QDataStream& in, World &w)
-{
-    w.streamIn(in);
-    return in;
-}

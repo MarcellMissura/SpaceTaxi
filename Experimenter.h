@@ -2,9 +2,9 @@
 #define EXPERIMENTER_H_
 #include <QThread>
 #include <QString>
-#include "util/Vec2.h"
-#include "util/Vector.h"
-#include "util/Logger.h"
+#include "lib/util/Vec2.h"
+#include "lib/util/Vector.h"
+#include "lib/util/Logger.h"
 #include "ExperimentConfig.h"
 
 class Experimenter : public QThread
@@ -39,7 +39,6 @@ signals:
 private:
     void trajectoryExperiments();
     void postProcessTrajectoryExperiments();
-    void geometricModelTest();
     void geometryRuntimeTests();
     void containerTest();
     void lineTests();

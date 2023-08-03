@@ -1,7 +1,7 @@
 #ifndef EXPERIMENTCONFIG_H_
 #define EXPERIMENTCONFIG_H_
 #include <QString>
-#include "util/VecN.h"
+#include "lib/util/VecN.h"
 
 struct ExperimentConfig
 {

@@ -5,7 +5,7 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
-#include "util/StopWatch.h"
+#include "lib/util/StopWatch.h"
 
 class GraphicsScene : public QGraphicsScene
 {

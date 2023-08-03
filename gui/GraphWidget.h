@@ -2,8 +2,8 @@
 #define GRAPH_H
 #include <QWidget>
 #include "Curve.h"
-#include "util/StopWatch.h"
-#include "util/Vec2i.h"
+#include "lib/util/StopWatch.h"
+#include "lib/util/Vec2i.h"
 
 class GraphWidget: public QWidget
 {

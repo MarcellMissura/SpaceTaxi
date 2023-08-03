@@ -14,32 +14,42 @@ Command::Command()
 
     showBody = true;
     showTargets = true;
-    showGeometricModel = false;
-    showSensedGrid = 1;
+    showSensedPolygons = false;
+    showSensedGrid = false;
     showDijkstraMap = false;
     showTrajectoryTrace = false;
-    showPlanTrace = false;
     showSimulationDebugDraw = false;
     showWorldVisibilityGraph = false;
     showLocalVisibilityGraph = false;
     showDropOffPoints = true;
-    showWorldObstacles = false;
+    showWorldPolygons = true;
     showWorldMap = true;
-    showExpandedWorldMap = true;
     showRayModel = false;
     showWorldPath = true;
+    showLidar = 0;
+    showPoseGraph = 1;
+    showLineMap = 1;
+    showVisibilityPolygon = false;
+    showPolygonMap = 1;
+    showPose = 1;
 
     learn = false;
     predictionType = Unicycle; // Unicycle, Holonomic, None
-    forceFieldReflex = true;
-    stucknessReflex = true;
+    emergencyBrakeReflex = true;
+    stucknessReflex = false;
     useTimeAbort = true;
     useDynamicPath = true;
     useClosing = true;
-    ghostMode = false;
+    ghostMode = true;
     pathPlanningMethod = MinimalConstruct;
-    trajectoryPlanningMethod = STAA;
+    trajectoryPlanningMethod = PD;
     heuristic = MinimalConstruct;
     trajectoryType = Arc;
-    frequency = 30;
+    frequency = 10;
+
+    globalLocalization = false;
+    keepLineObservations = false;
+    keepPoseHistory = false;
+    mapUpdateEnabled = true;
+    laserPointSmoothing = false;
 }

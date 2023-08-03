@@ -2,7 +2,8 @@
 #include <math.h>
 #include "blackboard/State.h"
 #include "blackboard/Config.h"
-#include "globals.h"
+#include "blackboard/Command.h"
+
 
 Curve::Curve()
 {
@@ -155,21 +156,13 @@ void Curve::draw(QPainter* painter)
 	// When the view is zoomed out, multiple states map to the same pixel and there is no point drawing all of them.
 	// To avoid excessive plotting, determine the stride to step through the state history.
 	int stride = 1;
-	stride = qMax(1, qFloor(1.0/(painter->transform().m11()*config.rcIterationTime)));
+    stride = qMax(1, qFloor(1.0/(painter->transform().m11()*(1.0/command.frequency))));
 
-	// For each stride, determine the min and the max state value. These have to be plotted to avoid flickering.
+    // Collect the indices of the state history that need to be plotted.
 	indices.clear();
-	for (int i = startIndex; i > endIndex+stride-2; i=i-stride)
-	{
+    for (int i = startIndex; i < endIndex; i=i+stride)
         indices << i;
-	}
-
-    if (indices.isEmpty())
-    {
-        painter->restore();
-        painter->restore();
-        return;
-    }
+    indices << endIndex;
 
 	// Draw the actual curve.
 	double x1,y1,x2,y2;

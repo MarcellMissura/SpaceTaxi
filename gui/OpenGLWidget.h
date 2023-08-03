@@ -1,101 +1,63 @@
-#ifndef OpenGLWidget_H
-#define OpenGLWidget_H
+#ifndef OPENGLWIDGET_H_
+#define OPENGLWIDGET_H_
 
-#include "MessageQueue.h"
 #include <QGLViewer/qglviewer.h>
-#include "RobotModel/RobotModel.h"
-#include "RobotModel/Copedo.h"
-#include "RobotModel/Dynaped.h"
-#include "RobotModel/Thor.h"
-#include "RobotModel/Nop.h"
-#include "blackboard/State.h"
-#include "soccerfield/SoccerField.h"
+#include "util/StopWatch.h"
+#include "MessageQueue.h"
+#include "util/Pose2D.h"
+
+using namespace qglviewer;
 
 class OpenGLWidget: public QGLViewer
 {
-	Q_OBJECT
+    Q_OBJECT
 
-public:
-	double tscale;
-	bool recording;
+    bool inited;
 
-	bool autoCam;
-    int showFloor;
-    bool showGcv;
-	bool showShadow;
-    bool showTrajectories;
-    bool showShortestPath;
-    bool showRobotModel;
-    bool showWorldPolygons;
-    bool showWorldGrid;
-    bool showWorldGeometry;
-    bool showGlobalPath;
-    bool showSensedGrid;
-    bool showExperimentPaths;
-
-private:
-	int currentStateIndex;
     double radius;
 
     MessageQueue messageQueue;
-    int pushArrowTimer;
+    StopWatch stopWatch;
 
-    RobotModel* rxModel;
-	RobotModel* txModel;
-	Copedo rxCopedo;
-	Copedo txCopedo;
-	Dynaped rxDynaped;
-	Dynaped txDynaped;
-	Thor rxThor;
-	Thor txThor;
-	Nop rxNop;
-	Nop txNop;
-	RobotModel rxSimon;
-	RobotModel txSimon;
-    Vector<RobotModel> models;
-    RobotModel trajectorySimon;
-    SoccerField soccerField;
+    qglviewer::Vec poseArrowStart, poseArrowFinish;
+
+    QString worldCoordString;
+    QString localCoordString;
+    QString gridCoordString;
+    QPoint mouseMovePos;
+
+    Pose2D recordedPose;
+
+public:
+    bool recording;
 
 public:
     OpenGLWidget(QWidget* parent=0);
     ~OpenGLWidget();
 
-	void changeRobot(QString robotName);
-
-public:
-	void keyPressEvent(QKeyEvent*);
-
-
 public slots:
-	void messageIn(QString m);
-    void setFrameIndex(int cfi);
-	void reset();
-
-	void toggleAxis();
-	void togglePerspective();
-	void toggleFloor();
-	void toggleShadow();
-    void toggleTrajectories();
-	void toggleGcv();
-    void toggleRobotModel();
-    void toggleShortestPath();
-    void toggleWorldPolygons();
-    void toggleWorldGrid();
-    void toggleWorldGeometry();
-    void toggleGlobalPath();
-    void toggleSensedGrid();
-    void toggleExperimentPaths();
+    void messageIn(QString m);
+    void reset();
+    void toggleAxis();
+    void startRecording();
+    void stopRecording();
+    void cameraView();
 
 protected:
-	void init();
-	void draw();
+    void init() override;
+    void draw() override;
+
+    void mousePressEvent(QMouseEvent *qme) override;
+    void mouseReleaseEvent(QMouseEvent *qme) override;
+    void mouseMoveEvent(QMouseEvent *qme) override;
 
 private:
-    void drawFloor() const;
-    void drawSoccerField() const;
-    void drawGaitVector(Vec3 gaitVector, double r, double g, double b) const;
-    void drawTrajectories() const;
+    void drawFloor();
+    void drawRecordedPose();
+
+signals:
+    void poseRecorded(const Pose2D& p);
 
 };
 
-#endif // OpenGLWidget_H
+#endif
