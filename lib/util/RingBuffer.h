@@ -79,7 +79,24 @@ public:
     }
 
     RingBuffer<T>& operator<<(T const& e) {push(e); return *this;} // Same as push_back().
+
+
+    void streamOut(QDataStream& out) const
+    {
+        out << maxSize;
+        out << bufferOffset;
+        out << d;
+    }
+
+    void streamIn(QDataStream &in)
+    {
+        in >> maxSize;
+        in >> bufferOffset;
+        in >> d;
+    }
 };
+
+
 
 // QDebug output.
 template <typename T>
@@ -106,6 +123,22 @@ QDebug operator<<(QDebug dbg, const RingBuffer<T> &o)
         dbg << o[i] << "\n";
     dbg << "]";
     return dbg;
+}
+
+// Streams the content of the RingBuffer into the QDataStream.
+template <typename T>
+QDataStream& operator<<(QDataStream& out, const RingBuffer<T> &o)
+{
+    o.streamOut(out);
+    return out;
+}
+
+// Streams the contents of the QDataStream into the RingBuffer.
+template <typename T>
+QDataStream& operator>>(QDataStream& in, RingBuffer<T> &o)
+{
+    o.streamIn(in);
+    return in;
 }
 
 #endif

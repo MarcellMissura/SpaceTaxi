@@ -18,6 +18,8 @@ public:
     Pose2D(const Vec2 &o, double zo=0);
     Pose2D(double xo, double yo, double zo=0);
 
+    operator QTransform() const {return getQTransform();}
+
 public:
 
     bool isNull() const;

@@ -13,14 +13,15 @@ public:
     Vector<TrackedLine> lineObservations; // Storage for line observations that went into computing an "average".
     LinkedList<PoseGraphNode*> observerNodes;
 
-    bool seenP1; // Has p1 been seen?
-    bool seenP2; // Has p2 been seen?
-    double totalWeight; // The accumulated weight of all obversations.
-    uint observationCount; // How many times has this line been observed?
     uint firstSeen; // The frameId of the first observation.
     uint lastSeen; // The frameId of the last observation.
+    uint observationCount; // How many times has this line been observed?
+    bool seenP1; // Has p1 been seen?
+    bool seenP2; // Has p2 been seen?
+    uint seenP1Count; // How many times has p1 been seen?
+    uint seenP2Count; // How many times has p1 been seen?
+    double totalWeight; // The accumulated weight of all observations.
     bool active; // Flag that indicates whether the line is in the active set or not.
-
 
     TrackedLine();
     TrackedLine(const Line& l, uint frameId=0);

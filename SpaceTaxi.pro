@@ -12,16 +12,16 @@ QT += core \
 HEADERS += Experimenter.h \
     ExperimentConfig.h \
     World.h \
-    SpaceTaxi.h \
+    MainWindow.h \
     MainControlLoop.h \
     globals.h
 SOURCES += Experimenter.cpp \
     ExperimentConfig.cpp \
     World.cpp \
     MainControlLoop.cpp \
-    SpaceTaxi.cpp \
+    MainWindow.cpp \
     main.cpp
-FORMS += spacetaxi.ui
+FORMS += gui.ui
 RESOURCES +=
 CONFIG += console
 CONFIG += warn_off

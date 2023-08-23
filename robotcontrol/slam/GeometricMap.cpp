@@ -61,7 +61,7 @@ bool GeometricMap::isEmpty() const
 // Adds a line to the map, if the line is long enough.
 void GeometricMap::addLine(const TrackedLine &o)
 {
-    if (o.length() < config.laserMinLineLength)
+    if (o.length() < config.laserLineMinLength)
         return;
 
     uint id = 0;
@@ -172,12 +172,12 @@ Pose2D GeometricMap::slam(const Pose2D &inputPose, const Vector<TrackedLine> &in
 
     // The medium snap is used as an indicator for loop closing. The snapMedium() function
     // also produces a mediumSnapQuality indicator, confirmedLinePairs, and observer poses.
-    mediumSnappedPose = snapMedium(this->inputLines, inputPose, config.debugLevel > 0);
+    mediumSnappedPose = snapMedium(this->inputLines, inputPose, config.debugLevel > 10);
 
     // Use the local snap function to compute a snappedPose that aligns the input lines with the map
     // lines as good as it can. After this function, the confirmedLinePairs and unconfirmedInputLines
     // will be filled with data as needed for updating the map.
-    localSnappedPose = snapLocal(this->inputLines, inputPose, config.debugLevel > 10);
+    localSnappedPose = snapLocal(this->inputLines, inputPose, config.debugLevel > 0);
 
     // Detect bad snaps and return the input pose without modifying the map.
     if (localSnappedPose.isNan())
@@ -202,7 +202,7 @@ Pose2D GeometricMap::slam(const Pose2D &inputPose, const Vector<TrackedLine> &in
     updatePoseGraph(localSnappedPose, seenLines, config.debugLevel > 10);
 
     // Update the polygon map.
-    updatePolygonMap(localSnappedPose, visPol, config.debugLevel > 0);
+    updatePolygonMap(localSnappedPose, visPol, config.debugLevel > 10);
 
     // Loop closing.
     // Loop closing is detected when the medium snap successfully managed to snap
@@ -255,7 +255,7 @@ void GeometricMap::printMemoryUsage() const
     qDebug() << "Polygon vertices:" << sizeof(double)*polygonMap.getVertexCount() / 1024;
 }
 
-//
+
 void GeometricMap::exportMap() const
 {
     qDebug() << "Map lines:";
@@ -392,19 +392,19 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     if (debug)
     {
         qDebug() << state.frameId << "All local line pairs:" << linePairs.size();
-        qDebug() << linePairs;
+        qDebug() << &linePairs;
     }
 
     // 2. Extract the largest consensus set from the line pairs with respect to rotation.
     // This is to remove outliers. In the local snap setting where all input lines are
     // close to their paired map line, we can assume a unimodal distribution of the
     // rotation with perhaps a few outliers.
-    linePairs = rotationConsensus(linePairs, config.slamClusteringAngleEps, debug);
+    linePairs = rotationConsensus(linePairs, config.slamClusteringAngleEps);
 
     if (debug)
     {
         qDebug() << state.frameId << "Rotation angle sample consensus:";
-        qDebug() << linePairs;
+        qDebug() << &linePairs;
     }
 
     // 3. Compute the weighted average rotation of the consensus set and let that be the rotation of our snap transform.
@@ -417,12 +417,14 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     }
     if (totalWeight > 0)
         avgRotation /= totalWeight;
-    localSnappedPose.turn(avgRotation);
+
+    if (debug)
+        qDebug() << "Avg rotation:" << avgRotation;
 
     // Update the rotation of the line pairs in the consensus set.
+    localSnappedPose.turn(avgRotation);
     for (uint i = 0; i < linePairs.size(); i++)
         linePairs[i].inputPose = localSnappedPose;
-
 
 
     // 4. Build pairs of line pairs to acquire a set of hypotheses of what the transformation could be.
@@ -546,11 +548,11 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     {
         // 9. Compute the hypothesis consensus set and discard outliers.
         // Compute the consensus of the set of "proper" hypotheses.
-        Vector<TransformationHypothesis> hypothesisConsensusSet = hypConsensus(properHypothesisSet, config.slamClusteringTransformEps);
-        if (false && debug)
+        Vector<TransformationHypothesis> hypothesisConsensusSet = hypConsensus(properHypothesisSet, config.slamClusteringTransformEps, debug);
+        if (debug)
         {
             qDebug() << state.frameId << "Hypothesis consensus set:";
-            qDebug() << hypothesisConsensusSet;
+            qDebug() << &hypothesisConsensusSet;
         }
 
         // 10. Settle on the average translation of the hypothesis consensus set.
@@ -592,8 +594,8 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
             hypothesisConsensusSet[i].linePair1->confirmed = true;
             hypothesisConsensusSet[i].linePair2->confirmed = true;
         }
-        if (false && debug)
-            qDebug() << state.frameId << "Confirmed line pairs:" << confirmedLinePairs;
+        if (debug)
+            qDebug() << state.frameId << "Confirmed line pairs:" << &confirmedLinePairs;
     }
 
 
@@ -603,8 +605,8 @@ Pose2D GeometricMap::snapLocal(Vector<TrackedLine> &inputLines, const Pose2D &in
     if (!inputLines[i].active)
         unconfirmedInputLines << inputLines[i] + localSnappedPose;
 
-    if (false && debug)
-        qDebug() << state.frameId << "Unconfirmed input lines:" << unconfirmedInputLines;
+    if (debug)
+        qDebug() << state.frameId << "Unconfirmed input lines:" << &unconfirmedInputLines;
 
     if (debug)
         qDebug() << "Returning snapped pose:" << localSnappedPose  << "diff:" << localSnappedPose-inputPose << (localSnappedPose-inputPose).norm();
@@ -734,7 +736,7 @@ Pose2D GeometricMap::snapGlobal(Vector<TrackedLine> &inputLines, bool debug)
         return globalSnappedPose;
     }
 
-    // The consensus set can still contain multiple clusters of hypotheses, i.e. it is multi-modal.
+    // The consensus set can still contain multiple clusters of hypotheses, i.e. it is multimodal.
     // Perform a cluster analysis and pick the largest one with the most votes.
     Vector<Vector<TransformationHypothesis> > hypsClusters = hypClusters(hypothesisConsensusSet, config.slamClusteringTransformEps);
     if (hypsClusters.size() > 1)
@@ -1498,7 +1500,7 @@ void GeometricMap::eraseMapLines(const Pose2D& pose, const Polygon &visPol, bool
                 Vector<Line> clippedLines = visibilityPolygon.clipLine(mapLine);
                 for (uint k = 0; k < clippedLines.size(); k++)
                 {
-                    if (clippedLines[k].length() > config.laserMinLineLength)
+                    if (clippedLines[k].length() > config.laserLineMinLength)
                     {
                         lineBuffer << TrackedLine(clippedLines[k], state.frameId);
                         lineBuffer.last().firstSeen = mapLine.firstSeen;
@@ -1605,9 +1607,9 @@ Vector<LinePair> GeometricMap::translationConsensus(const Vector<LinePair>& line
     return consensusSet;
 }
 
-// Returns the transformation hypotheses that are in consens with each other with respect to the dist
-// between their transformations and the neighbourhood threshold eps. In other words, outliers are
-// discarded that are far away from the agreeing majority of the hypotheses set.
+// Returns the largest set of transformation hypotheses that are in consens with each other with respect
+// to the dist between their transformations and the neighbourhood threshold eps. In other words, outliers
+// are discarded that are far away from the agreeing majority of the hypotheses set.
 Vector<TransformationHypothesis> GeometricMap::hypConsensus(Vector<TransformationHypothesis>& hyps, double eps, bool debug)
 {
     // The consensus set is computed with a voting algorithm. For every hypothesis in the set,
@@ -1641,6 +1643,8 @@ Vector<TransformationHypothesis> GeometricMap::hypConsensus(Vector<Transformatio
             if (i == j)
                 continue;
 
+            if (false && debug)
+                qDebug() << "hyps" << i << j << "dist:" << hyps[i].dist(hyps[j]);
             if (hyps[i].dist(hyps[j]) < eps)
             {
                 if (false && debug)
@@ -1671,7 +1675,9 @@ Vector<TransformationHypothesis> GeometricMap::hypConsensus(Vector<Transformatio
         }
 
         if (hyps[i].votes >= mostVotes)
+        {
             mostVotesIdx << i;
+        }
     }
 
     if (debug)
@@ -1679,7 +1685,7 @@ Vector<TransformationHypothesis> GeometricMap::hypConsensus(Vector<Transformatio
         qDebug() << "Hyp consensus:";
         for (uint i = 0; i < hyps.size(); i++)
             qDebug() << i << hyps[i].votes << "hyp:" << hyps[i];
-        qDebug() << "Most popular:" << &mostVotesIdx;
+        qDebug() << "Most popular:" << mostVotesIdx;
     }
 
     // 2. Collect the indices of all the voters.
@@ -1705,7 +1711,7 @@ Vector<TransformationHypothesis> GeometricMap::hypConsensus(Vector<Transformatio
         }
     }
 
-    static Vector<TransformationHypothesis> consensusSet;
+    thread_local Vector<TransformationHypothesis> consensusSet;
     consensusSet.clear();
     for (uint i = 0; i < mostVotesIdx.size(); i++)
         consensusSet << hyps[mostVotesIdx[i]];
@@ -1782,8 +1788,6 @@ const Vector<Vector<TransformationHypothesis> >& GeometricMap::hypClusters(const
     return clusters;
 }
 
-
-
 // Updates the pose graph by adding a new node at the provided pose if needed and connecting
 // the seen map lines with the graph. The set of seen map lines as currently seen by the sensor
 // is expected to be unified and in global coordinates.
@@ -1851,7 +1855,7 @@ void GeometricMap::updatePolygonMap(const Pose2D& pose, const Polygon& visPol, b
     }
 
     // Use a negative offset to reduce the size of the bounded visibility polygon.
-    // This operation implicitely inflates the obstacles and mitigates the growing union problem.
+    // This operation implicitly inflates the obstacles and mitigates the growing union problem.
     // The offsetting operation can result in multiple polygons.
     const Vector<Polygon>& reducedVisibilityPolygons = boundedVisPol.offseted(-config.slamVisibilityPolygonShrinking, config.laserDouglasPeuckerEpsilon);
     for (uint i = 0; i < reducedVisibilityPolygons.size(); i++)
@@ -1872,7 +1876,7 @@ void GeometricMap::updatePolygonMap(const Pose2D& pose, const Polygon& visPol, b
     if (closestPoseGraphNode != closestPoseGraphNodeBefore && closestPoseGraphNodeBefore != 0)
     {
         polygonMap.unite(closestPoseGraphNodeBefore->observedNeighborhood);
-        polygonMap.simplify(2*config.laserDouglasPeuckerEpsilon);
+        polygonMap.simplify(config.laserDouglasPeuckerEpsilon);
     }
 }
 
@@ -1990,7 +1994,7 @@ void GeometricMap::closeLoop(const Pose2D &localSnap, const Pose2D &mediumSnap)
         }
     }
 
-    // The three things needed for the loop closing.
+    // The three things needed for the loop closing: root node, leaf node, and offset.
     PoseGraphNode* rootNode = observers[closestIdx];
     PoseGraphNode* leafNode = closestPoseGraphNode;
     Pose2D offset = ((mediumSnap - localSnap) + leafNode->pose) - rootNode->pose;
@@ -1998,7 +2002,7 @@ void GeometricMap::closeLoop(const Pose2D &localSnap, const Pose2D &mediumSnap)
     qDebug() << state.frameId << "PoseGraph::closeLoop()";
     qDebug() << "  root node:" << rootNode->id;
     qDebug() << "  leaf node:" << leafNode->id;
-    qDebug() << "  Offset:" << offset << "norm:" << (mediumSnap-localSnap).norm();
+    qDebug() << "  offset:" << offset << "norm:" << (mediumSnap-localSnap).norm();
 
 
     // Optimize the graph between the root node and the leaf node to account for the loop closing offset.
@@ -2013,7 +2017,7 @@ void GeometricMap::closeLoop(const Pose2D &localSnap, const Pose2D &mediumSnap)
 
     // Update the map lines according to the offset of the associated graph nodes.
     // For now, this iterates over all map lines, but perhaps this could be optimized later, e.g.
-    // by gathering pointers to the relevant lines when determining the path from leaf to node.
+    // by gathering pointers to the relevant lines when determining the path from root to leaf.
     ListIterator<TrackedLine> mapLinesIt = mapLines.begin();
     while (mapLinesIt.hasNext())
     {
@@ -2267,7 +2271,7 @@ void GeometricMap::draw(QPainter *painter) const
     {
         // 0 - nothing
         // 1 - line matching view
-        // 2 - bare line view
+        // 2 - line map view
         // 3 - line observation accumulation view
 
         // Line matching view.
@@ -2298,14 +2302,14 @@ void GeometricMap::draw(QPainter *painter) const
 
             // The input lines in blue relative to inputPose.
             painter->save();
-            painter->setTransform(inputPose.getQTransform(), true);
+            painter->setTransform(inputPose, true);
             for (uint i = 0; i < inputLines.size(); i++)
                 inputLines[i].draw(painter, drawUtil.penBlueThick);
             painter->restore();
 
             // Prospected input lines in red relative to local snapped pose.
             painter->save();
-            painter->setTransform(localSnappedPose.getQTransform(), true);
+            painter->setTransform(localSnappedPose, true);
             for (uint j = 0; j < inputLines.size(); j++)
                 inputLines[j].draw(painter, drawUtil.penRedThick);
             painter->restore();
@@ -2340,7 +2344,7 @@ void GeometricMap::draw(QPainter *painter) const
 
                 // Input line labels in blue.
                 painter->save();
-                painter->setTransform(inputPose.getQTransform(), true);
+                painter->setTransform(inputPose, true);
                 for (uint i = 0; i < inputLines.size(); i++)
                     inputLines[i].drawLabel(painter, drawUtil.penBlue, 1.0, -inputPose.heading());
                 painter->restore();
@@ -2356,7 +2360,7 @@ void GeometricMap::draw(QPainter *painter) const
                 it.next().draw(painter, drawUtil.penThick);
 
             // Bare line map labels.
-            if (command.showLabels == 2)
+            if (command.showLabels)
             {
                 ListIterator<TrackedLine> it = mapLines.begin();
                 while (it.hasNext())
@@ -2643,7 +2647,7 @@ void GeometricMap::draw() const
         while (it.hasNext())
         {
             glLineWidth(1);
-            GLlib::setColor(drawUtil.grey);
+            GLlib::setColor(drawUtil.gray);
             ListIterator<PoseGraphNode*> nit = it.cur().neighbours.begin();
             while (nit.hasNext())
                 Line(it.cur().pose.pos(), nit.next()->pose.pos()).draw();

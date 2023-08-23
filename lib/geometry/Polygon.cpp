@@ -2400,7 +2400,6 @@ void Polygon::setUnitNogon(uint n)
 // It does not matter whether the polygon is transformed or not.
 void Polygon::draw(QPainter *painter, const QPen &pen, const QBrush &brush, double opacity) const
 {
-    QPen penny = pen;
 
     painter->save();
     painter->translate(x, y);
@@ -2424,11 +2423,14 @@ void Polygon::draw(QPainter *painter, const QPen &pen, const QBrush &brush, doub
     it = edgeIterator();
     while (it.hasNext())
     {
+        QPen penny = pen;
         const Line& line = it.next();
         if (line.getType() == Line::SightLine)
+        {
             penny.setStyle(Qt::DotLine);
-        else if (pen.style() != Qt::DashLine)
-            penny.setStyle(Qt::SolidLine);
+            penny.setCosmetic(true);
+            penny.setWidth(1);
+        }
         painter->setPen(penny);
         painter->drawLine(line.p1(), line.p2());
     }

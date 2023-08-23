@@ -227,14 +227,14 @@ void GridModel::computeOccupancyGrid(const Vector<Vec3>& pointCloud, double floo
     }
 }
 
-// Computes an occupancy grid from the given 2D point cloud (typically laser data).
-// All cells that at least one point lies in will be set to a value of 1.
+// Computes a binary occupancy grid from the given 2D point cloud (typically laser data).
+// All cells that contain at least one point are set to a value of 1.
 // All other cells are set to 0.
 void GridModel::computeOccupancyGrid(const Vector<Vec2>& pointCloud)
 {
     clear();
     for (uint i = 0; i < pointCloud.size(); i++)
-        if (!pointCloud[i].isNull() && contains(pointCloud[i]) && pointCloud[i].norm() < config.laserMaxLineDistance)
+        if (!pointCloud[i].isNull() && contains(pointCloud[i]) && pointCloud[i].norm() < config.laserLineMaxDistance)
             setAt(pointCloud[i], 1);
 }
 

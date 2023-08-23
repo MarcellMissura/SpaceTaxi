@@ -81,7 +81,7 @@ void UnicycleRobot::reset()
 // Takes in one frame of sensor input.
 void UnicycleRobot::setInput(const LaserSensor &laserInput, const Pose2D &odomInput)
 {
-    laserSensor.writePointBuffer(laserInput.readPointBuffer());
+    laserSensor.writeRangeBuffer(laserInput.readRangeBuffer());
     odomPose = odomInput;
 }
 
@@ -117,11 +117,8 @@ void UnicycleRobot::sense()
     // Convert the odom pose into the frame of the initial pose.
     localOdomPose = (localOdomPose - initialOdomPose) + initialPose;
 
-    if (command.keepPoseHistory)
-    {
-        odomHistory << localOdomPose; // Only for visualization.
+    if (command.keepPoseHistory || command.showPose == 2)
         poseHistory << pose(); // Only for visualization.
-    }
     if (command.showOdometry)
         odomHistory << localOdomPose; // Only for visualization.
 
@@ -133,8 +130,7 @@ void UnicycleRobot::sense()
     else
         predict(1.0/command.frequency); // dead reckoning
 
-    //qDebug() << odomPose << localOdomPose << localOdomPose
-    //qDebug() << "pose:" << pose() << pose() - initialPose << "odomPose:" << localOdomPose << odomPose << "diff:" << odomDiff;
+    //qDebug() << state.frameId << "pose:" << pose() << pose() - initialPose << "odomPose:" << localOdomPose << odomPose;
 
     // Laser data smoothing.
     laserSensor.filter();
@@ -148,6 +144,8 @@ void UnicycleRobot::sense()
         Pose2D currentPose = geometricMap.slam(pose(), laserSensor.extractLines(), visibilityPolygon);
         setPose(currentPose);
     }
+
+    //qDebug() << state.frameId << "pose:" << pose() << pose() - initialPose;
 
 
     // Sense the local map.
@@ -482,6 +480,7 @@ void UnicycleRobot::act()
         if (ebActive)
             acc.x = min(acc.x, ebA); // Apply the emergency break.
         setAcc(acc);
+        qDebug() << "set acc" << acc << vel();
     }
     else if (command.trajectoryPlanningMethod == command.PD)
     {
@@ -920,6 +919,14 @@ void UnicycleRobot::draw(QPainter *painter) const
         painter->restore();
     }
 
+    // The pose history.
+    if (command.showPose > 1)
+        for (uint i = 0; i < poseHistory.size(); i++)
+            drawUtil.drawNoseCircle(painter, poseHistory[i], drawUtil.penThin, drawUtil.brushYellow, 0.5*config.agentRadius);
+    if (command.showPose > 0)
+        drawUtil.drawNoseCircle(painter, pose(), drawUtil.penThin, drawUtil.brushYellow, 0.6*config.agentRadius);
+
+
 
     // Everything hereafter is drawn in local coordinates.
     painter->save();
@@ -943,7 +950,23 @@ void UnicycleRobot::draw(QPainter *painter) const
     // The Visibility Polygon.
     if (command.showVisibilityPolygon)
     {
-        visibilityPolygon.draw(painter, drawUtil.pen, drawUtil.brushGreen);
+        visibilityPolygon.draw(painter, drawUtil.pen, drawUtil.brushLightGreen, 0.5);
+
+        Polygon boundedVisPol = visibilityPolygon;
+        ListIterator<Line> ei = boundedVisPol.edgeIterator();
+        while (ei.hasNext())
+        {
+            Line& edge = ei.next();
+            Vec2& p1 = edge.p1();
+            Vec2& p2 = edge.p2();
+            if (p1.length() > config.slamVisibilityPolygonBound)
+                p1.normalize(config.slamVisibilityPolygonBound);
+            if (p2.length() > config.slamVisibilityPolygonBound)
+                p2.normalize(config.slamVisibilityPolygonBound);
+        }
+        Vector<Polygon> pols = boundedVisPol.offseted(-config.slamVisibilityPolygonShrinking, config.laserDouglasPeuckerEpsilon);
+        for (uint i = 0; i < pols.size(); i++)
+            pols[i].draw(painter, drawUtil.penDashed, drawUtil.brushLightGreen, 0.2);
     }
 
     // The ray model.

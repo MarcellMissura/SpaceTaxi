@@ -59,25 +59,23 @@ QStringList State::memberNames;
 Vector<quint64> State::memberOffsets;
 Vector<QString> State::memberTypes;
 Vector<State> State::history;
-
 World State::world;
 
-// In the constructor members should be initialized where needed.
+// In the constructor, members should be initialized.
 State::State()
 {
-    debug = 0;
-    stop = 0;
+    stop = false;
 
     frameId = 0;
     time = 0;
     realTime = 0;
-    bufferTime = 0;
     iterationTime = 0;
     executionTime = 0;
-    pathTime = 0;
     senseTime = 0;
     actTime = 0;
+    pathTime = 0;
     trajectoryTime = 0;
+    bufferTime = 0;
     drawTime = 0;
 
     aasExpansions = 0;
@@ -89,6 +87,7 @@ State::State()
     aasDried = 0;
     aasDepth = 0;
     aasScore = 0;
+    aasPathFails = 0;
 }
 
 State::~State()
@@ -105,16 +104,15 @@ State::~State()
 void State::init()
 {
     registerMember("time", &time);
-    registerMember("debug", &debug);
 
     registerMember("time.iterationTime", &iterationTime);
     registerMember("time.executionTime", &executionTime);
+    registerMember("time.buffer", &bufferTime);
+    registerMember("time.draw", &drawTime);
     registerMember("time.sense", &senseTime);
     registerMember("time.act", &actTime);
-    registerMember("time.buffer", &bufferTime);
     registerMember("time.pathTime", &pathTime);
     registerMember("time.trajectory", &trajectoryTime);
-    registerMember("time.draw", &drawTime);
 
     registerMember("uniAgent.x", &uniTaxi.x);
     registerMember("uniAgent.y", &uniTaxi.y);
@@ -137,6 +135,7 @@ void State::init()
     registerMember("STAA*.dried", &aasDried);
     registerMember("STAA*.finished", &aasFinished);
     registerMember("STAA*.score", &aasScore);
+    registerMember("STAA*.pathfails", &aasPathFails);
 
 //	qDebug() << memberNames;
 //	qDebug() << memberTypes;
@@ -161,13 +160,11 @@ void State::save() const
     QFile file("data/statehistory.dat");
     file.open(QIODevice::WriteOnly);
     QDataStream out(&file);
-
     for (int i = 0; i < history.size(); i++)
     {
         QByteArray ba((char *)(&(history[i])), sizeof(State));
         out << ba;
     }
-
     file.close();
 }
 
@@ -200,7 +197,10 @@ void State::load(QString fileName)
 
     // Renumber the frames just in case.
     for (uint i = 0; i < history.size(); i++)
+    {
         history[i].frameId = i;
+        history[i].time -= history[0].time;
+    }
 
     if (!history.isEmpty())
         *this = history.last();

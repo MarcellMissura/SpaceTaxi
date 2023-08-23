@@ -7,8 +7,8 @@ struct Command
     bool joystick;
     bool keyboard;
 
-    double ax;
-    double ay;
+    double ax; // Commanded linear acceleration.
+    double ay; // Commanded angular acceleration.
 
     bool showBody;
     bool showTargets;
@@ -42,7 +42,7 @@ struct Command
     bool keepPoseHistory;
     bool laserSpatialFilter;
     bool laserTemporalFilter;
-    bool laserParticleRemoval;
+    bool laserSpeckleRemoval;
     bool useOdomAsPrior;
     bool emergencyBrakeReflex;
     bool stucknessReflex;

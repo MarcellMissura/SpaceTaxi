@@ -1,18 +1,18 @@
-﻿#include "SpaceTaxi.h"
+﻿#include "MainWindow.h"
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QDesktopWidget>
 
-SpaceTaxi::SpaceTaxi(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     QCoreApplication::setOrganizationName("MarcellMissura");
     QCoreApplication::setApplicationName("SpaceTaxi");
 
     QWidget* cw = new QWidget();
-    ui.setupUi(cw); // Here, the ui file (spacetaxi.ui) is built into the central widget.
+    ui.setupUi(cw); // Builds the ui file (gui.ui) into the central widget.
     setCentralWidget(cw); // The central widget has to be set because it's a QMainWindow.
-    resize(QDesktopWidget().availableGeometry(this).size() * 0.5); // Resize to 50% of the screen.
+    resize(QDesktopWidget().availableGeometry(this).size() * 0.75); // Resize to 75% of the screen.
 
     robotName = "config";
 
@@ -96,7 +96,7 @@ SpaceTaxi::SpaceTaxi(QWidget *parent)
     connect(&animationTimer, SIGNAL(timeout()), this, SLOT(animate()));
 }
 
-SpaceTaxi::~SpaceTaxi()
+MainWindow::~MainWindow()
 {
     QSettings settings;
     settings.setValue("verticalSplitterTop", verticalSplitterTop->saveState());
@@ -105,7 +105,7 @@ SpaceTaxi::~SpaceTaxi()
 }
 
 // Build the menu bar.
-void SpaceTaxi::buildMenu()
+void MainWindow::buildMenu()
 {
     QMenuBar* menuBar = new QMenuBar();
     setMenuBar(menuBar);
@@ -475,6 +475,23 @@ void SpaceTaxi::buildMenu()
 
     QMenu* commandMenu = menuBar->addMenu(tr("&Command"));
 
+    QAction* selectPoseAction = commandMenu->addAction(tr("&Select Pose"));
+    selectPoseAction->setToolTip(tr("Select initial pose for localisation."));
+    selectPoseAction->setShortcut(QKeySequence(tr("E")));
+    selectPoseAction->setCheckable(true);
+    selectPoseAction->setChecked(command.selectPose);
+    connect(selectPoseAction, SIGNAL(triggered()), this, SLOT(toggleSelectPose()));
+
+    QAction* selectTargetAction = commandMenu->addAction(tr("&Select Target"));
+    selectTargetAction->setToolTip(tr("Select target pose for navigation."));
+    selectTargetAction->setShortcut(QKeySequence(tr("T")));
+    selectTargetAction->setCheckable(true);
+    selectTargetAction->setChecked(command.selectTarget);
+    connect(selectTargetAction, SIGNAL(triggered()), this, SLOT(toggleSelectTarget()));
+
+    commandMenu->addSeparator();
+
+
     QAction* experimenterAction = commandMenu->addAction(tr("&Experimenter"));
     experimenterAction->setToolTip(tr("Toggles experimenter."));
     experimenterAction->setShortcut(QKeySequence(tr("E")));
@@ -728,17 +745,17 @@ void SpaceTaxi::buildMenu()
 }
 
 // Vertical splitter synchronization.
-void SpaceTaxi::topSplitterMoved()
+void MainWindow::topSplitterMoved()
 {
     verticalSplitterBottom->setSizes(verticalSplitterTop->sizes());
 }
 
-void SpaceTaxi::bottomSplitterMoved()
+void MainWindow::bottomSplitterMoved()
 {
     verticalSplitterTop->setSizes(verticalSplitterBottom->sizes());
 }
 
-void SpaceTaxi::joystickConnected()
+void MainWindow::joystickConnected()
 {
     messageIn("Joystick connected.");
     joystickAction->setVisible(true);
@@ -746,7 +763,7 @@ void SpaceTaxi::joystickConnected()
     command.joystick = true;
 }
 
-void SpaceTaxi::joystickDisconnected()
+void MainWindow::joystickDisconnected()
 {
     messageIn("Joystick disconnected.");
     joystickAction->setVisible(false);
@@ -755,7 +772,7 @@ void SpaceTaxi::joystickDisconnected()
 
 // Handles the joystick buttons. Some of them select and move sliders in the config widget.
 // Some control the robot by switching between walk and halt, executing kicks etc.
-void SpaceTaxi::joystickButtonPressed(QList<bool> button)
+void MainWindow::joystickButtonPressed(QList<bool> button)
 {
     // Buttons 1 to 4 control robot behaviors.
     if (button[1])
@@ -815,7 +832,7 @@ void SpaceTaxi::joystickButtonPressed(QList<bool> button)
 }
 
 // Handles the joystick sticks.
-void SpaceTaxi::joystickMoved(QList<double> axis)
+void MainWindow::joystickMoved(QList<double> axis)
 {
     command.ax = axis[1];
     command.ay = axis[0];
@@ -824,20 +841,20 @@ void SpaceTaxi::joystickMoved(QList<double> axis)
 
 // This is needed when the entire config has changed, e.g. when the robot model was
 // changed, the config was reset or a new robot was detected.
-void SpaceTaxi::configChanged()
+void MainWindow::configChanged()
 {
     configWidget.configChangedIn();
     graphicsViewWidget.update();
 }
 
 // Slot for internal message strings.
-void SpaceTaxi::messageIn(QString m)
+void MainWindow::messageIn(QString m)
 {
     graphicsViewWidget.messageIn(m);
 }
 
 // Toggles the config widget.
-void SpaceTaxi::toggleConfig()
+void MainWindow::toggleConfig()
 {
     if (configWidget.isHidden())
         configWidget.show();
@@ -846,7 +863,7 @@ void SpaceTaxi::toggleConfig()
 }
 
 // Toggles the graph widget.
-void SpaceTaxi::toggleGraph()
+void MainWindow::toggleGraph()
 {
     if (verticalSplitterBottom->isHidden())
         verticalSplitterBottom->show();
@@ -854,7 +871,7 @@ void SpaceTaxi::toggleGraph()
         verticalSplitterBottom->hide();
 }
 
-void SpaceTaxi::toggleJoystick()
+void MainWindow::toggleJoystick()
 {
     command.joystick = !command.joystick;
     if (command.joystick)
@@ -863,7 +880,7 @@ void SpaceTaxi::toggleJoystick()
         messageIn("Joystick control deactivated.");
 }
 
-void SpaceTaxi::toggleKeyboard()
+void MainWindow::toggleKeyboard()
 {
     command.keyboard = !command.keyboard;
     if (command.keyboard)
@@ -872,87 +889,87 @@ void SpaceTaxi::toggleKeyboard()
         messageIn("Keyboard control disabled.");
 }
 
-void SpaceTaxi::toggleTrajectoryTrace()
+void MainWindow::toggleTrajectoryTrace()
 {
     command.showTrajectoryTrace = !command.showTrajectoryTrace;
     update();
 }
 
-void SpaceTaxi::toggleDropOffPoints()
+void MainWindow::toggleDropOffPoints()
 {
     command.showDropOffPoints = !command.showDropOffPoints;
     graphicsScene.init();
     update();
 }
 
-void SpaceTaxi::toggleTargets()
+void MainWindow::toggleTargets()
 {
     command.showTargets = !command.showTargets;
     update();
 }
 
-void SpaceTaxi::toggleWorldPolygons()
+void MainWindow::toggleWorldPolygons()
 {
     command.showWorldPolygons = !command.showWorldPolygons;
     graphicsScene.init();
     update();
 }
 
-void SpaceTaxi::toggleWorldMap()
+void MainWindow::toggleWorldMap()
 {
     command.showWorldMap = !command.showWorldMap;
     update();
 }
 
-void SpaceTaxi::toggleWorldPath()
+void MainWindow::toggleWorldPath()
 {
     command.showWorldPath = !command.showWorldPath;
     update();
 }
 
-void SpaceTaxi::toggleGeometricModel()
+void MainWindow::toggleGeometricModel()
 {
     command.showSensedPolygons = !command.showSensedPolygons;
     update();
 }
 
-void SpaceTaxi::toggleVisibilityPolygon()
+void MainWindow::toggleVisibilityPolygon()
 {
     command.showVisibilityPolygon = !command.showVisibilityPolygon;
     update();
 }
 
-void SpaceTaxi::toggleSimulationDebug()
+void MainWindow::toggleSimulationDebug()
 {
     command.showSimulationDebugDraw = !command.showSimulationDebugDraw;
     update();
 }
 
-void SpaceTaxi::toggleRayModel()
+void MainWindow::toggleRayModel()
 {
     command.showRayModel = !command.showRayModel;
     update();
 }
 
-void SpaceTaxi::toggleLidar()
+void MainWindow::toggleLidar()
 {
     command.showLaser = (command.showLaser+1) % 3;
     update();
 }
 
-void SpaceTaxi::toggleWorldVisibilityGraph()
+void MainWindow::toggleWorldVisibilityGraph()
 {
     command.showWorldVisibilityGraph = !command.showWorldVisibilityGraph;
     update();
 }
 
-void SpaceTaxi::toggleLocalVisibilityGraph()
+void MainWindow::toggleLocalVisibilityGraph()
 {
     command.showLocalVisibilityGraph = !command.showLocalVisibilityGraph;
     update();
 }
 
-void SpaceTaxi::toggleTeaching()
+void MainWindow::toggleTeaching()
 {
     command.learn = !command.learn;
     if(command.learn)
@@ -961,25 +978,25 @@ void SpaceTaxi::toggleTeaching()
         messageIn("Teaching off.");
 }
 
-void SpaceTaxi::clearRuleBase()
+void MainWindow::clearRuleBase()
 {
     state.world.unicycleAgents[0].ruleBase.clear();
     messageIn("Rule base cleared.");
 }
 
-void SpaceTaxi::toggleSensedGrid()
+void MainWindow::toggleSensedGrid()
 {
     command.showSensedGrid = !command.showSensedGrid;
     update();
 }
 
-void SpaceTaxi::toggleDijkstraMap()
+void MainWindow::toggleDijkstraMap()
 {
     command.showDijkstraMap = !command.showDijkstraMap;
     update();
 }
 
-void SpaceTaxi::toggleEmergencyBrakeReflex()
+void MainWindow::toggleEmergencyBrakeReflex()
 {
     command.emergencyBrakeReflex = !command.emergencyBrakeReflex;
     if (command.emergencyBrakeReflex)
@@ -989,7 +1006,7 @@ void SpaceTaxi::toggleEmergencyBrakeReflex()
     update();
 }
 
-void SpaceTaxi::toggleStucknessReflex()
+void MainWindow::toggleStucknessReflex()
 {
     command.stucknessReflex = !command.stucknessReflex;
     if (command.stucknessReflex)
@@ -999,7 +1016,7 @@ void SpaceTaxi::toggleStucknessReflex()
     update();
 }
 
-void SpaceTaxi::toggleTimeAbort()
+void MainWindow::toggleTimeAbort()
 {
     command.useTimeAbort = !command.useTimeAbort;
     if (command.useTimeAbort)
@@ -1009,7 +1026,7 @@ void SpaceTaxi::toggleTimeAbort()
     update();
 }
 
-void SpaceTaxi::toggleClosing()
+void MainWindow::toggleClosing()
 {
     command.useClosing = !command.useClosing;
     if (command.useClosing)
@@ -1019,7 +1036,7 @@ void SpaceTaxi::toggleClosing()
     update();
 }
 
-void SpaceTaxi::toggleDynamicPath()
+void MainWindow::toggleDynamicPath()
 {
     command.useDynamicPath = !command.useDynamicPath;
     if (command.useDynamicPath)
@@ -1029,13 +1046,49 @@ void SpaceTaxi::toggleDynamicPath()
     update();
 }
 
-void SpaceTaxi::toggleBody()
+void MainWindow::toggleBody()
 {
     command.showBody = !command.showBody;
     graphicsViewWidget.update();
 }
 
-void SpaceTaxi::toggleGhostMode()
+void MainWindow::toggleSelectPose()
+{
+    command.selectPose = !command.selectPose;
+    if (command.selectPose) {
+        messageIn("Pose selection enabled.");
+    } else {
+        messageIn("Pose selection disabled.");
+    }
+}
+
+void MainWindow::toggleSelectTarget()
+{
+    command.selectTarget = !command.selectTarget;
+    if (command.selectTarget) {
+        messageIn("Target selection enabled.");
+    } else {
+        messageIn("Target selection disabled.");
+    }
+}
+
+void MainWindow::poseRecorded(const Pose2D &pose)
+{
+    if (command.selectPose)
+    {
+        //state.robot.setInitialPose(pose);
+        messageIn("Initial pose set.");
+    }
+    else if (command.selectTarget)
+    {
+        //state.robot.setMainTarget(pose);
+        messageIn("Navigation target set.");
+    }
+    command.selectPose = false;
+    command.selectTarget = false;
+}
+
+void MainWindow::toggleGhostMode()
 {
     command.ghostMode = !command.ghostMode;
     if (command.ghostMode)
@@ -1044,13 +1097,13 @@ void SpaceTaxi::toggleGhostMode()
         messageIn("Ghost mode disabled.");
 }
 
-void SpaceTaxi::togglePathPlanner(int d)
+void MainWindow::togglePathPlanner(int d)
 {
     command.pathPlanningMethod = d;
     update();
 }
 
-void SpaceTaxi::toggleTrajectoryControl(int d)
+void MainWindow::toggleTrajectoryControl(int d)
 {
     command.trajectoryPlanningMethod = d;
     state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
@@ -1069,7 +1122,7 @@ void SpaceTaxi::toggleTrajectoryControl(int d)
     update();
 }
 
-void SpaceTaxi::togglePredictionType(int d)
+void MainWindow::togglePredictionType(int d)
 {
     command.predictionType = d;
     state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
@@ -1082,7 +1135,7 @@ void SpaceTaxi::togglePredictionType(int d)
         messageIn("No prediction");
 }
 
-void SpaceTaxi::toggleHeuristic(int d)
+void MainWindow::toggleHeuristic(int d)
 {
     command.heuristic = d;
     state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
@@ -1103,7 +1156,7 @@ void SpaceTaxi::toggleHeuristic(int d)
         messageIn("Grid Dijkstra heuristic");
 }
 
-void SpaceTaxi::toggleTrajectoryType(int d)
+void MainWindow::toggleTrajectoryType(int d)
 {
     command.trajectoryType = d;
     state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
@@ -1116,7 +1169,7 @@ void SpaceTaxi::toggleTrajectoryType(int d)
         messageIn("Switched to Fresnel trajectory type.");
 }
 
-void SpaceTaxi::toggleFrequency(int f)
+void MainWindow::toggleFrequency(int f)
 {
     command.frequency = f;
     state.clear();
@@ -1135,7 +1188,7 @@ void SpaceTaxi::toggleFrequency(int f)
         messageIn("Switched to 30Hz.");
 }
 
-void SpaceTaxi::toggleMap(int mapId)
+void MainWindow::toggleMap(int mapId)
 {
     state.clear();
     state.world.setMap(mapId, max(config.unicycleAgents, 1.0));
@@ -1178,7 +1231,7 @@ void SpaceTaxi::toggleMap(int mapId)
 
 // This function is called by the animation timer to update the gui
 // when replaying the state history.
-void SpaceTaxi::animate()
+void MainWindow::animate()
 {
     if (recording)
     {
@@ -1200,7 +1253,7 @@ void SpaceTaxi::animate()
 
 // Toggles the record mode. In record mode, the robot control thread is
 // running and data are collected in the state history.
-void SpaceTaxi::record()
+void MainWindow::record()
 {
     if (recording)
         recordStop();
@@ -1209,7 +1262,7 @@ void SpaceTaxi::record()
 }
 
 // Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
-void SpaceTaxi::recordStart()
+void MainWindow::recordStart()
 {
     animationTimer.stop();
     recording = true;
@@ -1219,7 +1272,7 @@ void SpaceTaxi::recordStart()
 }
 
 // Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
-void SpaceTaxi::recordStop()
+void MainWindow::recordStop()
 {
     recording = false;
     graphicsViewWidget.stopRecording();
@@ -1229,7 +1282,7 @@ void SpaceTaxi::recordStop()
 }
 
 // Play button handler.
-void SpaceTaxi::play()
+void MainWindow::play()
 {
     if (recording)
         return;
@@ -1247,13 +1300,13 @@ void SpaceTaxi::play()
 }
 
 // Stop button handler.
-void SpaceTaxi::stop()
+void MainWindow::stop()
 {
     animationTimer.stop();
     update();
 }
 
-void SpaceTaxi::frameForward()
+void MainWindow::frameForward()
 {
     if (recording)
         return;
@@ -1272,7 +1325,7 @@ void SpaceTaxi::frameForward()
     }
 }
 
-void SpaceTaxi::frameBack()
+void MainWindow::frameBack()
 {
     if (recording)
         return;
@@ -1281,7 +1334,7 @@ void SpaceTaxi::frameBack()
     loadFrame(cfi-1);
 }
 
-void SpaceTaxi::jumpToStart()
+void MainWindow::jumpToStart()
 {
     if (recording)
         return;
@@ -1290,7 +1343,7 @@ void SpaceTaxi::jumpToStart()
     loadFrame(0);
 }
 
-void SpaceTaxi::jumpToEnd()
+void MainWindow::jumpToEnd()
 {
     if (recording)
         return;
@@ -1299,7 +1352,7 @@ void SpaceTaxi::jumpToEnd()
     loadFrame(state.size()-1);
 }
 
-void SpaceTaxi::jumpToFrame(int f)
+void MainWindow::jumpToFrame(int f)
 {
     if (recording)
         return;
@@ -1311,7 +1364,7 @@ void SpaceTaxi::jumpToFrame(int f)
 
 // This slot is called when the user browses the state history with the slider or with
 // the frame forward, frame backward, and playback functions.
-void SpaceTaxi::loadFrame(int cfi)
+void MainWindow::loadFrame(int cfi)
 {
     if (recording)
         return;
@@ -1346,34 +1399,34 @@ void SpaceTaxi::loadFrame(int cfi)
 }
 
 // Refreshes the gui components.
-void SpaceTaxi::updateGui()
+void MainWindow::updateGui()
 {
     graphicsScene.init();
     graphicsViewWidget.update();
     graphWidget.update();
 }
 
-void SpaceTaxi::saveConfig()
+void MainWindow::saveConfig()
 {
     config.save(robotName);
     messageIn("Config saved.");
 }
 
-void SpaceTaxi::loadConfig()
+void MainWindow::loadConfig()
 {
     config.load(robotName);
     configChanged();
     messageIn("Config reset.");
 }
 
-void SpaceTaxi::saveStateHistory()
+void MainWindow::saveStateHistory()
 {
     recordStop();
     state.save();
     messageIn("State history saved.");
 }
 
-void SpaceTaxi::loadStateHistory(QString fileName)
+void MainWindow::loadStateHistory(QString fileName)
 {
     messageIn("Loading...");
     recordStop();
@@ -1382,13 +1435,13 @@ void SpaceTaxi::loadStateHistory(QString fileName)
     messageIn("State history loaded.");
 }
 
-void SpaceTaxi::exportWorld()
+void MainWindow::exportWorld()
 {
     state.world.logObstaclesToTxt();
     messageIn("World exported.");
 }
 
-void SpaceTaxi::reset()
+void MainWindow::reset()
 {
     state.world.reset();
     //mainControlLoop.reset();
@@ -1402,7 +1455,7 @@ void SpaceTaxi::reset()
 // Global event filter.
 // I'm using this to route all key presses into the keyPressEvent of this class
 // no matter where the focus is. This works much better than calling grabKeyBoard().
-bool SpaceTaxi::eventFilter(QObject *obj, QEvent *event)
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress)
     {
@@ -1417,7 +1470,7 @@ bool SpaceTaxi::eventFilter(QObject *obj, QEvent *event)
     }
 }
 
-void SpaceTaxi::keyPressEvent(QKeyEvent *event)
+void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->isAutoRepeat())
         return;
@@ -1503,7 +1556,7 @@ void SpaceTaxi::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void SpaceTaxi::keyReleaseEvent(QKeyEvent *event)
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->isAutoRepeat())
         return;

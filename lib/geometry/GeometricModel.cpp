@@ -211,9 +211,6 @@ int GeometricModel::getVertexCount() const
 // objects in this geometric scene.
 Box GeometricModel::getBoundingBox() const
 {
-    if (polygons.isEmpty() && unicycleObstacles.isEmpty())
-        return Box();
-
     Box box;
     if (!rootPolygons.isEmpty())
         box = rootPolygons.first().boundingBox();
@@ -1369,7 +1366,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
         const Polygon& pol = rootPolyIt.next();
         pol.draw(painter, pen, drawUtil.brushWhite, 0.8); // always white
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
-        if (config.debugLevel > 4)
+        if (config.debugLevel > 5 && command.showLabels)
             pol.drawLabel(painter);
     }
 
@@ -1381,7 +1378,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
         const Polygon& pol = dilatedPolyIt.next();
         pol.draw(painter, pen, dilatedPolygonBrush, 0.5); // dilated brush
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
-        if (config.debugLevel > 4)
+        if (config.debugLevel > 5  && command.showLabels)
             pol.drawLabel(painter);
     }
 
@@ -1393,7 +1390,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
         const Polygon& pol = polyIt.next();
         pol.draw(painter, pen, polygonBrush, 0.5); // polygon brush
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
-        if (config.debugLevel > 4)
+        if (config.debugLevel > 5 && command.showLabels)
             pol.drawLabel(painter);
     }
 
@@ -1405,7 +1402,7 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
         const UnicycleObstacle& obst = obstIt.next();
         obst.drawHull(painter, pen, drawUtil.brushBlue, 0.1);
         obst.draw(painter, pen, drawUtil.brushRed, 0.1);
-        if (config.debugLevel > 4)
+        if (config.debugLevel > 5 && command.showLabels)
             obst.drawLabel(painter);
     }
 

@@ -12,21 +12,19 @@
 // Represents the current state of the robot and its perception of the world.
 struct State
 {
-	int frameId;
+    int frameId; // An all purpose frame id starting at 0 and counting up henceforth.
+    bool stop; // Stops the robot control execution. Used for debugging.
+
     double time; // Current robot control time since program start. Mandatory field.
-	double realTime; // Current real time since program start.
+    double realTime; // Current real time since program start.
     double iterationTime; // How long did the last iteration really take? (10 ms?)
     double executionTime; // The execution time of the last rc iteration. (<< 10 ms)
-    double bufferTime; // The time needed for copying things into the state history.
-    double drawTime; // The time needed to draw things on the screen.
-	double debug; // An all purpose debug value.
-    int stop; // Stops the robot control execution.
-
-    // Runtime performance.
-    double senseTime;
-    double actTime;
-    double pathTime;
-    double trajectoryTime;
+    double drawTime; // Execution time of the draw function in ms.
+    double bufferTime; // Copying into buffer time in ms.
+    double senseTime; // Runtime of the sense function in ms.
+    double actTime; // Copying into buffer time in ms.
+    double pathTime; // Runtime of the path planning in ms.
+    double trajectoryTime; // Runtime of the trajectory planning in ms.
 
     // A* performance values.
     int aasExpansions;
@@ -37,6 +35,7 @@ struct State
     int aasFinished;
     int aasDried;
     int aasDepth;
+    int aasPathFails;
     double aasScore;
 
     // The whole world. :)
@@ -90,7 +89,7 @@ private:
     static QMutex mutex;
 
 public:
-	static QStringList memberNames; // Contains the names of the members in the right order.
+    static QStringList memberNames; // Contains the names of the members in the right order.
 };
 
 QDebug operator<<(QDebug dbg, const State &v);

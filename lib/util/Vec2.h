@@ -48,8 +48,6 @@ public:
         return Vec2(-x,-y);
     }
 
-public:
-
     void scale(double s)
     {
         VecN<2>::scale(s);

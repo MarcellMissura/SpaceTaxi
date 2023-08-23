@@ -36,25 +36,25 @@ Command::Command()
     showRuler = false;
     showOdometry = false;
 
+    laserSpatialFilter = false;
+    laserTemporalFilter = false;
+    laserSpeckleRemoval = true;
     slamEnabled = false;
+    useOdomAsPrior = true;
     mapUpdateEnabled = true;
-    selectPose = false;
-    selectTarget = false;
     globalLocalization = false;
     keepLineObservations = false;
     keepPoseHistory = false;
-    laserSpatialFilter = false;
-    laserTemporalFilter = false;
-    laserParticleRemoval = true;
-    useOdomAsPrior = true;
-    draw = true;
-    learn = false;
+    selectPose = false;
+    selectTarget = false;
     emergencyBrakeReflex = false;
     stucknessReflex = false;
     useTimeAbort = true;
     useDynamicPath = true;
     useClosing = true;
     ghostMode = true;
+    draw = true;
+    learn = false;
 
     heuristic = MinimalConstruct;
     pathPlanningMethod = MinimalConstruct;

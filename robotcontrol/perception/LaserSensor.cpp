@@ -45,6 +45,9 @@ LaserSensor& LaserSensor::operator=(const LaserSensor &o)
     frameId = o.frameId;
     laserInfo = o.laserInfo;
     laserToBasePose = o.laserToBasePose;
+    rangeBuffer = o.rangeBuffer;
+    rangeHistory = o.rangeHistory;
+    unitVectors = o.unitVectors;
     pointBuffer = o.pointBuffer;
 
     return *this;
@@ -60,41 +63,91 @@ const LaserInfo &LaserSensor::getLaserInfo() const
 void LaserSensor::setLaserInfo(const LaserInfo &info)
 {
     this->laserInfo = info;
+
+    unitVectors.clear();
+    Vec2 base(1,0);
+    for (int i = 0; i < info.rays; i++)
+        unitVectors << base.rotated(laserInfo.angleMin + i*laserInfo.angleIncrement);
 }
 
+// Sets the transformation between the base link and the laser sensor.
 void LaserSensor::setLaserToBasePose(const Pose2D &p)
 {
     this->laserToBasePose = p;
 }
 
+// Retrieves the transformation between the base link and the laser sensor.
 const Pose2D &LaserSensor::getLaserToBasePose() const
 {
     return laserToBasePose;
 }
 
-// Locks the mutex and overwrites the buffer with the data in ob.
-void LaserSensor::writePointBuffer(const Vector<Vec2>& ob)
+// Locks the mutex and overwrites the point buffer with new points
+// computed from the ranges. This will only work if the LaserInfo
+// has been set correctly.
+void LaserSensor::writeRangeBuffer(const Vector<double> &rb)
 {
     QMutexLocker locker(&mutex);
     frameId++;
-    pointBuffer = ob;
-    return;
+
+    this->rangeBuffer = rb;
+    if (command.laserTemporalFilter)
+    {
+        rangeHistory.setMaxSize(config.laserSmoothingMedianFilterSize);
+        rangeHistory.push(rangeBuffer);
+    }
+
+    pointBuffer.clear();
+    for (uint i = 0; i < rangeBuffer.size(); i++)
+        if (!isnull(rangeBuffer[i]) && !isnan(rangeBuffer[i])) // Discard nans and zeros.
+            pointBuffer << unitVectors[i] * rangeBuffer[i];
+
+//    qDebug() << rangeBuffer;
+//    qDebug() << pointBuffer;
 }
 
-// Locks the mutex and overwrites the ob buffer with the data in this object.
-// This is a thread safe way of copying the data. Since the laser holds only
-// a small amount of data, and you can use your own persitant buffer, this is
-// the best way of accessing the laser points.
-void LaserSensor::readPointBuffer(Vector<Vec2> &ob) const
+// Locks the mutex and overwrites the rb buffer with the data in this object.
+// This is a thread safe way of copying the ranges. Since you can use your own
+// persitant buffer, this is the best way of accessing the laser ranges.
+void LaserSensor::readRangeBuffer(Vector<double> &rb) const
 {
     QMutexLocker locker(&mutex);
-    ob = pointBuffer;
+    rb = rangeBuffer;
     return;
 }
 
 // Locks the mutex to wait for write operations to finish and returns a copy
-// of the laser data. This is a thread safe way of accessing the data points,
-// but it creates a new copy of the laser point buffer each time you call it.
+// of the laser ranges. This is a thread safe way of accessing the ranges,
+// but it creates a new copy of the range buffer each time you call it.
+Vector<double> LaserSensor::readRangeBuffer() const
+{
+    QMutexLocker locker(&mutex);
+    return rangeBuffer;
+}
+
+
+// Locks the mutex and overwrites the point buffer with the data in pb.
+void LaserSensor::writePointBuffer(const Vector<Vec2>& pb)
+{
+    QMutexLocker locker(&mutex);
+    frameId++;
+    pointBuffer = pb;
+    return;
+}
+
+// Locks the mutex and overwrites the pb buffer with the data in this object.
+// This is a thread safe way of accessing the points. Since you can use your
+// own persitant buffer, this is the best way of accessing the laser points.
+void LaserSensor::readPointBuffer(Vector<Vec2> &pb) const
+{
+    QMutexLocker locker(&mutex);
+    pb = pointBuffer;
+    return;
+}
+
+// Locks the mutex to wait for write operations to finish and returns a copy
+// of the laser points. This is a thread safe way of accessing the laser points,
+// but it creates a new copy of the point buffer each time you call it.
 Vector<Vec2> LaserSensor::readPointBuffer() const
 {
     QMutexLocker locker(&mutex);
@@ -136,27 +189,8 @@ const Vector<TrackedLine> &LaserSensor::extractLines(bool debug) const
         if (line1.isSightLine())
             continue;
 
-        // Discard lines that are too short.
-        if (line1.length() < config.laserMinLineLength)
-        {
-            if (debug)
-                qDebug() << "Discarding line" << line1 << "due to shortness." << line1.length();
-            continue;
-        }
-
-        // Discard far away lines where both end points are too far away.
-        if (line1.p1().norm() > config.laserMaxLineDistance && line1.p2().norm() > config.laserMaxLineDistance)
-        {
-            if (debug)
-                qDebug() << "Discarding line" << line1 << "due to distance.";
-            continue;
-        }
-
-        double parallelMeasureThreshold = 0.993;
-
-        // Discard lines that are too closely aligned with the direction of the sensor ray.
-        // These are often phantom lines that don't really exist.
-        if (fabs(line1.p1().normalized() * line1.lineVector().normalized()) > parallelMeasureThreshold)
+        // Discard lines that are too short, too far away, or have too little angle to the ray direction.
+        if (!isLineOkay(line1))
             continue;
 
         // Mark seen vertices. Seen vertices occur between blocking lines and sight lines, if the
@@ -164,7 +198,7 @@ const Vector<TrackedLine> &LaserSensor::extractLines(bool debug) const
         // that have a large enough angle to each other.
         bool seenP1 = false;
         bool seenP2 = false;
-        if (line0.length() >= config.laserMinLineLength && (fabs(line0.p1().normalized() * line0.lineVector().normalized()) < parallelMeasureThreshold))
+        if (isLineOkay(line0))
         {
             double angle1 = line0.angle(line1);
             if (line0.isBlockingLine() && fabs(angle1) > config.slamSeenCornerMinAngle)
@@ -173,7 +207,7 @@ const Vector<TrackedLine> &LaserSensor::extractLines(bool debug) const
                 seenP1 = true;
         }
 
-        if (line2.length() >= config.laserMinLineLength && (fabs(line2.p1().normalized() * line2.lineVector().normalized()) < parallelMeasureThreshold))
+        if (isLineOkay(line2)) // This leads to a segfault in frame 436
         {
             double angle2 = line1.angle(line2);
             if (line2.isBlockingLine() && fabs(angle2) > config.slamSeenCornerMinAngle)
@@ -213,8 +247,7 @@ const Polygon& LaserSensor::getVisibilityPolygon() const
     visibilityPolygon.appendVertex(pointBuffer[0], Line::SightLine);
     for (uint i = 1; i < pointBuffer.size(); i++)
     {
-        if ((pointBuffer[i-1]-pointBuffer[i]).norm() > config.laserSegmentDistanceThreshold
-                || pointBuffer[i].norm() > config.laserMaxRayLength)
+        if ((pointBuffer[i-1]-pointBuffer[i]).norm() > config.laserSegmentDistanceThreshold)
         {
             visibilityPolygon.appendVertex(pointBuffer[i], Line::SightLine);
             //qDebug() << "appended sight vertex" << pointBuffer[i] << visibilityPolygon.getEdges().last();
@@ -257,29 +290,6 @@ const Polygon& LaserSensor::getVisibilityPolygon() const
             visibilityPolygon.removeEdge(shortIt);
         else
             shortIt.next();
-    }
-
-    // Grooming. Remove inverse spikes.
-    // Inverse spikes are very sharp inward corners that are caused by a single
-    // laser point being way out of place or a very small object such as a chair leg.
-    visibilityPolygon.rewriteEdgeIds();
-    ListIterator<Line> spikeIt = visibilityPolygon.edgeIterator();
-    while (!spikeIt.atEnd())
-    {
-        Line& l1 = spikeIt.peekPrev();
-        const Line& l2 = spikeIt.cur();
-
-        double f = l1.lineVector()*l2.lineVector()/(l1.length()*l2.length());
-        if (f < -0.98)
-        {
-            if (l2.isSightLine())
-                l1.setSightLine();
-            visibilityPolygon.removeEdge(spikeIt); // This also steps the iterator.
-        }
-        else
-        {
-            spikeIt.next();
-        }
     }
 
 //    if (visibilityPolygon.isSelfIntersecting()) // Can be removed when it no longer occurs.
@@ -469,11 +479,14 @@ Polygon LaserSensor::extractTriangleMarker(int debug) const
     return avgTriangle;
 }
 
-// Main control for all filters.
+// Main control for all filters (temporal, spatial, and speckle removal).
+// The filters can be enabled and disable in command and tuned with config parameters.
 void LaserSensor::filter()
 {
-    if (command.laserParticleRemoval)
-        particleRemoval();
+    if (command.laserTemporalFilter)
+        temporalFilter();
+    if (command.laserSpeckleRemoval)
+        speckleRemoval();
     if (command.laserSpatialFilter)
         spatialFilter();
 }
@@ -481,9 +494,8 @@ void LaserSensor::filter()
 // Removes small clusters of points as determined by the parameters:
 // config.laserSegmentDistanceThreshold - maximum distance between points in a segment
 // config.laserSmoothingMinSegmentSize - minimum number of points in a cluster (otherwise removed).
-// It permanently removes points from the sensor and the pointBuffer will be smaller.
-// Currently, this does not work well together with the temporal filter.
-void LaserSensor::particleRemoval()
+// It removes points from the pointBuffer.
+void LaserSensor::speckleRemoval()
 {
     QMutexLocker locker(&mutex);
 
@@ -511,6 +523,7 @@ void LaserSensor::particleRemoval()
 }
 
 // Smoothes the points with a configurable spatial low-pass filter.
+// It replaces the points in the point buffer.
 void LaserSensor::spatialFilter()
 {
     QMutexLocker locker(&mutex);
@@ -538,6 +551,71 @@ void LaserSensor::spatialFilter()
     }
 
     return;
+}
+
+// Smoothes the ranges with a configurable median filter over historical data
+// of each sensor ray. This filter needs to be applied first, because it replaces
+// the data in the range buffer and the point buffer.
+void LaserSensor::temporalFilter()
+{
+    QMutexLocker locker(&mutex);
+
+    // Replace the range buffer with the Median of the historical data.
+    Vector<double> psv;
+    for (uint i = 0; i < laserInfo.rays; i++)
+    {
+        //qDebug() << "filtering point" << i;
+        psv.clear();
+        for (uint j = 0; j < rangeHistory.size(); j++)
+        {
+            double v = rangeHistory[j][i];
+            if (!isnull(v) && !isnan(v)) // Discard nans and zeros.
+                psv << v;
+            //qDebug() << "  adding point" << j << ps.point << ps.length;
+        }
+        psv.sort();
+        uint psvidx = psv.size()/2;
+        rangeBuffer[i] = psv.isEmpty() ? 0 : psv[psvidx];
+        //qDebug() << "median:" << psv.size() << psvidx << psv[psvidx].point;
+    }
+
+    // Rewrite the point buffer.
+    pointBuffer.clear();
+    for (uint i = 0; i < rangeBuffer.size(); i++)
+        if (!isnull(rangeBuffer[i]) && !isnan(rangeBuffer[i])) // Discard nans and zeros.
+            pointBuffer << unitVectors[i] * rangeBuffer[i];
+}
+
+
+// Returns true if a line is reliable, i.e. is long enough, close enough, and has a good angle.
+bool LaserSensor::isLineOkay(const Line &l, bool debug) const
+{
+    // Discard lines that are too short.
+    if (l.length() < config.laserLineMinLength)
+    {
+        if (debug)
+            qDebug() << "Discarding line" << l << "due to shortness." << l.length();
+        return false;
+    }
+
+    // Discard far away lines where both end points are too far away.
+    if (l.p1().norm() > config.laserLineMaxDistance && l.p2().norm() > config.laserLineMaxDistance)
+    {
+        if (debug)
+            qDebug() << "Discarding line" << l << "due to distance.";
+        return false;
+    }
+
+    // Discard lines that are too closely aligned with the direction of the sensor ray.
+    // These are often phantom lines that don't really exist.
+    if (fabs((l.center()*l.lineVector()) / (l.center().norm()*l.length())) > fcos(config.laserLineMinAngle))
+    {
+        if (debug)
+            qDebug() << "Discarding line" << l << "due to angle." << acos(fabs((l.center()*l.lineVector()) / (l.center().norm()*l.length())));
+        return false;
+    }
+
+    return true;
 }
 
 // Draws the laser points on a QPainter in 3 modes.
@@ -601,7 +679,7 @@ void LaserSensor::draw(QPainter *painter) const
             // Draw the points.
             painter->setBrush(QBrush(c));
             for (uint j = 0; j < segments[i].size(); j++)
-                painter->drawEllipse(segments[i][j], 0.01, 0.01);
+                painter->drawEllipse(segments[i][j], 0.008, 0.008);
 
             // Draw the labels.
             if (command.showLabels)
@@ -627,12 +705,17 @@ void LaserSensor::draw(QPainter *painter) const
         penThick.setCosmetic(true);
         penThick.setWidth(8);
         penThick.setColor(drawUtil.blue);
-//        Vector<TrackedLine> lines = extractLines();
-//        for (uint i = 0; i < lines.size(); i++)
-//            lines[i].draw(painter, penThick);
+        Vector<TrackedLine> lines = extractLines();
+        for (uint i = 0; i < lines.size(); i++)
+            lines[i].draw(painter, penThick);
 
-        // Triangle feature for docking.
-        Polygon triangle = extractTriangleMarker(config.debugLevel);
+        // Line labels in blue.
+        if (command.showLabels)
+            for (uint i = 0; i < lines.size(); i++)
+                lines[i].drawLabel(painter, drawUtil.penBlue, 1.0);
+
+        // Docking triangle feature.
+        Polygon triangle = extractTriangleMarker();
         if (!triangle.isEmpty())
         {
             triangle.draw(painter, drawUtil.penThick, drawUtil.brushYellow);
@@ -720,28 +803,73 @@ void LaserSensor::draw() const
     }
 }
 
-void LaserSensor::printInfo() const
-{
-    QMutexLocker locker(&mutex);
-    for (uint i = 0; i < pointBuffer.size(); i++)
-    {
-        qDebug() << i << pointBuffer[i] << laserInfo.angleMin+i*laserInfo.angleIncrement << pointBuffer[i].angle()
-                 << fabs(laserInfo.angleMin+i*laserInfo.angleIncrement - pointBuffer[i].angle());
-    }
-}
-
 void LaserSensor::streamOut(QDataStream& out) const
 {
     QMutexLocker locker(&mutex);
     out << frameId;
-    out << pointBuffer;
+    out << laserInfo;
+    out << laserToBasePose;
+    out << rangeBuffer;
 }
 
 void LaserSensor::streamIn(QDataStream &in)
 {
     QMutexLocker locker(&mutex);
     in >> frameId;
-    in >> pointBuffer;
+    in >> laserInfo;
+    in >> laserToBasePose;
+    in >> rangeBuffer;
+    setLaserInfo(laserInfo);
+    pointBuffer.clear();
+    for (uint i = 0; i < rangeBuffer.size(); i++)
+        if (!isnull(rangeBuffer[i]) && !isnan(rangeBuffer[i])) // Discard nans and zeros.
+            pointBuffer << unitVectors[i] * rangeBuffer[i];
+}
+
+void LaserInfo::streamOut(QDataStream& out) const
+{
+    out << rays;
+    out << angleMin;
+    out << angleMax;
+    out << angleIncrement;
+    out << rangeMin;
+    out << rangeMax;
+    out << timeIncrement;
+    out << scanTime;
+}
+
+void LaserInfo::streamIn(QDataStream &in)
+{
+    in >> rays;
+    in >> angleMin;
+    in >> angleMax;
+    in >> angleIncrement;
+    in >> rangeMin;
+    in >> rangeMax;
+    in >> timeIncrement;
+    in >> scanTime;
+}
+
+QDataStream& operator<<(QDataStream& out, const LaserInfo &o)
+{
+    o.streamOut(out);
+    return out;
+}
+
+QDataStream& operator>>(QDataStream& in, LaserInfo &o)
+{
+    o.streamIn(in);
+    return in;
+}
+
+QDebug operator<<(QDebug dbg, const LaserInfo &o)
+{
+    dbg << "LaserInfo:";
+    dbg << "rays:" << o.rays;
+    dbg << "angle min, max, increment:" << o.angleMin << o.angleMax << o.angleIncrement;
+    dbg << "range min, max:" << o.rangeMin << o.rangeMax;
+    dbg << "time increment, scan time:" << o.timeIncrement << o.scanTime;
+    return dbg;
 }
 
 QDataStream& operator<<(QDataStream& out, const LaserSensor &o)
@@ -758,6 +886,7 @@ QDataStream& operator>>(QDataStream& in, LaserSensor &o)
 
 QDebug operator<<(QDebug dbg, const LaserSensor &o)
 {
+    dbg << o.readRangeBuffer();
     dbg << o.readPointBuffer();
     return dbg;
 }

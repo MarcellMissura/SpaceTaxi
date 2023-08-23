@@ -68,6 +68,8 @@ public:
     void setTargetState(const Pose2D& target);
     const Pose2D& getTargetState() const;
 
+    void setTimeLimit(double tl);
+
     // Grid and geometric models.
     void setGridModel(GridModel &gm);
     void setGeometricModel(GeometricModel &gm);

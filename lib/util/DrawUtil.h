@@ -83,14 +83,17 @@ struct DrawUtil
 
     QColor white;
     QColor black;
-    QColor grey;
+    QColor gray;
     QColor lightGray;
     QColor darkGray;
     QColor yellow;
+    QColor orange;
     QColor red;
     QColor green;
     QColor lightGreen;
     QColor blue;
+    QColor lightBlue;
+    QColor magenta;
     QColor ivory;
     QColor transparent;
 

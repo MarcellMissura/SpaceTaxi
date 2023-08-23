@@ -29,14 +29,17 @@ DrawUtil::DrawUtil()
     white = QColor("white");
     black = QColor("black");
     yellow = QColor("yellow");
+    orange = QColor::fromRgb(255,165,0);
     red = QColor("red");
     green = QColor("green");
     lightGreen = QColor::fromRgb(100,255,100);
     blue = QColor("blue");
-    grey = QColor("#808080");
-    lightGray = QColor("#BBBBBB");
-    darkGray = QColor("#4C4C4C");
+    lightBlue = QColor::fromRgb(125,125,255);
+    gray = QColor::fromRgb(127,127,127);
+    lightGray = QColor::fromRgb(200,200,200);
+    darkGray = QColor::fromRgb(64,64,64);
     ivory = QColor::fromRgb(255,255,240);
+    magenta = QColor::fromRgb(255,0,255);
     transparent = QColor::fromRgb(0,0,0,255);
 
 
@@ -76,173 +79,173 @@ DrawUtil::DrawUtil()
 
     penGray.setCosmetic(true);
     penGray.setWidth(2);
-    penGray.setColor(QColor::fromRgb(100,100,100));
+    penGray.setColor(gray);
 
     penGrayThin.setCosmetic(true);
     penGrayThin.setWidth(1);
-    penGrayThin.setColor(QColor::fromRgb(175,175,175));
+    penGrayThin.setColor(gray);
 
     penGrayDashed.setCosmetic(true);
     penGrayDashed.setStyle(Qt::DashLine);
     penGrayDashed.setWidth(2);
-    penGrayDashed.setColor(QColor::fromRgb(175,175,175));
+    penGrayDashed.setColor(gray);
 
     penGrayThinDashed.setCosmetic(true);
     penGrayThinDashed.setStyle(Qt::DashLine);
     penGrayThinDashed.setWidth(1);
-    penGrayThinDashed.setColor(QColor::fromRgb(175,175,175));
+    penGrayThinDashed.setColor(gray);
 
     penGrayThick.setCosmetic(true);
     penGrayThick.setWidth(3);
-    penGrayThick.setColor(QColor::fromRgb(175,175,175));
+    penGrayThick.setColor(gray);
 
     penLightGray.setCosmetic(true);
     penLightGray.setWidth(2);
-    penLightGray.setColor(QColor::fromRgb(200,200,200));
+    penLightGray.setColor(lightGray);
 
     penLightGrayThin.setCosmetic(true);
     penLightGrayThin.setWidth(1);
-    penLightGrayThin.setColor(QColor::fromRgb(200,200,200));
+    penLightGrayThin.setColor(lightGray);
 
     penLightGrayThick.setCosmetic(true);
     penLightGrayThick.setWidth(3);
-    penLightGrayThick.setColor(QColor::fromRgb(200,200,200));
+    penLightGrayThick.setColor(lightGray);
 
     penLightGrayDashed.setCosmetic(true);
     penLightGrayDashed.setStyle(Qt::DashLine);
     penLightGrayDashed.setWidth(2);
-    penLightGrayDashed.setColor(QColor::fromRgb(200,200,200));
+    penLightGrayDashed.setColor(lightGray);
 
 
     penDarkGray.setCosmetic(true);
     penDarkGray.setWidth(2);
-    penDarkGray.setColor(QColor::fromRgb(150,150,150));
+    penDarkGray.setColor(darkGray);
 
     penDarkGrayThin.setCosmetic(true);
     penDarkGrayThin.setWidth(1);
-    penDarkGrayThin.setColor(QColor::fromRgb(150,150,150));
+    penDarkGrayThin.setColor(darkGray);
 
     penDarkGrayDashed.setCosmetic(true);
     penDarkGrayDashed.setStyle(Qt::DashLine);
     penDarkGrayDashed.setWidth(2);
-    penDarkGrayDashed.setColor(QColor::fromRgb(150,150,150));
+    penDarkGrayDashed.setColor(darkGray);
 
     penDarkGrayThinDashed.setCosmetic(true);
     penDarkGrayThinDashed.setStyle(Qt::DashLine);
     penDarkGrayThinDashed.setWidth(1);
-    penDarkGrayThinDashed.setColor(QColor::fromRgb(150,150,150));
+    penDarkGrayThinDashed.setColor(darkGray);
 
 
     penRed.setCosmetic(true);
     penRed.setWidth(2);
-    penRed.setColor(Qt::red);
+    penRed.setColor(red);
 
     penRedDashed.setCosmetic(true);
     penRedDashed.setWidth(2);
     penRedDashed.setStyle(Qt::DashLine);
-    penRedDashed.setColor(Qt::red);
+    penRedDashed.setColor(red);
 
     penRedThin.setCosmetic(true);
     penRedThin.setWidth(1);
-    penRedThin.setColor(Qt::red);
+    penRedThin.setColor(red);
 
     penRedThinDashed.setCosmetic(true);
     penRedThinDashed.setWidth(1);
     penRedThinDashed.setStyle(Qt::DashLine);
-    penRedThinDashed.setColor(Qt::red);
+    penRedThinDashed.setColor(red);
 
     penRedThick.setCosmetic(true);
     penRedThick.setWidth(3);
-    penRedThick.setColor(Qt::red);
+    penRedThick.setColor(red);
 
     penRedThicker.setCosmetic(true);
     penRedThicker.setWidth(5);
-    penRedThicker.setColor(Qt::red);
+    penRedThicker.setColor(red);
 
     penYellow.setCosmetic(true);
     penYellow.setWidth(2);
-    penYellow.setColor(Qt::yellow);
+    penYellow.setColor(yellow);
 
     penYellowThick.setCosmetic(true);
     penYellowThick.setWidth(5);
-    penYellowThick.setColor(Qt::yellow);
+    penYellowThick.setColor(yellow);
 
     penOrange.setCosmetic(true);
     penOrange.setWidth(2);
-    penOrange.setColor(QColor::fromRgb(255,165,0));
+    penOrange.setColor(orange);
 
     penOrangeThick.setCosmetic(true);
     penOrangeThick.setWidth(7);
-    penOrangeThick.setColor(QColor::fromRgb(255,165,0));
+    penOrangeThick.setColor(orange);
 
     penBlue.setCosmetic(true);
     penBlue.setWidth(2);
-    penBlue.setColor(Qt::blue);
+    penBlue.setColor(blue);
 
     penBlueThin.setCosmetic(true);
     penBlueThin.setWidth(1);
-    penBlueThin.setColor(Qt::blue);
+    penBlueThin.setColor(blue);
 
     penBlueThick.setCosmetic(true);
     penBlueThick.setWidth(3);
-    penBlueThick.setColor(Qt::blue);
+    penBlueThick.setColor(blue);
 
     penGreen.setCosmetic(true);
     penGreen.setWidth(2);
-    penGreen.setColor(Qt::green);
+    penGreen.setColor(green);
 
     penGreenThin.setCosmetic(true);
     penGreenThin.setWidth(1);
-    penGreenThin.setColor(Qt::green);
+    penGreenThin.setColor(green);
 
     penGreenThick.setCosmetic(true);
     penGreenThick.setWidth(3);
-    penGreenThick.setColor(Qt::green);
+    penGreenThick.setColor(green);
 
 
-    brush.setColor(QColor::fromRgb(0,0,0));
+    brush.setColor(black);
     brush.setStyle(Qt::SolidPattern);
 
-    brushLightGray.setColor(QColor::fromRgb(200,200,200));
+    brushLightGray.setColor(lightGray);
     brushLightGray.setStyle(Qt::SolidPattern);
 
-    brushGray.setColor(QColor::fromRgb(175,175,175));
+    brushGray.setColor(gray);
     brushGray.setStyle(Qt::SolidPattern);
 
-    brushDarkGray.setColor(QColor::fromRgb(150,150,150));
+    brushDarkGray.setColor(darkGray);
     brushDarkGray.setStyle(Qt::SolidPattern);
 
-    brushWhite.setColor(QColor::fromRgb(255,255,255));
+    brushWhite.setColor(white);
     brushWhite.setStyle(Qt::SolidPattern);
 
-    brushTransparent.setColor(QColor::fromRgb(255,255,255,0));
+    brushTransparent.setColor(white);
     brushTransparent.setStyle(Qt::SolidPattern);
 
-    brushIvory.setColor(QColor::fromRgb(255,255,240));
+    brushIvory.setColor(ivory);
     brushIvory.setStyle(Qt::SolidPattern);
 
-    brushYellow.setColor(QColor::fromRgb(255,255,0));
+    brushYellow.setColor(yellow);
     brushYellow.setStyle(Qt::SolidPattern);
 
-    brushRed.setColor(QColor::fromRgb(255,0,0));
+    brushRed.setColor(red);
     brushRed.setStyle(Qt::SolidPattern);
 
-    brushOrange.setColor(QColor::fromRgb(255,100,0));
+    brushOrange.setColor(orange);
     brushOrange.setStyle(Qt::SolidPattern);
 
-    brushBlue.setColor(QColor::fromRgb(0,0,255));
+    brushBlue.setColor(blue);
     brushBlue.setStyle(Qt::SolidPattern);
 
-    brushLightBlue.setColor(QColor::fromRgb(125,125,255));
+    brushLightBlue.setColor(lightBlue);
     brushLightBlue.setStyle(Qt::SolidPattern);
 
-    brushMagenta.setColor(QColor::fromRgb(255,0,255));
+    brushMagenta.setColor(magenta);
     brushMagenta.setStyle(Qt::SolidPattern);
 
-    brushGreen.setColor(QColor::fromRgb(0,255,0));
+    brushGreen.setColor(green);
     brushGreen.setStyle(Qt::SolidPattern);
 
-    brushLightGreen.setColor(QColor::fromRgb(100,255,100));
+    brushLightGreen.setColor(lightGreen);
     brushLightGreen.setStyle(Qt::SolidPattern);
 }
 
@@ -408,7 +411,7 @@ void DrawUtil::drawArrow(QPainter* painter, const Vec2& from, const Vec2& to, co
 void DrawUtil::drawNoseCircle(QPainter* painter, const Pose2D& pose, const QPen& pen, const QBrush& brush, double radius)
 {
     painter->save();
-    painter->setTransform(pose.getQTransform(), true);
+    painter->setTransform(pose, true);
     painter->setPen(pen);
     painter->setBrush(brush);
     painter->drawEllipse(QPointF(), radius, radius);
@@ -431,7 +434,7 @@ void DrawUtil::drawFrame(QPainter* painter, const Pose2D& pose, double size)
     greenPen.setColor(Qt::green);
 
     painter->save();
-    painter->setTransform(pose.getQTransform(), true);
+    painter->setTransform(pose, true);
     drawArrow(painter, Vec2(), Vec2(size,0), redPen);
     drawArrow(painter, Vec2(), Vec2(0, size), greenPen);
     painter->restore();

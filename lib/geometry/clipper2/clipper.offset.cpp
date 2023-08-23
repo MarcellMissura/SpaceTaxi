@@ -439,8 +439,6 @@ void ClipperOffset::OffsetOpenPath(Group& group, Path64& path)
 
 void ClipperOffset::DoGroupOffset(Group& group)
 {
-
-
 	Rect64 r;
 	int idx = -1;
 	//the lowermost polygon must be an outer polygon. So we can use that as the

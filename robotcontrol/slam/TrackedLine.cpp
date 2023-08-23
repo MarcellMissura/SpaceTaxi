@@ -14,6 +14,8 @@ TrackedLine::TrackedLine() : Line()
     active = false;
     seenP1 = false;
     seenP2 = false;
+    seenP1Count = 0;
+    seenP2Count = 0;
 }
 
 TrackedLine::TrackedLine(const Line& l, uint frameId) : Line(l)
@@ -26,6 +28,8 @@ TrackedLine::TrackedLine(const Line& l, uint frameId) : Line(l)
     active = false;
     seenP1 = false;
     seenP2 = false;
+    seenP1Count = 0;
+    seenP2Count = 0;
     sort(); // Makes sure that x1 < x2.
 }
 

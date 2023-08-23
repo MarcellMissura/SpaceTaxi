@@ -697,9 +697,9 @@ void UnicycleAgent::simulateLaserSensor()
     base.normalize(config.laserLength);
     rays.clear();
     Vector<Vec2> laserPoints;
-    for (int i = 0; i < config.laserNumber; i++)
+    for (int i = 0; i < config.laserRays; i++)
     {
-        Vec2 ray1 = base.rotated(-config.laserAngleRange + i*2*config.laserAngleRange/(config.laserNumber-1));
+        Vec2 ray1 = base.rotated(-config.laserAngleRange + i*2*config.laserAngleRange/(config.laserRays-1));
         Vec2 ray2 = localWorldPolygons.rayIntersection(Vec2(), ray1);
         Vec2 ray3 = localWorldDynamicObstacles.rayIntersection(Vec2(), ray2);
         laserPoints << ray3;

@@ -1,4 +1,4 @@
-#include "SpaceTaxi.h"
+#include "MainWindow.h"
 #include "Experimenter.h"
 
 #include <QApplication>
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     else // GUI mode
     {
         QApplication a(argc, argv);
-        SpaceTaxi w;
+        MainWindow w;
 
         // Install the main window as an event filter.
         a.installEventFilter(&w);

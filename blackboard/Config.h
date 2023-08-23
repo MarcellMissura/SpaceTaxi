@@ -17,25 +17,24 @@ struct Config
     double agentLinearAccelerationLimit;
     double agentLinearVelocityLimitForward;
     double agentLinearVelocityLimitBackward;
-    double agentLinearJerkLimit;
-    double agentLinearDamping; // General linear damping applied in the phys sim at all times.
     double agentAngularAccelerationLimit;
     double agentAngularVelocityLimit;
+    double agentLinearDamping; // General linear damping applied in the phys sim at all times.
     double agentAngularDamping; // General angular damping applied in the phys sim at all times.
     double agentFriction; // Friction applies only when bodies touch.
 
     // Laser
-    double laserMaxRayLength; // Bounded length of the layer rays. Every point beyond this is considered unsafe.
-    double laserNumber; // How many sensor rays.
-    double laserAngleRange; // The opening angle of the sensor field.
+    double laserRays; // How many simulated sensor rays.
+    double laserAngleRange; // The opening angle of the simulated sensor field.
     double laserLength; // The maximum length of the simulated laser rays.
-    double laserLengthBound; // Bounded length of the layer rays.
+    double laserSmoothingMedianFilterSize; // How many historical values to select the mediam from.
+    double laserSmoothingSpatialPasses; // Number of low pass passes.
+    double laserSmoothingMinSegmentSize; // Clusters this small will be removed.
     double laserSegmentDistanceThreshold; // If neighbouring points are further apart than this, they don't belong to the same segment.
     double laserDouglasPeuckerEpsilon; // The epsilon parameter for the Douglas Peucker algorithm.
-    double laserSmoothingMinSegmentSize; // Clusters this small will be removed.
-    double laserSmoothingSpatialPasses; // Number of low pass passes.
-    double laserMinLineLength; // Minimum length of extracted lines.
-    double laserMaxLineDistance; // Maximum distance up to which lines are detected.
+    double laserLineMinLength; // Minimum length of extracted lines.
+    double laserLineMaxDistance; // Maximum distance up to which lines are detected.
+    double laserLineMinAngle; // Minimum angle of a line with respect to the viewing direction.
     double laserTriangleLegLength; // The diameter of the triangle marker.
     double laserTriangleAngle; // The angle at the tip of the triangle marker.
 
@@ -47,7 +46,7 @@ struct Config
     // geometric model
     double gmDilationRadius; // By how much are static polygons expanded.
     double gmAgentDilation; // By how much are the dynamic polygons expanded.
-    double gmDouglasPeuckerEpsilon;
+    double gmDouglasPeuckerEpsilon; // Douglas Peucker epsilon applied in the context of geometric operations.
 
     // grid model
     double gridWidth; // Grid model area definition.

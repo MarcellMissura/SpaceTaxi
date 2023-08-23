@@ -322,28 +322,30 @@ public:
 
 // QDebug output.
 template <typename T>
-QDebug operator<<(QDebug dbg, const Vector<T> *o)
-{
-    dbg << "sz:" << o->size() << " | ";
-    dbg << "[";
-    if  (o->size() > 1)
-        for (uint i = 0; i < o->size()-1; i++)
-            dbg << &o->at(i) << ",";
-    if (o->size() > 0)
-        dbg << &o->last();
-    dbg << "]";
-    return dbg;
-}
-
-
-// QDebug output.
-template <typename T>
 QDebug operator<<(QDebug dbg, const Vector<T> &o)
 {
     dbg << "sz:" << o.size() << " | ";
     dbg << "[";
-    for (uint i = 0; i < o.size(); i++)
-        dbg << o[i] << "\n";
+    if (o.size() > 1)
+        for (uint i = 0; i < o.size()-1; i++)
+            dbg << o[i] << ",";
+    if (o.size() > 0)
+        dbg << o[o.size()-1];
+    dbg << "]";
+    return dbg;
+}
+
+// More detailed line by line QDebug output operating on a pointer of a Vector.
+template <typename T>
+QDebug operator<<(QDebug dbg, const Vector<T> *o)
+{
+    dbg << "sz:" << o->size() << " | ";
+    dbg << "[";
+    if (o->size() > 1)
+        for (uint i = 0; i < o->size()-1; i++)
+            dbg << o->at(i) << "\n";
+    if (o->size() > 0)
+        dbg << o->last();
     dbg << "]";
     return dbg;
 }

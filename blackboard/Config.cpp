@@ -42,24 +42,23 @@ Config::Config()
     agentLinearAccelerationLimit = 5;
     agentLinearVelocityLimitForward = 2;
     agentLinearVelocityLimitBackward = -1;
-    agentLinearJerkLimit = 20;
-    agentLinearDamping = 1.0;
     agentAngularAccelerationLimit = 4;
     agentAngularVelocityLimit = 1.5;
+    agentLinearDamping = 1.0;
     agentAngularDamping = 3.0;
     agentFriction = 0.3;
 
-    laserMaxRayLength = 6; // Bounded length of the layer rays.
-    laserNumber = 512; // How many sensor rays.
+    laserRays = 512; // How many sensor rays.
     laserAngleRange = 2.0; // The opening angle of the sensor field.
     laserLength = 6; // The maximum length of the simulated laser rays.
-    laserLengthBound = 5; // Bounded length of the layer rays.
-    laserMinLineLength = 0.25;
-    laserMaxLineDistance = 5;
-    laserSegmentDistanceThreshold = 0.15;
-    laserDouglasPeuckerEpsilon = 0.02;
     laserSmoothingMinSegmentSize = 3;
     laserSmoothingSpatialPasses = 1;
+    laserSmoothingMedianFilterSize = 5;
+    laserSegmentDistanceThreshold = 0.15;
+    laserDouglasPeuckerEpsilon = 0.02;
+    laserLineMinLength = 0.3;
+    laserLineMaxDistance = 6;
+    laserLineMinAngle = 0.4;
     laserTriangleLegLength = 0.17; // The side length of the triangle.
     laserTriangleAngle = 2.3; // The angle at the tip of the triangle marker.
 
@@ -205,25 +204,24 @@ void Config::init()
     registerMember("agent.linearAccLimit", &agentLinearAccelerationLimit, 10.0);
     registerMember("agent.linearVelLimitForward", &agentLinearVelocityLimitForward, 10.0);
     registerMember("agent.linearVelLimitBackward", &agentLinearVelocityLimitBackward, 10.0);
-    registerMember("agent.linearJerkLimit", &agentLinearJerkLimit, 500.0);
-    registerMember("agent.linearDamping", &agentLinearDamping, 10.0);
     registerMember("agent.angularAccLimit", &agentAngularAccelerationLimit, 10.0);
     registerMember("agent.angularVelLimit", &agentAngularVelocityLimit, 10.0);
+    registerMember("agent.linearDamping", &agentLinearDamping, 10.0);
     registerMember("agent.angularDamping", &agentAngularDamping, 10.0);
     registerMember("agent.friction", &agentFriction, 10.0);
 
     // laser sensor
-    registerMember("laser.maxRayLength", &laserMaxRayLength, 10.0);
-    registerMember("laser.number", &laserNumber, 1000);
+    registerMember("laser.rays", &laserRays, 1000);
     registerMember("laser.angleRange", &laserAngleRange, PI);
     registerMember("laser.length", &laserLength, 50.0);
-    registerMember("laser.lengthBound", &laserLengthBound, 10.0);
     registerMember("laser.segmentDistanceThreshold", &laserSegmentDistanceThreshold, 1.0);
     registerMember("laser.douglasPeuckerEpsilon", &laserDouglasPeuckerEpsilon, 0.1);
+    registerMember("laser.medianFilterSize", &laserSmoothingMedianFilterSize, 100);
     registerMember("laser.smoothingPasses", &laserSmoothingSpatialPasses, 100);
     registerMember("laser.minSegmentSize", &laserSmoothingMinSegmentSize, 100);
-    registerMember("laser.minLineLength", &laserMinLineLength, 1.0);
-    registerMember("laser.maxLineDistance", &laserMaxLineDistance, 10.0);
+    registerMember("laser.lineMinLength", &laserLineMinLength, 1.0);
+    registerMember("laser.lineMaxDistance", &laserLineMaxDistance, 20.0);
+    registerMember("laser.lineMinAngle", &laserLineMinAngle, PI2);
     registerMember("laser.triangleLegLength", &laserTriangleLegLength, 1.0);
     registerMember("laser.triangleAngle", &laserTriangleAngle, PI);
 

@@ -16,6 +16,9 @@ const double RAD_TO_DEG =  180.0 / PI;
 const double DEG_TO_RAD =  PI / 180.0;
 const double EPSILON = 1.0E-5;
 
+// Checks if number is (almost) zero.
+static const bool isnull(double n) { return (n < EPSILON && n > -EPSILON); }
+
 // Min max bound trio.
 template <typename T>
 static const T &min(const T &a, const T &b) { return (a < b) ? a : b; }

@@ -52,7 +52,7 @@ void MainControlLoop::start()
     // 10 Hz, the control loop fires every 50 milliseconds and so on. The
     // simulated time is not affected by the speedup. At a frequency of 10 Hz,
     // the simulated time is always 100 ms.
-	running = true;
+    running = true;
     timer.start( (int) (1000.0/(config.speedUp*command.frequency)) );
 	lastStartTimestamp = stopWatch.programTime();
 }
@@ -60,8 +60,8 @@ void MainControlLoop::start()
 // Stops the main control loop.
 void MainControlLoop::stop()
 {
-	running = false;
-	timer.stop();
+    running = false;
+    timer.stop();
 }
 
 // The main loop of the game. It's periodically called by the timer.

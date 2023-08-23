@@ -1,7 +1,7 @@
-﻿#ifndef SPACETAXI_H
-#define SPACETAXI_H
+﻿#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-#include "ui_spacetaxi.h"
+#include "ui_gui.h"
 #include <QMainWindow>
 #include <QSplitter>
 #include "gui/GraphWidget.h"
@@ -16,31 +16,31 @@
 #include "MainControlLoop.h"
 #include "Experimenter.h"
 
-class SpaceTaxi : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    Ui::SpaceTaxiClass ui;
+    Ui::MainWindowClass ui;
 
     CheckBoxWidget checkboxWidget;
-	GraphWidget graphWidget;
-	ConfigWidget configWidget;
-	GraphicsViewWidget graphicsViewWidget;
+    GraphWidget graphWidget;
+    ConfigWidget configWidget;
+    GraphicsViewWidget graphicsViewWidget;
     GraphicsScene graphicsScene;
 
     QSignalMapper mapSelectionMapper;
-    QSignalMapper pathSelectionMapper;
     QSignalMapper trajectoryPlannerSelectionMapper;
+    QSignalMapper frequencySelectionMapper;
+    QSignalMapper pathSelectionMapper;
     QSignalMapper trajectoryTypeSelectionMapper;
     QSignalMapper predictionTypeSelectionMapper;
     QSignalMapper heuristicSelectionMapper;
-    QSignalMapper frequencySelectionMapper;
 
-	QSplitter* verticalSplitterTop;
-	QSplitter* verticalSplitterBottom;
-	QSplitter* horizontalSplitter;
+    QSplitter* verticalSplitterTop;
+    QSplitter* verticalSplitterBottom;
+    QSplitter* horizontalSplitter;
 
-	QAction* joystickAction;
+    QAction* joystickAction;
     QAction* keyboardAction;
     QAction* showWorldPathAction;
 
@@ -56,46 +56,52 @@ class SpaceTaxi : public QMainWindow
     Experimenter experimenter;
 
     void buildMenu();
-    
+
 public:
-    SpaceTaxi(QWidget *parent = 0);
-    ~SpaceTaxi();
+    MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
 public slots:
-	void joystickConnected();
-	void joystickDisconnected();
-	void joystickButtonPressed(QList<bool>);
-	void joystickMoved(QList<double>);
-	void configChanged();
-	void topSplitterMoved();
-	void bottomSplitterMoved();
-	void messageIn(QString m);
-	void toggleConfig();
-	void toggleGraph();
-	void animate();
-	void record();
-	void recordStart();
-	void recordStop();
-	void play();
-	void stop();
-	void frameBack();
-	void frameForward();
-	void jumpToStart();
-	void jumpToEnd();
-	void jumpToFrame(int);
+    void joystickConnected();
+    void joystickDisconnected();
+    void joystickButtonPressed(QList<bool>);
+    void joystickMoved(QList<double>);
+
+    void configChanged();
+    void topSplitterMoved();
+    void bottomSplitterMoved();
+    void messageIn(QString m);
+    void toggleConfig();
+    void toggleGraph();
+    void animate();
+    void record();
+    void recordStart();
+    void recordStop();
+    void play();
+    void stop();
+    void frameBack();
+    void frameForward();
+    void jumpToStart();
+    void jumpToEnd();
+    void jumpToFrame(int);
     void loadFrame(int);
     void updateGui();
 
-	void reset();
-	void saveConfig();
-	void loadConfig();
-	void saveStateHistory();
-	void loadStateHistory(QString fileName = "");
+    void reset();
+    void saveConfig();
+    void loadConfig();
+    void saveStateHistory();
+    void loadStateHistory(QString fileName = "");
     void exportWorld();
 
-	void toggleJoystick();
+    void toggleJoystick();
     void toggleKeyboard();
     void toggleMap(int mapId);
+
+    void toggleSelectPose();
+    void toggleSelectTarget();
+    void poseRecorded(const Pose2D& pose);
+
     void toggleGeometricModel();
     void toggleSimulationDebug();
     void toggleTeaching();
@@ -137,4 +143,4 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event);
 };
 
-#endif // SPACETAXI_H
+#endif

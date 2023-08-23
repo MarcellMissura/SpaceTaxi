@@ -150,6 +150,12 @@ const Pose2D &ShortTermAbortingAStar::getTargetState() const
     return targetState;
 }
 
+// Sets the time limit for the search in milliseconds.
+void ShortTermAbortingAStar::setTimeLimit(double tl)
+{
+    timeLimit = tl;
+}
+
 // Performs the Polygons + Minimal Construct + PathRTR search using Aborting A*.
 // Preconditions: setGridModel() must have been called to provide the input perception grid,
 // The start and target states have to be set using setStartState() and setTargetState(),
