@@ -1,6 +1,6 @@
+#include "lib/globals.h"
 #include "fresnelnr.h"
 #include <stdio.h>
-#include "globals.h"
 
 fcomplex Cadd(fcomplex a, fcomplex b)
 {

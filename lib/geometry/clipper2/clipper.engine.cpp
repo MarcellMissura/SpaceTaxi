@@ -2784,7 +2784,6 @@ namespace Clipper2Lib {
   void ClipperBase::DeepCheckOwners(OutRec* outrec, PolyPath* polypath)
   {
     RecursiveCheckOwners(outrec, polypath);
-
     while (outrec->owner && outrec->owner->splits)
     {
       OutRec* split = nullptr;
@@ -2965,8 +2964,9 @@ namespace Clipper2Lib {
       solutionOpen->reserve(outrec_list_.size());
     }
 
-    for (OutRec* outrec : outrec_list_)
+    for (uint i = 0; i < outrec_list_.size(); i++)
     {
+      OutRec* outrec = outrec_list_[i];
       if (outrec->pts == nullptr) continue;
 
       PathD path;
@@ -2988,12 +2988,13 @@ namespace Clipper2Lib {
   void ClipperD::BuildPolygonsD(LinkedList<Polygon>& resultPolygons)
   {
         Polygon pol;
-        for (OutRec* outrec : outrec_list_)
+        for (uint i = 0; i < outrec_list_.size(); i++)
         {
+            OutRec* outrec = outrec_list_[i];
             if (outrec->pts == nullptr) continue;
             CleanCollinear(outrec);
             //closed paths should always return a Positive orientation
-            if (BuildPolygonD(outrec->pts, true, pol, invScale_))
+            if (BuildPolygonD(outrec->pts, ReverseSolution, pol, invScale_))
                 resultPolygons << pol;
         }
   }
@@ -3005,8 +3006,9 @@ namespace Clipper2Lib {
     if (has_open_paths_)
       open_paths.reserve(outrec_list_.size());
 
-    for (OutRec* outrec : outrec_list_)
+    for (uint i = 0; i < outrec_list_.size(); i++)
     {
+      OutRec* outrec = outrec_list_[i];
       if (!outrec || !outrec->pts) continue;
       if (outrec->is_open)
       {
@@ -3025,8 +3027,9 @@ namespace Clipper2Lib {
   {
         polytree.Clear();
 
-        for (OutRec* outrec : outrec_list_)
+        for (uint i = 0; i < outrec_list_.size(); i++)
         {
+            OutRec* outrec = outrec_list_[i];
             if (!outrec || !outrec->pts) continue;
             if (CheckBounds(outrec))
                 DeepCheckOwners(outrec, &polytree);

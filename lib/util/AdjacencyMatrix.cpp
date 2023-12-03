@@ -5,13 +5,14 @@
 // when needed, but memory is never released again to avoid reoccuring
 // heap allocations. There is no need to define the structure.
 // The matrix will automatically accomodate an index (i,j) when you
-// call set(i,j). The entries of the matrix can be in one of three states:
-// 0 - no edge between i and j. isSet(i,j) and isChecked(i,j) return false.
-// 1 - unknown, isSet(i,j) is true and isChecked(i,j) is false.
-// 2 - checked edge between i and j, isSet(i,j) and isChecked(i,j) both return true.
-// If you check for an index (i,j) with isSet(i,j) or isChecked(i,j) outside
-// of the allocated memory, false is returned. To manipulate the state of an edge,
-// call set(i,j), unset(i,j) or check(i,j).
+// call set(i,j) or check(i,j). The entries of the matrix can be in one
+// of three states:
+// 0 - void state, isSet(i,j) and isChecked(i,j) return false.
+// 1 - set state, isSet(i,j) is true and isChecked(i,j) is false.
+// 2 - checked state, isSet(i,j) and isChecked(i,j) return true.
+// If you call isSet(i,j) or isChecked(i,j) with an index (i,j) outside of
+// the allocated memory, false is returned and the structure remains unchanged.
+// To manipulate the state of an edge, call set(i,j), unset(i,j) or check(i,j).
 
 AdjacencyMatrix::AdjacencyMatrix()
 {
@@ -41,6 +42,22 @@ void AdjacencyMatrix::set(uint i, uint j)
     m.ensureSize(i+1);
     m[i].ensureSize(j+1);
     m[i][j] = 1;
+}
+
+// Set the matrix entry at (i,j) to your custom value v.
+// The matrix will automatically grow to accomodate an element i,j.
+void AdjacencyMatrix::set(uint i, uint j, char v)
+{
+    if (j > i)
+    {
+        uint temp = j;
+        j = i;
+        i = temp;
+    }
+
+    m.ensureSize(i+1);
+    m[i].ensureSize(j+1);
+    m[i][j] = v;
 }
 
 // Set the matrix entry at (i,j) to 0 (no edge state).

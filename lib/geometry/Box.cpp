@@ -1,5 +1,5 @@
 #include "Box.h"
-#include "blackboard/Config.h"
+#include "board/Config.h"
 #include <GL/glu.h>
 
 // The Box is an axis aligned rectangle typically used as a bounding box
@@ -158,6 +158,12 @@ Vec2 Box::bottomLeft() const
 Vec2 Box::bottomRight() const
 {
     return Vec2(right(), bottom());
+}
+
+// Returns the world coordinates of the center of the box.
+Vec2 Box::center() const
+{
+    return Vec2((right()-left())/2, (top()-bottom())/2);
 }
 
 // Sets the left border of the box in world.

@@ -1,9 +1,9 @@
 #ifndef VECN_H_
 #define VECN_H_
+#include "lib/globals.h"
 #include <math.h>
 #include <QDebug>
 #include <QDataStream>
-#include "globals.h"
 
 // The VecN is a generic vector of doubles where the number of dimensions N is specified
 // as a template parameter. For example, VecN<3> v; creates a three dimensional vector.

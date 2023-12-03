@@ -53,6 +53,7 @@ State state;
 
 // These members are static so that buffering into history does not create copies.
 QMutex State::mutex(QMutex::Recursive);
+QMutex State::bigMutex;
 int State::stateIndexOffset = 0;
 int State::bufferOffset = 0;
 QStringList State::memberNames;
@@ -68,7 +69,7 @@ State::State()
 
     frameId = 0;
     time = 0;
-    realTime = 0;
+    receptionTime = 0;
     iterationTime = 0;
     executionTime = 0;
     senseTime = 0;
@@ -77,6 +78,11 @@ State::State()
     trajectoryTime = 0;
     bufferTime = 0;
     drawTime = 0;
+    localizationTime = 0;
+    mapUpdateTime = 0;
+
+    pathLength = 0;
+    mapRam = 0;
 
     aasExpansions = 0;
     aasClosed = 0;
@@ -104,15 +110,23 @@ State::~State()
 void State::init()
 {
     registerMember("time", &time);
-
-    registerMember("time.iterationTime", &iterationTime);
-    registerMember("time.executionTime", &executionTime);
+    registerMember("time.iteration", &iterationTime);
+    registerMember("time.execution", &executionTime);
+    registerMember("time.reception", &receptionTime);
+    registerMember("time.sense", &senseTime);
+    registerMember("time.laser", &laserTime);
+    registerMember("time.localMap", &localMapTime);
+    registerMember("time.slam", &slamTime);
+    registerMember("time.localization", &localizationTime);
+    registerMember("time.mapUpdate", &mapUpdateTime);
+    registerMember("time.act", &actTime);
+    registerMember("time.path", &pathTime);
+    registerMember("time.trajectory", &trajectoryTime);
     registerMember("time.buffer", &bufferTime);
     registerMember("time.draw", &drawTime);
-    registerMember("time.sense", &senseTime);
-    registerMember("time.act", &actTime);
-    registerMember("time.pathTime", &pathTime);
-    registerMember("time.trajectory", &trajectoryTime);
+
+    registerMember("path.length", &pathLength);
+    registerMember("map.ram", &mapRam);
 
     registerMember("uniAgent.x", &uniTaxi.x);
     registerMember("uniAgent.y", &uniTaxi.y);
@@ -255,6 +269,12 @@ void State::bufferToFile() const
     file.close();
 }
 
+// Clears the state history file.
+void State::resetFile() const
+{
+    QFile::resize("data/statehistory.dat", 0);
+}
+
 // Returns the amount of buffered historical state objects.
 int State::size() const
 {
@@ -297,11 +317,11 @@ double State::getMember(int i) const
 {
     QMutexLocker locker(&mutex);
 
-	if (memberTypes[i].startsWith('i'))
+    if (memberTypes[i].startsWith('i'))
         return (double)(*((int*)((quint64)this+memberOffsets[i])));
-	else if (memberTypes[i].startsWith('b'))
+    else if (memberTypes[i].startsWith('b'))
         return (double)(*((bool*)((quint64)this+memberOffsets[i])));
-	else if (memberTypes[i].startsWith('f'))
+    else if (memberTypes[i].startsWith('f'))
         return (double)(*((float*)((quint64)this+memberOffsets[i])));
     return *((double*)((quint64)this+memberOffsets[i]));
 }
@@ -313,16 +333,16 @@ double State::getMember(QString key) const
 {
     QMutexLocker locker(&mutex);
 
-	int memberIndex = 0;
-	bool memberFound = false;
+    int memberIndex = 0;
+    bool memberFound = false;
     while (!memberFound)
-		if (memberNames[memberIndex++] == key)
-			memberFound = true;
+        if (memberNames[memberIndex++] == key)
+            memberFound = true;
 
-	if (memberFound)
-		return getMember(memberIndex-1);
+    if (memberFound)
+        return getMember(memberIndex-1);
 
-	return 0;
+    return 0;
 }
 
 // Sets the ith member to value v.

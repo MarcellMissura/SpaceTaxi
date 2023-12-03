@@ -1,5 +1,5 @@
 #include "TransformationHypothesis.h"
-#include "blackboard/Config.h"
+#include "board/Config.h"
 
 TransformationHypothesis::TransformationHypothesis()
 {
@@ -122,7 +122,7 @@ bool TransformationHypothesis::computeTransform(LinePair& lpi_, LinePair &lpj_, 
     // A significant portion (ca. 75%) of the input line must be covered. The map line
     // does not need to be covered significantly. There are cases where the robot would
     // look through a door and see only a small portion of a long line in the corridor.
-    if (lpi.percentualOverlap() < config.slamPairingMinOverlapPercent || lpj.percentualOverlap() < config.slamPairingMinOverlapPercent)
+    if (lpi.percentualOverlap() < config.slamHypMinOverlapPercent || lpj.percentualOverlap() < config.slamHypMinOverlapPercent)
     {
         if (debug)
         {
@@ -185,7 +185,7 @@ bool TransformationHypothesis::computeTranslation(LinePair& lpi_, LinePair &lpj_
         {
             if (debug)
             qDebug() << "Pairs" << lpi_.inputLine->id << lpi_.mapLine->id << "and" << lpj_.inputLine->id << lpj_.mapLine->id
-                     << "have parallel map lines but different orthos:" << fabs(lpi_.ortho() - lpj_.ortho()) << "Discarded.";
+                     << "have parallel map lines but different orthos:" << lpi_.ortho() << lpj_.ortho() << fabs(lpi_.ortho() - lpj_.ortho()) << "Discarded.";
             return false;
         }
 
@@ -231,7 +231,7 @@ bool TransformationHypothesis::computeTranslation(LinePair& lpi_, LinePair &lpj_
     // A significant portion (ca. 75%) of the input line must be covered. The map line
     // does not need to be covered significantly. There are cases where the robot would
     // look through a door and see only a small portion of a long line in the corridor.
-    if (lpi.percentualOverlap() < config.slamPairingMinOverlapPercent || lpj.percentualOverlap() < config.slamPairingMinOverlapPercent)
+    if (lpi.percentualOverlap() < config.slamHypMinOverlapPercent || lpj.percentualOverlap() < config.slamHypMinOverlapPercent)
     {
         if (debug)
         {
@@ -253,6 +253,35 @@ double TransformationHypothesis::dist(const TransformationHypothesis& other) con
     return tr_.dist(other.tr_);
 }
 
+// Returns true if this hypothesis is related to the other. Two hypotheses are related
+// when the input lines of the one hyp are the same as the input lines of the other hyp.
+bool TransformationHypothesis::isRelatedTo(const TransformationHypothesis &other) const
+{
+    LinePair* lp1 = linePair1;
+    LinePair* lp2 = linePair2;
+    LinePair* lp3 = other.linePair1;
+    LinePair* lp4 = other.linePair2;
+    return ((lp1->inputLine->id == lp3->inputLine->id && lp2->inputLine->id == lp4->inputLine->id)
+    || (lp1->inputLine->id == lp4->inputLine->id && lp2->inputLine->id == lp3->inputLine->id));
+}
+
+// Returns true if this hypothesis is in conflict with the other. Two hypotheses are in conflict
+// with each other when in either pair, the same input line is assigned to a different map line.
+bool TransformationHypothesis::isInConflictWith(const TransformationHypothesis &other) const
+{
+    int iid1 = linePair1->inputLine->id;
+    int iid2 = linePair2->inputLine->id;
+    int iid3 = other.linePair1->inputLine->id;
+    int iid4 = other.linePair2->inputLine->id;
+
+    int mid1 = linePair1->mapLine->id;
+    int mid2 = linePair2->mapLine->id;
+    int mid3 = other.linePair1->mapLine->id;
+    int mid4 = other.linePair2->mapLine->id;
+
+    return ((iid1 == iid3 && mid1 != mid3) || (iid1 == iid4 && mid1 != mid4) || (iid2 == iid3 && mid2 != mid3) || (iid2 == iid4 && mid2 != mid4));
+}
+
 // Returns the transform that this hypothesis suggests as a Pose2D relative to inputPose.
 const Pose2D &TransformationHypothesis::tr() const
 {
@@ -265,5 +294,11 @@ QDebug operator<<(QDebug dbg, const TransformationHypothesis &n)
         << "pairs:" << n.linePair1->inputLine->id << n.linePair1->mapLine->id << "and"
         << n.linePair2->inputLine->id << n.linePair2->mapLine->id
         << "tr:" << n.tr();
+    return dbg;
+}
+
+QDebug operator<<(QDebug dbg, const TransformationHypothesis *n)
+{
+    dbg << n->id << ":" << n->linePair1 << "," << n->linePair2;
     return dbg;
 }

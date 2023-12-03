@@ -728,8 +728,7 @@ namespace Clipper2Lib {
   }
 
   template <typename T>
-  inline Paths<T> SimplifyPaths(const Paths<T> paths, 
-    double epsilon, bool isOpenPath = false)
+  inline Paths<T> SimplifyPaths(const Paths<T> paths, double epsilon, bool isOpenPath = false)
   {
     Paths<T> result;
     result.reserve(paths.size());

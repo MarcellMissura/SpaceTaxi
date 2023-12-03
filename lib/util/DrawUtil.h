@@ -43,11 +43,14 @@ struct DrawUtil
     QPen penLightGray;
     QPen penLightGrayDashed;
     QPen penLightGrayThin;
+    QPen penLightGrayThinDashed;
     QPen penLightGrayThick;
+
     QPen penDarkGray;
     QPen penDarkGrayDashed;
     QPen penDarkGrayThin;
     QPen penDarkGrayThinDashed;
+
     QPen penRed;
     QPen penRedDashed;
     QPen penRedThin;
@@ -59,9 +62,11 @@ struct DrawUtil
     QPen penOrange;
     QPen penOrangeThick;
     QPen penBlue;
+    QPen penBlueDashed;
     QPen penBlueThin;
     QPen penBlueThick;
     QPen penGreen;
+    QPen penGreenDashed;
     QPen penGreenThick;
     QPen penGreenThin;
 
@@ -75,6 +80,7 @@ struct DrawUtil
     QBrush brushYellow;
     QBrush brushOrange;
     QBrush brushRed;
+    QBrush brushLightRed;
     QBrush brushBlue;
     QBrush brushLightBlue;
     QBrush brushMagenta;
@@ -89,6 +95,7 @@ struct DrawUtil
     QColor yellow;
     QColor orange;
     QColor red;
+    QColor lightRed;
     QColor green;
     QColor lightGreen;
     QColor blue;
@@ -111,6 +118,7 @@ struct DrawUtil
     static void drawCross(QPainter* painter, const Vec2& pos, const QPen& pen, const QBrush& brush, double size=0.1, double opacity=0.8);
     static void drawArrow(QPainter* painter, const Vec2 &from, const Vec2 &to, const QPen& pen);
     static void drawNoseCircle(QPainter* painter, const Pose2D &pose, const QPen& pen, const QBrush& brush, double radius=0.1);
+    static void drawLine(QPainter* painter, const Vec2 &from, const Vec2 &to, const QPen& pen);
     static void drawFrame(QPainter* painter, const Pose2D& pose, double size=0.1);
 };
 

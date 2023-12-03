@@ -12,8 +12,6 @@ class MainControlLoop : public QObject
     bool running;
     StopWatch stopWatch; // for precise performance measuring
     QTimer timer; // drives the rc thread
-    double lastUpdateTimestamp;
-    double lastStartTimestamp;
 
 public:
 

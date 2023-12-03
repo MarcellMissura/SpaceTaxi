@@ -1,5 +1,5 @@
 #include "ExperimentConfig.h"
-#include "blackboard/Command.h"
+#include "board/Command.h"
 
 QString ExperimentConfig::getMapName() const
 {

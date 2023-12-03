@@ -1,8 +1,8 @@
 #include "Experimenter.h"
-#include "globals.h"
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "lib/globals.h"
+#include "board/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
 #include "lib/util/Logger.h"
 #include "lib/util/StopWatch.h"
 #include "lib/util/Statistics.h"
@@ -125,11 +125,11 @@ void Experimenter::run()
     qDebug() << "Experimenter started.";
     running = true;
 
-    trajectoryExperiments();
-    postProcessTrajectoryExperiments();
+    //trajectoryExperiments();
+    //postProcessTrajectoryExperiments();
     //geometricModelTest();
     //geometryRuntimeTests();
-    //arithmeticOperationsTest();
+    arithmeticOperationsTest();
     //lineTests();
     //pocPredictionTest();
 
@@ -756,9 +756,7 @@ void Experimenter::geometryRuntimeTests()
     // Transform computation test.
     sw.start();
     for (int i = 0; i < polygons.size(); i++)
-    {
         polygons[i].transform();
-    }
     double time = 1000.0*sw.elapsedTimeMs();
     qDebug() << "Transform computation time:" << time/polygons.size() << "microseconds.";
 
@@ -1311,6 +1309,15 @@ void Experimenter::arithmeticOperationsTest()
     }
     time = sw.elapsedTimeMs();
     qDebug() << "sqrt test:" << 1000*1000*time/N << "ns" << a;
+
+    a = 2.0;
+    sw.start();
+    for (uint k = 0; k < N; k++)
+    {
+        a += log(a);
+    }
+    time = sw.elapsedTimeMs();
+    qDebug() << "log test:" << 1000*1000*time/N << "ns" << a;
 
     a = 0.1;
     sw.start();

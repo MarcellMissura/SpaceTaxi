@@ -7,7 +7,7 @@
 #include "lib/util/AdjacencyMatrix.h"
 #include "lib/geometry/Box.h"
 #include "lib/geometry/Polygon.h"
-//#include "lib/geometry/GeometricModel.h"
+#include "lib/geometry/Path.h"
 class GeometricModel;
 #include <QPainter>
 #include <QDebug>
@@ -125,7 +125,7 @@ public:
     Box boundingBox; // A bounding box that confines the search to remain within.
 
     PriorityQueue<Node*> q; // A priority q for A*.
-    Vector<Vec2> path; // The result of a path search.
+    Path path; // The result of a path search.
 
     uint lineIntersectionTests;
     uint tangentialTests;
@@ -146,7 +146,7 @@ public:
     const Box& getBounds() const;
 
     bool computePath(const Vec2 &from, const Vec2 &to, int debug=0);
-    const Vector<Vec2> &getPath() const;
+    const Path &getPath() const;
 
     void draw(QPainter* painter) const;
     void draw() const;

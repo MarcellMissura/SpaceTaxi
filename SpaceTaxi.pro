@@ -1,4 +1,4 @@
-include(blackboard/blackboard.pri)
+include(board/board.pri)
 include(gui/gui.pri)
 include(lib/lib.pri)
 include(robotcontrol/robotcontrol.pri)
@@ -13,8 +13,7 @@ HEADERS += Experimenter.h \
     ExperimentConfig.h \
     World.h \
     MainWindow.h \
-    MainControlLoop.h \
-    globals.h
+    MainControlLoop.h
 SOURCES += Experimenter.cpp \
     ExperimentConfig.cpp \
     World.cpp \

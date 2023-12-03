@@ -1,8 +1,8 @@
 #include "poc.h"
+#include "lib/globals.h"
+#include <complex>
 #include <math.h>
 #include <QDebug>
-#include <complex>
-#include "globals.h"
 
 // The poc is a pole on cart model.
 // The state of the poc is the position of the cart x, the cart velocity vx,

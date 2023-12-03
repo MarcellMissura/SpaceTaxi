@@ -32,12 +32,10 @@ class ShortTermAbortingAStar
     Vector<Vec2> actionSet;
 
     // Data structures for collision checking and heuristic evaluation.
-    GridModel* sensedGrid; // not const because of init Dijkstra
-    GeometricModel* localMap; // not const because of computeDynamicPath
-
-    // Hull polygons for collision checking.
     Polygon hullPolygon;
     Polygon planPolygon;
+    GridModel* sensedGrid; // not const because of init Dijkstra
+    GeometricModel* localMap; // not const because of computeDynamicPath
 
     StopWatch stopWatch;
 
@@ -91,19 +89,20 @@ public:
 
     // Visualization.
     void draw(QPainter* painter) const;
-    void drawVisibilityGraph(QPainter *painter) const;
     void draw() const;
 
 private:
-    double heuristic(const Pose2D& from, const Pose2D &to);
+    void computeActionSet();
+    Polygon getSafetyPolygon(double vel) const;
+    bool collisionCheck(const UnicycleSearchNode &u) const;
+    double heuristic(const UnicycleSearchNode& from, const Pose2D &to);
     double heuristic_euklidean(const Pose2D& from, const Pose2D &to) const;
-    double heuristic_patheuklidean(const Vector<Vec2> &path, const Pose2D& from, const Pose2D &to) const;
-    double heuristic_rtr(const Pose2D& from, const Pose2D &to) const;
+    double heuristic_patheuklidean(const Path &path, const Pose2D& from, const Pose2D &to) const;
+    double heuristic_rtr(const Pose2D& from, const Pose2D &to, bool debug=false) const;
+    double heuristic_dock_rtr(const Pose2D& from, const Pose2D &to, bool debug=false) const;
     double heuristic_rtr_min(const Pose2D& from, const Pose2D &to) const;
     double heuristic_rtr_max(const Pose2D& from, const Pose2D &to) const;
-    double heuristic_pathrtr(const Vector<Vec2> &path, const Pose2D& from, const Pose2D &to) const;
-    bool collisionCheck(const UnicycleSearchNode &u) const;
-    void computeActionSet();
+    double heuristic_pathrtr(const Path &path, const Pose2D& from, const Pose2D &to) const;
 };
 
 #endif

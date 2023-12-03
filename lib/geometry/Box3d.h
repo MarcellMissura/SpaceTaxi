@@ -1,9 +1,9 @@
 #ifndef BOX3D_H_
 #define BOX3D_H_
-#include "util/Vec3.h"
-#include "util/Vector.h"
-#include "geometry/Line.h"
-#include "util/Transform3D.h"
+#include "lib/util/Vec3.h"
+#include "lib/util/Vector.h"
+#include "lib/geometry/Line.h"
+#include "lib/util/Transform3D.h"
 
 // This is a 3D oriented box class used for the purpose of bounding box tests.
 // The box is defined by its center point p and its half extent vectors dx, dy, and dz.

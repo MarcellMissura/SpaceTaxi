@@ -1,12 +1,12 @@
 #include "GraphicsViewWidget.h"
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "board/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
 
 GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
     : QGraphicsView(parent)
 {
-    setMouseTracking(true);
+    //setMouseTracking(true);
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate); // Prevents tear when dragging an item.
     setRenderHint(QPainter::Antialiasing, true);
 
@@ -19,6 +19,8 @@ GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
     showRuler = false;
     showFrameInfo = true;
     recording = false;
+    poseSelection = false;
+    boxSelection = false;
 
     mouseClickTimeStamp = 0;
     lastMouseUpdateTimeStamp = 0;
@@ -104,8 +106,29 @@ void GraphicsViewWidget::toggleRuler()
     {
         setMouseTracking(false);
         //setDragMode(QGraphicsView::ScrollHandDrag);
+        setCursor(Qt::ArrowCursor);
     }
     update();
+}
+
+// Toggles the pose selection.
+void GraphicsViewWidget::togglePoseSelection()
+{
+    poseSelection = !poseSelection;
+    if (poseSelection)
+        setCursor(Qt::CrossCursor);
+    else
+        setCursor(Qt::ArrowCursor);
+}
+
+// Toggles the box selection.
+void GraphicsViewWidget::toggleBoxSelection()
+{
+    boxSelection = !boxSelection;
+    if (boxSelection)
+        setCursor(Qt::CrossCursor);
+    else
+        setCursor(Qt::ArrowCursor);
 }
 
 // Toggles the frame info shown on the bottom.
@@ -159,6 +182,11 @@ void GraphicsViewWidget::updateMouse(QPoint mousePos)
 // These are drawn on top of the graphics scene.
 void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
 {
+    if (!command.draw)
+        return;
+
+    QMutexLocker locker(&state.bigMutex);
+
     StopWatch sw;
     sw.start();
 
@@ -190,18 +218,15 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
         QPointF mappedMouse = mapToScene(mouse);
         painter->drawText(mouse + QPoint(10, -10), "world: [" + QString::number(mappedMouse.x()) + ", " + QString::number(mappedMouse.y()) + "]");
 
-        if (!state.world.unicycleAgents.isEmpty())
-        {
-            Vec2 locMouse = mapToScene(mouse);
-            locMouse -= state.world.unicycleAgents.first().pose();
-            painter->drawText(mouse + QPoint(10, 4), "local:   [" + QString::number(locMouse.x) + ", " + QString::number(locMouse.y) + "]");
+        Vec2 locMouse = mapToScene(mouse);
+        locMouse -= state.uniTaxi.pose();
+        painter->drawText(mouse + QPoint(10, 4), "local:   [" + QString::number(locMouse.x) + ", " + QString::number(locMouse.y) + "]");
 
-            if (state.world.unicycleAgents.first().sensedGrid.contains(locMouse))
-            {
-                Vec2u mni = state.world.unicycleAgents.first().sensedGrid.getNodeIndex(locMouse);
-                double v = state.world.unicycleAgents.first().sensedGrid.getAt(mni);
-                painter->drawText(mouse + QPoint(10, 18), "grid:    [" + QString::number(mni.x) + ", " + QString::number(mni.y) + "] v:" + QString::number(v));
-            }
+        if (state.uniTaxi.costmap.contains(locMouse))
+        {
+            Vec2u mni = state.uniTaxi.costmap.getNodeIndex(locMouse);
+            double v = state.uniTaxi.costmap.getAt(mni);
+            painter->drawText(mouse + QPoint(10, 18), "grid:    [" + QString::number(mni.x) + ", " + QString::number(mni.y) + "] v:" + QString::number(v));
         }
     }
 
@@ -211,12 +236,33 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
         painter->setFont(QFont("Helvetica", 14, QFont::Light));
         painter->setPen(QColor::fromRgbF(0.3,0.3,0.7));
         painter->drawText(QPoint(18, height()-10), "frame: " + QString::number(state.frameId) +
-                    "  score: " + QString::number(state.uniTaxi.score) +
-                          "  cols: " + QString::number(state.uniTaxi.collisions) +
-                          "  stucks: " + QString::number(state.uniTaxi.stucks) +
-                          "  closes: " + QString::number(state.uniTaxi.closes));
+                          "  time: " + QString::number(state.time) +
+                          "  score: " + QString::number(state.uniTaxi.score) +
+                          "  cols: " + QString::number(state.uniTaxi.collisions));
         if (state.iterationTime > 0)
             painter->drawText(QPoint(width()-55, height()-10), "x" + QString::number((1000.0/command.frequency)/state.iterationTime).left(4));
+    }
+
+    // The recorded pose.
+    if (poseSelection && !selectedPose.isNull())
+    {
+        Pose2D mousePose = selectedPose;
+        QPoint p = mapFromScene(selectedPose.pos());
+        mousePose.setPos(p.x(), p.y());
+        drawUtil.drawNoseCircle(painter, mousePose, drawUtil.penThick, drawUtil.brushRed, (mapFromScene(0.5*config.agentWidth, 0.5*config.agentHeight)- mapFromScene(0, 0)).x());
+    }
+
+    // The selected box.
+    if (boxSelection && !selectionP2.isNull())
+    {
+        QPoint p1 = mapFromScene(selectionP1);
+        QPoint p2 = mapFromScene(selectionP2);
+        selectedBox.clear();
+        selectedBox << Vec2(p1.x(), p1.y())
+                    << Vec2(p1.x(), p2.y())
+                    << Vec2(p2.x(), p2.y())
+                    << Vec2(p2.x(), p1.y());
+        selectedBox.draw(painter, drawUtil.penThinDashed, Qt::NoBrush);
     }
 
     state.drawTime = sw.elapsedTimeMs();
@@ -225,14 +271,22 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
 // The axes and the grid are drawn on the background.
 void GraphicsViewWidget::drawBackground(QPainter *painter, const QRectF &rect)
 {
-    // Draw the world underlay.
-    state.world.drawBackground(painter);
-
     painter->setRenderHint(QPainter::Antialiasing, false);
     QPen pen(QColor(100, 10, 10));
     pen.setWidth(2);
     pen.setCosmetic(true);
     painter->setPen(pen);
+
+
+//    drawUtil.drawNoseCircle(painter, Pose2D(mapToScene(QPoint(22, 80)), 0), drawUtil.pen, drawUtil.brushYellow, 1.0);
+//    drawUtil.drawCross(painter, mapToScene(QPoint(23, 110)), drawUtil.pen, drawUtil.brushRed, 0.4);
+//    QRectF clearRect(mapToScene(QPoint(10, 10)), mapToScene(QPoint(40, 30)));
+//    QRectF fillRect(mapToScene(QPoint(10, 40)), mapToScene(QPoint(40, 60)));
+//    painter->save();
+//    painter->drawRect(clearRect);
+//    painter->setBrush(drawUtil.brushGray);
+//    painter->drawRect(fillRect);
+//    painter->restore();
 
     // Debug draw of window center and scene center.
     if (false)
@@ -299,26 +353,53 @@ void GraphicsViewWidget::wheelEvent(QWheelEvent *event)
 
 void GraphicsViewWidget::mousePressEvent(QMouseEvent *event)
 {
-//    QGraphicsScene* sc = scene();
-//    qDebug() << "mouse click widget";
-//    qDebug() << "There are" << items(event->pos()).size() << sc->items(mapToScene(event->pos())).size() << "items at";
-//    qDebug() << "screen position" << event->pos();
-//    qDebug() << "scene position" << mapToScene(event->pos());
+    //QGraphicsScene* sc = scene();
+    //qDebug() << "mouse click on widget" << event->pos() << mapToScene(event->pos());
+    //qDebug() << "There are" << items(event->pos()).size() << sc->items(mapToScene(event->pos())).size() << "items at";
+    //qDebug() << "screen position" << event->pos();
+    //qDebug() << "scene position" << mapToScene(event->pos());
 
-    setDragMode(QGraphicsView::ScrollHandDrag);
-
-    mouseClick = event->pos();
-    mouseClickTimeStamp = stopWatch.programTime();
-    mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
-    stopSwipeFadeOut();
-    QGraphicsView::mousePressEvent(event);
+    if (poseSelection)
+    {
+        setMouseTracking(true);
+        setCursor(Qt::CrossCursor);
+        selectedPose.setPos(mapToScene(event->pos()));
+    }
+    if (boxSelection)
+    {
+        setMouseTracking(true);
+        setCursor(Qt::CrossCursor);
+        //selectedBox.set(mapToScene(event->pos()), 0, 0, 0, 0);
+        selectionP1 = mapToScene(event->pos());
+    }
+    else
+    {
+        setDragMode(QGraphicsView::ScrollHandDrag);
+        mouseClick = event->pos();
+        mouseClickTimeStamp = stopWatch.programTime();
+        mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
+        stopSwipeFadeOut();
+        QGraphicsView::mousePressEvent(event);
+    }
 }
 
 void GraphicsViewWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    updateMouse(event->pos());
-    mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
-    QGraphicsView::mouseMoveEvent(event); // use the default drag implementation
+    if (poseSelection)
+    {
+        selectedPose.setHeading(-ffpicut((Vec2(mapToScene(event->pos())) - selectedPose.pos()).angle())); // The heading is always w.r.t the x-axis in 2D.
+    }
+    else if (boxSelection)
+    {
+        selectionP2 = mapToScene(event->pos());
+    }
+    else
+    {
+        updateMouse(event->pos());
+        mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
+        QGraphicsView::mouseMoveEvent(event); // use the default drag implementation
+    }
+
     update();
 }
 
@@ -330,15 +411,45 @@ void GraphicsViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
 
 void GraphicsViewWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    // Start swipe fade out if the screen was dragged and released.
-    if (mouse != mouseClick and event->button() == Qt::LeftButton and items(event->pos()).size() == 0)
+    if (poseSelection)
     {
-        updateMouse(event->pos());
-        startSwipeFadeOut();
+        selectedPose.setHeading(ffpicut((selectedPose.pos() - Vec2(mapToScene(event->pos()))).angle()+PI)); // The heading is always w.r.t the x-axis in 2D.
+        emit poseSelected(selectedPose);
+        setMouseTracking(false);
+        setCursor(Qt::ArrowCursor);
+        selectedPose.setNull();
+        poseSelection = false;
+        update();
     }
+    if (boxSelection)
+    {
+        selectionP2 = mapToScene(event->pos());
+        selectedBox.clear();
+        selectedBox << selectionP1
+                    << Vec2(selectionP1.x, selectionP2.y)
+                    << selectionP2
+                    << Vec2(selectionP2.x, selectionP1.y);
+        selectedBox.ensureCW();
+        emit boxSelected(selectedBox);
+        setMouseTracking(false);
+        setCursor(Qt::ArrowCursor);
+        selectionP1.setNull();
+        selectionP2.setNull();
+        boxSelection = false;
+        update();
+    }
+    else
+    {
+        // Start swipe fade out if the screen was dragged and released.
+        if (mouse != mouseClick and event->button() == Qt::LeftButton && items(event->pos()).size() == 0)
+        {
+            updateMouse(event->pos());
+            startSwipeFadeOut();
+        }
 
-    mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
+        mouseDown = (event->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton));
 
-    setDragMode(QGraphicsView::NoDrag);
-    QGraphicsView::mouseReleaseEvent(event);
+        setDragMode(QGraphicsView::NoDrag);
+        QGraphicsView::mouseReleaseEvent(event);
+    }
 }

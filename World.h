@@ -22,7 +22,7 @@ public:
     GeometricModel polygons; // Convex polygons that make up a map.
     GeometricModel worldMap; // inflated world obstacles
     Vector<UnicycleAgent> unicycleAgents;
-    Vector<Vec2> dropOffPoints;
+    Vector<Vec2> navGoals;
 
     void setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency);
 
@@ -41,7 +41,9 @@ public:
 
     const Vector<Polygon> &getStaticObstacles() const;
     Vector<UnicycleObstacle> getUnicycleObstacles(int excludeId=-1) const;
-    const Vector<Vec2>& getDropOffPoints() const;
+    const Vector<Vec2>& getNavGoals() const;
+
+    void setMainTarget(const Pose2D& p);
 
     void physicsTransformIn();
     void physicsTransformOut();

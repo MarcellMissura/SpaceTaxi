@@ -1,5 +1,5 @@
 #include "unicycle.h"
-#include "blackboard/Config.h"
+#include "board/Config.h"
 #include "lib/util/fresnelnr.h"
 #include "lib/util/GLlib.h"
 

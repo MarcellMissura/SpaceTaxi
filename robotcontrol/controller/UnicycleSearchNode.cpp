@@ -1,8 +1,8 @@
 #include "UnicycleSearchNode.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
-#include "blackboard/Command.h"
-#include "blackboard/Config.h"
+#include "board/Command.h"
+#include "board/Config.h"
 
 // The UnicycleSearchNode class is used by A* search.
 
@@ -74,8 +74,8 @@ void UnicycleSearchNode::propagate(const UnicycleSearchNode* u, const Vec2& acc,
     else if (type == command.B0)
     {
         // Compute the velocity that results from integrating the acceleration for (half) dt.
-        double ww = w + acc.y*dt*0.5;
-        double w1 = w + acc.y*dt;
+        double ww = bound(-config.agentAngularVelocityLimit, w + acc.y*dt*0.5, config.agentAngularVelocityLimit);
+        double w1 = bound(-config.agentAngularVelocityLimit, w + acc.y*dt, config.agentAngularVelocityLimit);
 
         setVel(v, ww); // Set approximate velocity.
         setAcc(acc.x, 0); // Zero b, this will make b0 spirals.
@@ -176,7 +176,7 @@ void UnicycleSearchNode::drawNoseCircle(QPainter *painter, double r, QBrush brus
     painter->drawLine(QPointF(), QPointF(2*r, 0));
 
     // Node label.
-    if (config.debugLevel > 0)
+    if (command.showLabels > 0)
     {
         QFont font;
         font.setFamily("Arial");

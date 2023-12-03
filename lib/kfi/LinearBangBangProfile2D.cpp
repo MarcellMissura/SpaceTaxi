@@ -109,7 +109,7 @@ Hpm2D VelocityProfile::getWaypoint(const Hpm2D& start, const Vector<Vec2>& path,
         if (sectionTime > waypointTime)
         {
             // Compute the waypoint.
-            Keyframe kf = b.evaluateAt(ctrl, waypointTime);
+            Keyframe kf = b.evaluateAt(waypointTime);
             Vec2 dd = (kf.x/l)*(path[i+1]-path[i]);
             Hpm2D waypoint;
             waypoint.setPos(path[i]+dd);

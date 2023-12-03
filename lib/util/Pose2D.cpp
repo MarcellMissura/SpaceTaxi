@@ -18,6 +18,7 @@ Pose2D::Pose2D()
     x = 0;
     y = 0;
     z = 0;
+    confidence = 0;
 }
 
 // Constructs a Pose2D with (x,y,z) = (o.x,o.y,zo).
@@ -26,6 +27,7 @@ Pose2D::Pose2D(const Vec2 &o, double zo)
     x = o.x;
     y = o.y;
     z = zo;
+    confidence = 0;
 }
 
 // Constructs a Pose2D with (x,y,z) = (xo,yo,zo).
@@ -34,6 +36,7 @@ Pose2D::Pose2D(double xo, double yo, double zo)
     x = xo;
     y = yo;
     z = zo;
+    confidence = 0;
 }
 
 // Returns true if x,y, and the heading are all (nearly) zero.
@@ -48,6 +51,7 @@ void Pose2D::setNull()
     x = 0;
     y = 0;
     z = 0;
+    confidence = 0;
 }
 
 // Resets the Pose2D to all zeros.
@@ -56,6 +60,7 @@ void Pose2D::setZero()
     x = 0;
     y = 0;
     z = 0;
+    confidence = 0;
 }
 
 // Returns true if either x, y, or z is nan.
@@ -70,6 +75,7 @@ void Pose2D::setNan()
     x = NAN;
     y = NAN;
     z = NAN;
+    confidence = NAN;
 }
 
 // Sets the (x,y) position of the Pose2D.
@@ -180,6 +186,12 @@ void Pose2D::setOrientation(double a)
     z = ffpicut(a);
 }
 
+// Returns the absolute value of the largest component, i.e. the maximum norm of the pose.
+double Pose2D::max() const
+{
+    return std::max(fabs(x), std::max(fabs(y), fabs(z)));
+}
+
 // Returns the norm of this transformation, which is |x|+|y|+|z|.
 double Pose2D::norm() const
 {
@@ -287,6 +299,11 @@ QTransform Pose2D::getQTransform() const
     tr.translate(x,y);
     tr.rotateRadians(z);
     return tr;
+}
+
+Pose2D operator*(double s, const Pose2D &o)
+{
+    return o*s;
 }
 
 // Maps the Vec2 v into the coordinate frame of the Pose2D p.

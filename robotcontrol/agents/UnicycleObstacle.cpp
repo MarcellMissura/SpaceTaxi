@@ -1,7 +1,7 @@
 #include "UnicycleObstacle.h"
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "board/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
 
 // The UnicycleObstacle class represents objects that move in a car-like manner.
 // A car's lateral velocity is always zero. A car's state is the position (x,y),
@@ -104,21 +104,22 @@ void UnicycleObstacle::physicsTransformIn()
     double forwardVelocity = b2Dot(forwardNormal, body->GetLinearVelocity());
     b2Vec2 lateralVelocity = b2Dot(rightNormal, body->GetLinearVelocity())*rightNormal;
 
-    // Cancels the lateral motion with the opposite impulse.
+    // Cancel the lateral motion with the opposite impulse.
     body->ApplyLinearImpulseToCenter(-body->GetMass()*lateralVelocity, true);
 
+    // Transfer the pose and the velocity from the simulation.
     Obstacle::physicsTransformIn(); // pos and rotation
-    setVel(forwardVelocity, body->GetAngularVelocity());
+    setVel(forwardVelocity, body->GetAngularVelocity()); // velocity
 
     //qDebug() << "pos:" << pos() << "vel:" << vel();
 }
 
-// Applies the controls to the physical body before a simulation step.
+// Applies the controls a and b to the physical body before a simulation step.
 void UnicycleObstacle::physicsControl()
 {
     // Car physics with Box2D according to http://www.iforce2d.net/b2dtut/top-down-car
     // All lateral forces are cancelled out and only the forward acceleration is applied.
-    // Also a torque is applied to rotate the body.
+    // Also, a torque is applied to rotate the body.
     // The mass of the body has to be 1.0 so that acceleration = force.
     b2Vec2 forwardNormal = body->GetWorldVector(b2Vec2(1,0));
     body->ApplyForceToCenter(a*forwardNormal, true);
@@ -255,6 +256,17 @@ void UnicycleObstacle::setAcc(double a, double b)
     this->a = a;
     this->b = b;
     boundingBoxValid = false;
+}
+
+// Convenience function to support velocity control. You may call this function
+// to compute accelerations that try to follow the commanded velocity as good as they can.
+void UnicycleObstacle::setTxVel(double vv, double ww)
+{
+    setTxVel(Vec2(vv, ww));
+}
+void UnicycleObstacle::setTxVel(const Vec2& txVel)
+{
+    setAcc((txVel-vel())/timeStep);
 }
 
 // Returns a forwarded object in time by dt.

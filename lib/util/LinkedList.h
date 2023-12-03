@@ -740,16 +740,18 @@ public:
                 it.next();
             }
         }
+
+        return;
     }
 
     // Removes the element from the linked list that is indicated by the iterator "it".
     // The memory of the removed slot is saved by appending it invisibly to the end.
     // The iterator is automatically updated to point at the next element after the
     // removed one. If you remove the head, the subsequent element in the list will
-    // become the head and the iterator points at this new head. If you remove the tail,
-    // the previous item in the list becomes the new tail and the iterator points at
-    // the head. This is a fast O(1) operation. All other iterators of the same instance
-    // of LinkedList are invalidated.
+    // become the head, the iterator points at this new head and hasNext() is true.
+    // If you remove the tail, the previous item in the list becomes the new tail,
+    // the iterator points at the head and hasNext() is false. This is a fast O(1)
+    // operation. All other iterators of the same instance of LinkedList are invalidated.
     void remove(ListIterator<T>& it)
     {
         // Empty list case.
@@ -768,7 +770,7 @@ public:
         {
             pop_front();
             it.cur_ = head;
-            it.flipped = true;
+            //it.flipped = true;
             return;
         }
 
@@ -1098,6 +1100,24 @@ QDataStream& operator>>(QDataStream& in, LinkedList<T> &o)
     return in;
 }
 
+template <typename T>
+QDebug operator<<(QDebug dbg, const LinkedList<T> &o)
+{
+    uint listSize = o.size();
+    bool sp = dbg.autoInsertSpaces();
+    dbg << o.size() << " [";
+    if (listSize > 0)
+    {
+        ListIterator<T> it = o.begin();
+        dbg << it.next();
+        while (it.hasNext())
+            dbg << "," << it.next();
+    }
+    dbg << "] ";
+    dbg.setAutoInsertSpaces(sp);
+    return dbg;
+}
+
 // QDebug output.
 template <typename T>
 QDebug operator<<(QDebug dbg, const LinkedList<T> *o)
@@ -1110,25 +1130,7 @@ QDebug operator<<(QDebug dbg, const LinkedList<T> *o)
         ListIterator<T> it = o->begin();
         dbg << &it.next();
         while (it.hasNext())
-            dbg << "," << &it.next();
-    }
-    dbg << "] ";
-    dbg.setAutoInsertSpaces(sp);
-    return dbg;
-}
-
-template <typename T>
-QDebug operator<<(QDebug dbg, const LinkedList<T> &o)
-{
-    uint listSize = o.size();
-    bool sp = dbg.autoInsertSpaces();
-    dbg << o.size() << " [";
-    if (listSize > 0)
-    {
-        ListIterator<T> it = o.begin();
-        dbg << it.next();
-        while (it.hasNext())
-            dbg << "\n" << it.next();
+            dbg << "\n" << &it.next();
     }
     dbg << "] ";
     dbg.setAutoInsertSpaces(sp);

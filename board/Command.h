@@ -1,7 +1,9 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
-// The global command object contains user input from the GUI.
+// The global command object is a blackboard just like the state object.
+// It contains variables that are set by key presses by the user and
+// control the robot or components of the gui.
 struct Command
 {
     bool joystick;
@@ -9,21 +11,22 @@ struct Command
 
     double ax; // Commanded linear acceleration.
     double ay; // Commanded angular acceleration.
+    double v; // Commanded linear velocity.
+    double w; // Commanded angular velocity.
 
     bool showBody;
     bool showTargets;
-    bool showSensedPolygons;
-    bool showSensedGrid;
+    bool showLocalMap;
+    bool showCostmap;
     bool showDijkstraMap;
     bool showRayModel;
-    bool showTrajectoryTrace;
     bool showSimulationDebugDraw;
     bool showWorldVisibilityGraph;
     bool showLocalVisibilityGraph;
-    bool showDropOffPoints;
+    bool showNavGoals;
     bool showWorldPolygons;
     bool showWorldMap;
-    bool showWorldPath;
+    bool showPaths;
     int showLaser;
     int showLineMap;
     bool showMotionPlan;
@@ -34,40 +37,45 @@ struct Command
     bool showLabels;
     bool showRuler;
     bool showOdometry;
+    bool showSafetyZone;
 
+    bool bufferToFile;
     bool slamEnabled;
     bool mapUpdateEnabled;
+    bool useOdometry;
     bool globalLocalization;
     bool keepLineObservations;
     bool keepPoseHistory;
     bool laserSpatialFilter;
     bool laserTemporalFilter;
     bool laserSpeckleRemoval;
-    bool useOdomAsPrior;
     bool emergencyBrakeReflex;
     bool stucknessReflex;
+    bool safetyZoneReflex;
     bool useTimeAbort;
     bool useDynamicPath;
     bool useClosing;
     bool selectPose;
     bool selectTarget;
+    bool clearMap;
+    bool fillMap;
     bool learn;
     bool draw;
     bool ghostMode;
 
     int predictionType; // Unicycle, Holonomic, None
     int pathPlanningMethod; // None, A*, LazyT*, Full, Naive, Minimal, Dijkstra
-    int trajectoryPlanningMethod; // PD, DWA, Deep DWA, Aborting A*
+    int trajectoryPlanningMethod; // PD, Arc, Bezier, DWA, STAA, RuleBase
     int heuristic; // mc, graph dijkstra, grid dijkstra, rtr, rtr max, rtr min,
     int trajectoryType; // quadratic, cubic, Arc, B0, Fresnel
-    int frequency; // 10Hz, 20Hz, 30Hz
+    int frequency; // 5Hz, 10Hz, 20Hz, 30Hz
 
     enum { NoPath, GridAStar, LazyThetaStar, FullConstruct, NaiveConstruct, MinimalConstruct,
-           Dijkstra, PD, DWA, RuleBase, STAA, Keyboard, Arc, B0, Fresnel,
-           Euklidean, PathEuklidean, RTR, RTR_MAX, RTR_MIN, PathRTR, GraphDijkstra, GridDijkstra,
+           Dijkstra, PD, DWA, Reel, RuleBase, STAA, SpeedControl, Keyboard, Arc, Bezier, B0, Fresnel,
+           Euklidean, PathEuklidean, RTR, DOCK_RTR, RTR_MAX, RTR_MIN, PathRTR, GraphDijkstra, GridDijkstra,
            Unicycle, Holonomic, None,
            Static, Dynamic };
-	Command();
+    Command();
 };
 
 extern Command command;

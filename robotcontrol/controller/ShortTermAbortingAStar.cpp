@@ -1,7 +1,8 @@
 #include "ShortTermAbortingAStar.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
-#include "blackboard/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
+#include "board/State.h"
+#include "lib/kfi/BangBang2D.h"
 #include "lib/util/Vec3u.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
@@ -166,7 +167,7 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
     {
         qDebug() << "ShortTermAbortingAStar::aStarSearch() started.";
         qDebug() << "Start State:" << startState;
-        qDebug() << "Target state:" << targetState;
+        qDebug() << "Target state:" << targetState << "n:" << (startState.pose()-targetState).norm();
         qDebug() << "Stuck:" << stuck;
     }
 
@@ -205,10 +206,11 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
         if (debug > 1)
         {
             qDebug() << "Popped:" << bestScoreNode
-                     << "vel: " << bestScoreNode->vel()
+                     //<< "vel: " << bestScoreNode->vel()
                      << "\tg:" << bestScoreNode->g
                      << "h:" << bestScoreNode->h
-                     << "f:" << bestScoreNode->f;
+                     << "f:" << bestScoreNode->f
+                     << "n:" << (targetState-bestScoreNode->pose()).norm() << (targetState-bestScoreNode->pose()).max();
         }
 
         // Abort the search when the target has been found.
@@ -226,7 +228,8 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
                          << "processed:" << processed
                          << "open:" << open.size()
                          << "closed:" << closed;
-                qDebug() << "Best action:" << getAction();
+                qDebug() << "Best action:" << getAction()
+                         << "Final state:" << bestSolutionNode;
             }
 
             executionTime = stopWatch.elapsedTimeMs();
@@ -308,6 +311,17 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
                 continue;
             }
 
+            // SAFETY ZONE
+            currentChild.sz = getSafetyPolygon(currentChild.v);
+            if (!localMap->polygonCollisionCheck(currentChild.sz).isEmpty())
+            {
+                currentChild.collided = 4;
+                collided++;
+                if (debug > 3)
+                    qDebug() << "    Collided with safety zone" << currentChild << ". Skipping.";
+                open << currentChild;
+                continue;
+            }
 
             // COLLISION CHECK
 
@@ -353,7 +367,6 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
             }
 
 
-
             // Cost so far (g = g + c). Costs are expressed as time, even though a penalty
             // is added for collided states and for obstacle proximity.
             double time = bestScoreNode->g + config.staaDt;
@@ -365,9 +378,10 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
             if (stuck)
                 tentative_g += config.staaStucknessWeight*currentChild.v;
 
+            // HEURISTIC
             // Compute the heuristic and the f value. The inflation factor has a positive effect on the convergence.
             currentChild.g = tentative_g;
-            currentChild.h = config.staaInflationFactor*heuristic(currentChild.pose(), targetState);
+            currentChild.h = config.staaInflationFactor*heuristic(currentChild, targetState);
             currentChild.f = currentChild.h + currentChild.g;
 
             // We use the heuristic as a collision check as well.
@@ -383,7 +397,7 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
             }
 
             // A hack just for visualization.
-            if (command.heuristic == command.MinimalConstruct)
+            if (heuristicType == command.MinimalConstruct)
                 currentChild.path = localMap->getPath();
 
 
@@ -428,12 +442,10 @@ double ShortTermAbortingAStar::heuristic_euklidean(const Pose2D &from, const Pos
 
 // Evaluates the Euklidean heuristic along a path, i.e. sums up the length of the
 // path segments and divides by the maximum velocity.
-double ShortTermAbortingAStar::heuristic_patheuklidean(const Vector<Vec2> &path, const Pose2D &from, const Pose2D &to) const
+double ShortTermAbortingAStar::heuristic_patheuklidean(const Path &path, const Pose2D &from, const Pose2D &to) const
 {
     // Remember the needed heading at the beginning of the path.
-    double pathDrivingDistance = 0;
-    for (uint i = 1; i < path.size(); i++)
-        pathDrivingDistance += (path[i]-path[i-1]).norm();
+    double pathDrivingDistance = path.length();
     return pathDrivingDistance/config.agentLinearVelocityLimitForward;
 }
 
@@ -441,21 +453,22 @@ double ShortTermAbortingAStar::heuristic_patheuklidean(const Vector<Vec2> &path,
 // The rtr heuristic is the sum of the times that are needed to turn to the target,
 // drive to the target, and turn into the target direction. Maximum velocities
 // are used to hopefully underestimate the true costs.
-double ShortTermAbortingAStar::heuristic_rtr(const Pose2D &from, const Pose2D &to) const
+double ShortTermAbortingAStar::heuristic_rtr(const Pose2D &from, const Pose2D &to, bool debug) const
 {
     // The RTR heuristic is expressed in time needed to turn
     // to the target, drive to the target, and turn into the target direction.
 
-    Vec2 vecToTarget;
-    vecToTarget.x = to.x-from.x;
-    vecToTarget.y = to.y-from.y;
-    double angleToTarget = vecToTarget.fangle();
-    double frontAngleToTarget = fabs(ffpicut(angleToTarget-from.z));
+    if (debug)
+        qDebug() << "         heuristic_rtr from:" << from << "to:" << to;
+
+    Vec2 vecToTarget(to.x-from.x, to.y-from.y);
     double distanceToTarget = vecToTarget.norm();
-    double frontAngleToGoalOrientation = fabs(ffpicut(to.z-angleToTarget));
+    double angleToTarget = vecToTarget.fangle();
+    double frontAngleToTarget = distanceToTarget > EPSILON ? fabs(ffpicut(angleToTarget-from.z)) : 0;
+    double frontAngleToGoalOrientation = distanceToTarget > EPSILON ? fabs(ffpicut(to.z-angleToTarget)) : 0;
     double frontTimeToRotateToTarget = frontAngleToTarget/config.agentAngularVelocityLimit;
     double frontTimeToDriveToTarget = distanceToTarget/config.agentLinearVelocityLimitForward;
-    double frontTimeToRotateToGoalOrientation = fabs(frontAngleToGoalOrientation/config.agentAngularVelocityLimit);
+    double frontTimeToRotateToGoalOrientation = frontAngleToGoalOrientation/config.agentAngularVelocityLimit;
     double backAngleToTarget = PI - frontAngleToTarget;
     double backAngleToGoalOrientation = PI - frontAngleToGoalOrientation;
     double backTimeToRotateToTarget = backAngleToTarget/config.agentAngularVelocityLimit;
@@ -465,11 +478,42 @@ double ShortTermAbortingAStar::heuristic_rtr(const Pose2D &from, const Pose2D &t
     double hfront = frontTimeToRotateToTarget + frontTimeToDriveToTarget + frontTimeToRotateToGoalOrientation;
     double hback = backTimeToRotateToTarget + backTimeToDriveToTarget + backTimeToRotateToGoalOrientation;
 
+    if (debug)
+    {
+        qDebug() << "            vec:" << vecToTarget << vecToTarget.norm() << vecToTarget.fangle() << "angleToTarget" << angleToTarget;
+        qDebug() << "            angs:" << frontAngleToTarget << distanceToTarget << frontAngleToGoalOrientation;
+        qDebug() << "            times:" << frontTimeToRotateToTarget << frontTimeToDriveToTarget << frontTimeToRotateToGoalOrientation;
+        qDebug() << "            fb:" << hfront << hback;
+    }
+
     return min(hfront, hback);
 
     // Taking the min of the front and back version has greatly helped to eliminate
     // a weak spot in the RTR function close behind and left and right of the robot
     // where it vastly overestimates the costs.
+}
+
+// Evaluates the rtr heuristic between two states from and to.
+// The rtr heuristic is the sum of the times that are needed to turn to the target,
+// drive to the target, and turn into the target direction. Maximum velocities
+// are used to hopefully underestimate the true costs.
+double ShortTermAbortingAStar::heuristic_dock_rtr(const Pose2D &from, const Pose2D &to, bool debug) const
+{
+    Pose2D localTarget = to - from;
+    double angle = localTarget.pos().fangle();
+    //localTarget.rotate(-angle); // rotate
+    double af = fabs(ffpicut(localTarget.heading()-angle));
+    double lf = max(0.0, min(1.0, 2.0*(af-0.2))); // lf is 0 when af is 0.2 or less, lf is 1.0 when af is 0.5 or more
+
+    Pose2D dock = to;
+    dock.translate(-lf * Vec2(1.0, 0).rotated(to.heading()));
+    if (debug)
+    {
+        qDebug() << "      heuristic_dock_rtr:" << from << dock << to;
+        qDebug() << "         af lf:" << af << lf << "localtarget:" << localTarget << "angle:" << angle;
+        qDebug() << "         h:" << heuristic_rtr(from, dock, true) << heuristic_rtr(dock, to, true);
+    }
+    return heuristic_rtr(from, dock) + heuristic_rtr(dock, to);
 }
 
 // Evaluates the rtr min heuristic between two states from and to.
@@ -539,10 +583,13 @@ double ShortTermAbortingAStar::heuristic_rtr_max(const Pose2D &from, const Pose2
 // Evaluates the path rtr heuristic function for a given path.
 // Even though the path starts with from and ends with to, from and to are
 // needed to encode the start and goal orientations.
-double ShortTermAbortingAStar::heuristic_pathrtr(const Vector<Vec2> &path, const Pose2D &from, const Pose2D &to) const
+double ShortTermAbortingAStar::heuristic_pathrtr(const Path &path, const Pose2D &from, const Pose2D &to) const
 {
+    //qDebug() << "ShortTermAbortingAStar::heuristic_pathrtr(const Path &path, const Pose2D &from, const Pose2D &to)";
+    //qDebug() << "from:" << from << "to:" << to << "path:" << path << path.last() << path.last().isNull();
+
     // Remember the needed heading at the beginning of the path.
-    double pathOrientation = Vec2(path[1]-path[0]).fangle();
+    double pathOrientation = path.last().isNull() ? from.z : Vec2(path[1]-path[0]).fangle();
     double frontAngleToPathOrientation = fabs(ffpicut(pathOrientation-from.z));
     double backAngleToPathOrientation = PI - frontAngleToPathOrientation;
 
@@ -552,7 +599,7 @@ double ShortTermAbortingAStar::heuristic_pathrtr(const Vector<Vec2> &path, const
     for (uint i = 1; i < path.size(); i++)
     {
         Vec2 vecToNextPathNode = path[i]-path[i-1];
-        double angleToNextPathNode = ffpicut(vecToNextPathNode.fangle()-currentHeading);
+        double angleToNextPathNode = (path[i] == path[i-1]) ? 0 : ffpicut(vecToNextPathNode.fangle()-currentHeading);
         currentHeading = ffpicut(currentHeading+angleToNextPathNode);
         pathTurningDistance += fabs(angleToNextPathNode);
         pathDrivingDistance += vecToNextPathNode.norm();
@@ -636,9 +683,7 @@ void ShortTermAbortingAStar::draw() const
             if (!u.closed)
                 continue;
 
-            glColor3f(0.3,0.3,0.3);
-            for (uint i = 1; i < u.path.size(); i++)
-                GLlib::drawLine(u.path[i], u.path[i-1], 0.025);
+            u.path.draw(drawUtil.penGray);
         }
     }
 
@@ -668,9 +713,36 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
 {
     Polygon drawPolygon;
 
+    // Debug level
+    // 0 - draw the best solution trace
+    // 1 - closed nodes
+    // 2 - shortest paths
+    // 3 - safety zones
+    // 4 - closed map
+
     // The closed map.
     if (config.debugLevel > 3)
         closedMap.drawCumulated(painter);
+
+    // The safety zones of the closed nodes.
+    if (config.debugLevel >= 2)
+    {
+        ListIterator<UnicycleSearchNode> it = open.begin();
+        it.next(); // skip the root
+        while (it.hasNext())
+        {
+            UnicycleSearchNode& u = it.next();
+            if (!u.closed)
+                continue;
+
+            u.sz.setPose(u.pose());
+            if (u.collided == 4)
+                u.sz.draw(painter, drawUtil.penThin, drawUtil.brushRed, 0.3);
+            else
+                u.sz.draw(painter, drawUtil.penThin, Qt::NoBrush, 0.1);
+        }
+    }
+
 
     // Draw the pose of all open states.
     if (config.debugLevel > 2)
@@ -680,6 +752,8 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
         while (it.hasNext())
         {
             const UnicycleSearchNode& u = it.next();
+            if (u.collided == 4)
+                u.drawNoseCircle(painter, 0.02, drawUtil.brushMagenta); // safety zone collision
             if (u.collided == 3)
                 u.drawNoseCircle(painter, 0.02, drawUtil.brushRed); // dynamic collision
             else if (u.collided == 2)
@@ -687,7 +761,7 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
             else if (u.collided == 1)
                 u.drawNoseCircle(painter, 0.02, drawUtil.brushDarkGray); // path collision
             else
-                u.drawNoseCircle(painter, 0.02, drawUtil.brushWhite);
+                u.drawNoseCircle(painter, 0.02, drawUtil.brushWhite); // no collision
         }
     }
 
@@ -759,7 +833,7 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
     }
 
     // The shortest paths of the closed nodes.
-    if (config.debugLevel == 2)
+    if (config.debugLevel >= 2)
     {
         ListIterator<UnicycleSearchNode> it = open.begin();
         it.next(); // skip the root
@@ -769,12 +843,7 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
             if (!u.closed)
                 continue;
 
-            painter->save();
-            painter->setOpacity(0.2);
-            painter->setPen(drawUtil.penThin);
-            for (uint i = 1; i < u.path.size(); i++)
-                painter->drawLine(QLineF(u.path[i], u.path[i-1]));
-            painter->restore();
+            u.path.draw(painter, drawUtil.penRedThin, 0.2);
         }
     }
 
@@ -797,54 +866,66 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
     }
 }
 
-// Draws the visibility graph of the geometric model.
-void ShortTermAbortingAStar::drawVisibilityGraph(QPainter *painter) const
-{
-    //if (!predictedUnifiedModels.isEmpty())
-    //    predictedUnifiedModels[0].drawVisibilityGraph(painter);
-}
-
 // The heuristic function called by A*.
-double ShortTermAbortingAStar::heuristic(const Pose2D &from, const Pose2D &to)
+double ShortTermAbortingAStar::heuristic(const UnicycleSearchNode &from, const Pose2D &to)
 {
     if (heuristicType == command.Euklidean)
     {
-        return heuristic_euklidean(from, to);
-    }
-    else if (heuristicType == command.PathEuklidean)
-    {
-        bool success = localMap->computeDynamicPath(from.pos(), to.pos());
-        if (success)
-            return heuristic_patheuklidean(localMap->getPath(), from, to);
+        return heuristic_euklidean(from.pose(), to);
     }
     else if (heuristicType == command.RTR) // rtr
     {
-        return heuristic_rtr(from, to);
+        return heuristic_rtr(from.pose(), to);
+    }
+    else if (heuristicType == command.DOCK_RTR) // dock rtr
+    {
+        return heuristic_dock_rtr(from.pose(), to);
     }
     else if (heuristicType == command.RTR_MAX) // rtr max
     {
-        return heuristic_rtr_max(from, to);
+        return heuristic_rtr_max(from.pose(), to);
     }
     else if (heuristicType == command.RTR_MIN) // rtr min
     {
-        return heuristic_rtr_min(from, to);
+        return heuristic_rtr_min(from.pose(), to);
     }
-    else if (heuristicType == command.MinimalConstruct)
+    else if (heuristicType == command.PathEuklidean) // path euklidean
     {
         bool success = localMap->computeDynamicPath(from.pos(), to.pos());
         if (success)
-            return heuristic_pathrtr(localMap->getPath(), from, to);
+            return heuristic_patheuklidean(localMap->getPath(), from.pose(), to);
     }
-    else if (heuristicType == command.GridDijkstra)
+    else if (heuristicType == command.MinimalConstruct) // path rtr with mc
+    {
+        bool success = localMap->computeDynamicPath(from.pos(), to.pos());
+        if (success)
+            return heuristic_pathrtr(localMap->getPath(), from.pose(), to);
+    }
+    else if (heuristicType == command.GridDijkstra) // path rtr with dijkstra
     {
         const Vector<Vec2>& pp = sensedGrid->computeDijkstraPath(from.pos(), to.pos());
         //qDebug() << "dijkstra path:" << pp;
+        Path ppp;
+        ppp.set(pp);
         bool success = !pp.isEmpty();
         if (success)
-            return heuristic_pathrtr(pp, from, to);
+            return heuristic_pathrtr(ppp, from.pose(), to);
     }
 
     return -1;
+}
+
+// Returns a polygon describing the safety zone for velocity vel.
+Polygon ShortTermAbortingAStar::getSafetyPolygon(double vel) const
+{
+    Polygon sz;
+    if (vel > 0.16)
+    {
+        double x = max(0.0, vel * 2.6/1.5);
+        double y = vel <= 0.5 ? 0.5 : (0.5 + 0.5/0.6 * (vel-0.5));
+        sz << Vec2(x, y) << Vec2(0,y) << Vec2(0, -y) << Vec2(x, -y);
+    }
+    return sz;
 }
 
 // Activates or deactivates the stuckness mode.
@@ -862,8 +943,9 @@ bool ShortTermAbortingAStar::isFinished()
 {
     if (bestScoreNode == 0)
         return false;
-    score = heuristic_rtr_max(bestScoreNode->pose(), targetState);
-    return (score < config.staaFinishedThreshold);
+    //score = heuristic_rtr_max(bestScoreNode->pose(), targetState);
+    //return (score < config.staaFinishedThreshold);
+    return ((bestScoreNode->pose()-targetState).max() < config.agentTargetReachedDistance);
 }
 
 // Returns the computed plan.

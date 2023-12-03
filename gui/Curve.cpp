@@ -1,8 +1,8 @@
 #include "Curve.h"
 #include <math.h>
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "board/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
 
 
 Curve::Curve()

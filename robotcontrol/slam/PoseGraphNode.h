@@ -23,6 +23,7 @@ public:
 
     double dist(const PoseGraphNode& pgn) const;
     double dist(const Pose2D& p) const;
+    double poseDist(const Pose2D& p) const;
 
     void setPose(const Pose2D& p);
 

@@ -2,6 +2,7 @@
 #define BANGBANG_H_
 #include "Keyframe.h"
 #include "lib/util/Vector.h"
+#include <QPainter>
 
 class BangBang
 {
@@ -10,8 +11,7 @@ public:
     Vector<Keyframe> keyframes;
     Vector<Keyframe> ctrl;
 
-    double VU;
-    double VL;
+    double V;
     double A;
 
 public:
@@ -24,21 +24,26 @@ public:
 
     void setA(double A);
     void setV(double V);
-    void setVU(double VU);
-    void setVL(double VL);
 
     void addKeyframes(const Vector<Keyframe>& inputFrames);
     void addKeyframe(const Keyframe& kf);
-    void addKeyframe(double dt, double x=0, double v=0, double a=0);
+    void addKeyframe(double t, double x=0, double v=0, double a=0);
+    Vector<Keyframe>& getKeyframes();
 
     const Vector<Keyframe>& getTimedControlSequence();
     const Vector<Keyframe>& getTimeOptimalControlSequence();
     const Vector<Keyframe>& getTimeOptimalControlSequence2();
 
-    Keyframe evaluateAt(const Vector<Keyframe>& ctrl, double dt) const;
+    Keyframe evaluateAt(double dt) const;
+    double getTotalTime() const;
+
+    void draw(QPainter& painter, const QPen& pen) const;
 
 private:
     void move(double dt, double a, int idx=0);
 };
+
+QDebug operator<<(QDebug dbg, const BangBang& o);
+QDebug operator<<(QDebug dbg, const BangBang* o);
 
 #endif // BANGBANG_H_

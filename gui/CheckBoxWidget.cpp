@@ -1,7 +1,7 @@
 #include <QSettings>
 #include <QHeaderView>
 #include "CheckBoxWidget.h"
-#include "blackboard/State.h"
+#include "board/State.h"
 
 // The checkbox widget contains a checkbox for every registered member of the state object.
 // The registered state variables are structured into a tree based on the identifier string

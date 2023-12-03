@@ -1,7 +1,7 @@
+#include "ConfigWidget.h"
+#include "board/Config.h"
 #include <QHBoxLayout>
 #include <QHeaderView>
-#include "ConfigWidget.h"
-#include "blackboard/Config.h"
 
 // A ready to use config slider widget nested inside a scroll area.
 // It's based on a global config object from the framework.

@@ -5,6 +5,9 @@
 #include <QGraphicsView>
 #include "MessageQueue.h"
 #include "lib/util/StopWatch.h"
+#include "lib/util/Pose2D.h"
+#include "lib/geometry/Polygon.h"
+
 
 class GraphicsViewWidget : public QGraphicsView
 {
@@ -38,6 +41,14 @@ private:
     double lastSwipeFadeOutTimeStamp;
     QPointF windowCenter;
 
+    bool poseSelection;
+    Pose2D selectedPose;
+
+    bool boxSelection;
+    Polygon selectedBox;
+    Vec2 selectionP1;
+    Vec2 selectionP2;
+
 public slots:
     void init();
     void reset();
@@ -48,6 +59,12 @@ public slots:
     void toggleFrameInfo();
     void startRecording();
     void stopRecording();
+    void togglePoseSelection();
+    void toggleBoxSelection();
+
+signals:
+    void poseSelected(const Pose2D& p);
+    void boxSelected(const Polygon& b);
 
 protected:
     void drawForeground(QPainter* painter, const QRectF& rect);
@@ -58,15 +75,13 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
 
-private:
-    void updateMouse(QPoint mousePos);
-
 private slots:
     void startSwipeFadeOut();
     void stopSwipeFadeOut();
     void swipeFadeOut();
 
 private:
+    void updateMouse(QPoint mousePos);
     void drawGrid(QPainter* painter, const QRectF& rect, double step = 1.0, QColor color = QColor(), Qt::PenStyle penStyle = Qt::SolidLine);
 };
 

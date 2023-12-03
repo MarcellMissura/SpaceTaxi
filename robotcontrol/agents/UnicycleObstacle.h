@@ -54,6 +54,8 @@ public:
     Vec2 acc() const;
     void setAcc(const Vec2& c);
     void setAcc(double a, double b);
+    void setTxVel(double vv, double ww);
+    void setTxVel(const Vec2 &txVel);
 
     void predict(double dt);
     UnicycleObstacle predicted(double dt) const;

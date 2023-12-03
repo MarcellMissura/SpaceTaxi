@@ -1,9 +1,10 @@
-#include "UnicycleAgent.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
-#include "blackboard/Command.h"
-#include "robotcontrol/controller/VelocityProfile.h"
-#include "lib/geometry/Collision.h"
+﻿#include "UnicycleAgent.h"
+#include "board/Config.h"
+#include "board/State.h"
+#include "board/Command.h"
+#include "lib/kfi/VelocityProfile.h"
+#include "lib/kfi/BangBang2D.h"
+#include "lib/kfi/Bezier2D.h"
 #include "lib/util/Statistics.h"
 #include "lib/util/StopWatch.h"
 #include "lib/util/DrawUtil.h"
@@ -14,28 +15,39 @@
 UnicycleAgent::UnicycleAgent() : UnicycleObstacle()
 {
     agentId = 0;
-    targetDropOffId = 0;
+
     stuckTimer = 0;
     stuckDetectionCounter = 0;
     ebActive = false;
-    ebA = 0;
+    ebActivationCounter = 0;
     isStuck = false;
-    score = 0;
-    milage = 0;
-    collisions = 0;
+
+    safetyActivationTime = 0;
+    safetyActive = false;
+
     inCollision = false;
     collided = false;
-    stucks = 0;
-    closes = 0;
+
     worldPathSuccess = true;
     trajectorySuccess = true;
-    pathTime = 0;
-    trajectoryTime = 0;
+    staticPathSuccess = true;
+    dynamicPathSuccess = true;
+    trajectorySuccess = true;
+    atTarget = false;
+    targetNavGoalId = 0;
 
     trajectoryPlanningMethod = command.trajectoryPlanningMethod;
     trajectoryType = command.trajectoryType;
     predictionType = command.predictionType;
     heuristicType = command.heuristic;
+
+    score = 0;
+    collisions = 0;
+    closes = 0;
+    stucks = 0;
+    milage = 0;
+    pathTime = 0;
+    trajectoryTime = 0;
 }
 
 // Initializes the polygon that represents the agent and inits
@@ -54,6 +66,8 @@ void UnicycleAgent::init(const Vec2& initialPos)
     setConvex();
     setCW();
 
+    // In the hull polygon for collision checks.
+    // The hull polygon is inside the inherited UnicycleObstacle
     hullPolygon.clear();
     hullPolygon.appendVertex(Vec2(-w, h));
     hullPolygon.appendVertex(Vec2(-w, -h));
@@ -69,53 +83,56 @@ void UnicycleAgent::init(const Vec2& initialPos)
     hullPolygon.grow(config.gmAgentDilation);
 
     // Set the initial pose of the agent.
+    // The initial pose comes out of the simulation.
     setPos(initialPos);
     setOrientation(0);
 
     // Init the main target to lie on the agent.
-    mainTarget = pos();
+    mainTarget = pose();
 
     // Init path and trajectory controllers.
     shortTermAbortingAStar.init();
 
-    // The sensed grid is a rectangular occupancy grid around the robot.
-    // The area and resolution of the sensed grid is initialized based on config parameters.
-    sensedGrid.setDim(2);
-    sensedGrid.setN(Vec2u(config.gridHeight/config.gridCellSize+1, config.gridWidth/config.gridCellSize+1));
-    sensedGrid.setMin(Vec2(-config.gridHeight/2+config.gridOffset, -config.gridWidth/2));
-    sensedGrid.setMax(Vec2(config.gridHeight/2+config.gridOffset, config.gridWidth/2));
-    sensedGrid.init();
-    occupanyGrid = sensedGrid;
-
-    //if (command.trajectoryPlanningMethod == command.RuleBase)
-    //{
+    if (command.trajectoryPlanningMethod == command.RuleBase)
+    {
         ruleBase.load("data/rulebase.dat");
         qDebug() << ruleBase.size() << "rules loaded";
-    //}
+    }
+
+    // The costmap and the occupancy grid are rectangular local grid maps around the robot.
+    // The area and resolution of the grid is initialized based on config parameters.
+    costmap.setDim(2);
+    costmap.setN(Vec2u(config.gridHeight/config.gridCellSize+1, config.gridWidth/config.gridCellSize+1));
+    costmap.setMin(Vec2(-config.gridHeight/2+config.gridOffset, -config.gridWidth/2));
+    costmap.setMax(Vec2(config.gridHeight/2+config.gridOffset, config.gridWidth/2));
+    costmap.init();
+    occupanyGrid = costmap;
 }
 
-// Takes in the world drop off points input.
-void UnicycleAgent::setWorldDropOffPoints(const Vector<Vec2> &dops)
+// Takes in the world nav goals.
+void UnicycleAgent::setWorldNavGoals(const Vector<Vec2> &goals)
 {
-    dropOffPoints = dops;
-    targetDropOffId = 0;
+    navGoals = goals;
+    targetNavGoalId = 0;
 
-    // Generate 200 targets randomly chosen from the available drop off points.
-    dropOffPointQueue.clear();
+    // Generate 200 targets randomly chosen from the available nav goals.
+    navGoalQueue.clear();
     for (uint i = 0; i < 200; i++)
     {
-        uint idx = Statistics::randomInt(0, dropOffPoints.size()-1);
-        while (!dropOffPointQueue.empty() && idx == dropOffPointQueue.last())
-            idx = Statistics::randomInt(0, dropOffPoints.size()-1);
-        dropOffPointQueue << idx;
+        uint idx = Statistics::randomInt(0, navGoals.size()-1);
+        while (!navGoalQueue.empty() && idx == navGoalQueue.last())
+            idx = Statistics::randomInt(0, navGoals.size()-1);
+        navGoalQueue << idx;
     }
 }
 
-// Takes in the world expanded static obstacles input.
-// This is what we consider to be the actual map the robot has built for itself.
+// Takes in the world map as input. This function provides cheat access to a world
+// map constructed from simulation. This is what we consider to be the actual map
+// the robot has built for itself.
 void UnicycleAgent::setWorldMap(const GeometricModel &pols)
 {
     worldMap = pols;
+    worldMap.prune(pos());
 }
 
 // Sets the world polygons. This is a little cheat that gives the agent
@@ -126,10 +143,17 @@ void UnicycleAgent::setWorldPolygons(const GeometricModel &pols)
     worldPolygons = pols;
 }
 
-// Takes in the world unicycles input.
+// Takes in the world unicycles input. I am not sure what this is still doing here.
 void UnicycleAgent::setWorldUnicycleObstacles(const Vector<UnicycleObstacle> &obst)
 {
     worldDynamicObstacles = obst;
+}
+
+// Sets the main target for the agent. This overrides the automatic nav goal queue.
+// Queue execution continues after the manually set target has been reached.
+void UnicycleAgent::setMainTarget(const Pose2D &p)
+{
+    mainTarget = p;
 }
 
 // Sets the trajectory and controller parameters.
@@ -141,7 +165,12 @@ void UnicycleAgent::setParams(int trajectoryPlanningMethod, int trajectoryType, 
     this->heuristicType = heuristicType;
     shortTermAbortingAStar.trajectoryType = trajectoryType;
     shortTermAbortingAStar.heuristicType = heuristicType;
-    if (frequency == 10)
+    if (frequency == 5)
+    {
+        timeStep = 0.2;
+        shortTermAbortingAStar.timeLimit = 180;
+    }
+    else if (frequency == 10)
     {
         timeStep = 0.1;
         shortTermAbortingAStar.timeLimit = 84;
@@ -151,7 +180,7 @@ void UnicycleAgent::setParams(int trajectoryPlanningMethod, int trajectoryType, 
         timeStep = 0.05;
         shortTermAbortingAStar.timeLimit = 36;
     }
-    else
+    else // frequency = 30
     {
         timeStep = 0.03;
         shortTermAbortingAStar.timeLimit = 19;
@@ -162,20 +191,12 @@ void UnicycleAgent::setParams(int trajectoryPlanningMethod, int trajectoryType, 
 // used for planning and localization.
 void UnicycleAgent::sense()
 {
-    // We already have a GeometricModel of the world map in worldMap.
-    // It comes in through the setWorldMap() function which the World
-    // calls once after it has built a new map and then the world map
-    // remains constant until the map is switched by the user. Even
-    // though the world map is computed from the simulated environment,
-    // it is fairly realistic and close to what a robot using a 2D lidar
-    // would produce when building a map with LineSlam. The world map
-    // is kept in world coordinates and used for path planning.
+    //####################
+    //# LASER PROCESSING #
+    //####################
 
-    // We compute the clipped world map though, the world map clipped
-    // to the local map.
-    clippedWorldMap = worldMap;
-    clippedWorldMap -= pose(); // local
-    clippedWorldMap.clip(sensedGrid.boundingBox());
+    StopWatch sw;
+    sw.start();
 
     // Compute the 2D lidar sensor simulation and the ray model.
     // Both are computed by casting rays from the robot and finding the
@@ -186,15 +207,46 @@ void UnicycleAgent::sense()
     computeRayModel();
 
     // From the laser sensor, we gain the visiblity polygon.
-    // The visibility polygon is used for building the plygonal map and
+    // The visibility polygon is used for building the polygonal map and
     // for clearing free space.
-    visibilityPolygon = laserSensor.getVisibilityPolygon();
+    visibilityPolygon = laserSensor.extractVisibilityPolygon();
+
+    state.laserTime = sw.elapsedTimeMs();
+
+
+
+    //########
+    //# SLAM #
+    //########
+
+    // We already have a GeometricModel of the world map in worldMap.
+    // It comes in through the setWorldMap() function which the World
+    // calls once after it has built a new map and then the world map
+    // remains constant until the map is switched by the user. Even
+    // though the world map is computed from the simulated environment,
+    // it is fairly realistic and close to what a robot using a 2D lidar
+    // would produce when building a map with LineSlam. The world map
+    // is kept in world coordinates and used for path planning.
+
+    // Geometric slam. Track the pose of the robot using laser data and build the map.
+//    sw.start();
+//    if (command.slamEnabled)
+//        worldMap.slam(pose(), laserSensor.extractLines(), visibilityPolygon, laserSensor.extractSensedPolygons());
+//    state.slamTime = sw.elapsedTimeMs();
+
+
+
+    //#############
+    //# LOCAL MAP #
+    //#############
+    sw.start();
 
     // We use the simulated lidar to compute the occupancy grid as the robot would do.
     // The occupancy grid is a local 8m x 8m occupancy grid. It is nearly centered around
     // the robot but is also pushed forward a bit so that the robot would see more to the
     // front than to the back.
     occupanyGrid.computeOccupancyGrid(laserSensor.readPointBuffer());
+    //occupanyGrid.dilate(config.gridSensedDilationRadius);
 
     // Here is a little simulation cheat where I delete cells from the occupancy grid
     // where the dynamic obstacles are.
@@ -202,7 +254,7 @@ void UnicycleAgent::sense()
     {
         UnicycleObstacle uo = worldDynamicObstacles[i];
         uo -= pose(); // Transform from world to local coordinates.
-        if (sensedGrid.contains(uo.pos()))
+        if (costmap.contains(uo.pos()))
         {
             uo.grow(config.gridCellSize);
             uo.transform();
@@ -214,29 +266,27 @@ void UnicycleAgent::sense()
     // connect single cells to contiguous regions.
     occupanyGrid.dilate(config.gridSensedDilationRadius);
 
-    // The sensed grid is computed by blurring the occupancy grid.
+    // The costmap is computed by blurring the occupancy grid.
     //occupanyGrid.clearPolygon(visibilityPolygon); // This is to combat too much dilation.
-    sensedGrid = occupanyGrid;
-    sensedGrid.dilate(config.gridBlurRadius);
-    sensedGrid.blur(config.gridBlurRadius);
-    sensedGrid.max(occupanyGrid);
+    costmap = occupanyGrid;
+    costmap.dilate(config.gridBlurRadius);
+    costmap.blur(config.gridBlurRadius);
+    costmap.max(occupanyGrid); // Make sure occupied cells stay occupied.
 
 
+    // We compute the clipped world map though, the world map clipped
+    // to the size local map.
+    clippedWorldMap = worldMap;
+    clippedWorldMap -= pose(); // local
+    clippedWorldMap.clip(costmap.boundingBox());
 
-    // The occupany grid is processed to a local map of polygons (the sensed polygons).
     // Sensed polygons are important in order to avoid obstacles that are not in the map.
     // The dilated sensed polygons are used for path planning inside the local map.
-    // The extraction of the sensed polygons from the occupancy grid is problematic. The
-    // occupany map computed from the laser rays requires a bit of dilation in order to
-    // connect sensed regions to contiguous thin clusters of cells that then also result
-    // in thin polygons that are unreliable (might degenerate to a line) and rather useless
-    // for collision checking because of tunneling. More dilation leads to overly extended
-    // occupied regions that can even block narrow passages, even when the visibility
-    // polygon is used for clearing after dilation. It would be better to try a new approach
-    // and generate the sensed polygons directly from the laser rays somehow.
     localMap.clear();
-    localMap.setPolygons(occupanyGrid.extractPolygons()); // local
-    localMap.dilate(config.gmDilationRadius);
+    localMap.setPolygons(laserSensor.extractSensedPolygons());
+    localMap.dilate(config.gmPolygonDilation);
+    //localMap.simplify(config.gmDouglasPeuckerEpsilon);
+    localMap.clip(costmap.boundingBox());
 
     // The clipped world map is added to the local map. This has the advantage that the map
     // polygons can be taken into account when path planning in the local map. This is actually
@@ -254,7 +304,7 @@ void UnicycleAgent::sense()
         UnicycleObstacle uo = worldDynamicObstacles[i];
         uo -= pose(); // Transform from world to local coordinates.
         //if (visibilityPolygon.intersects(uo.pos()))
-        if (sensedGrid.contains(uo.pos()))
+        if (costmap.contains(uo.pos()))
         {
             if (predictionType == command.Holonomic)
                 uo.setVel(uo.v,0);
@@ -265,7 +315,7 @@ void UnicycleAgent::sense()
         }
     }
 
-    localMap.setBounds(sensedGrid.boundingBox());
+    localMap.setBounds(costmap.boundingBox());
     localMap.renumber();
     localMap.autoPredict(); // Predict the future states of the agents.
     localMap.transform();
@@ -278,26 +328,25 @@ void UnicycleAgent::act()
     //# HIGH LAYER #
     //##############
     // High level planning. Where to put the main target?
-    // The main target is the (x,y) location of a drop-off point on the map
-    // in world coordinates.
+    // The main target is the (x,y, theta) pose in the map in world coordinates.
+    // The main target planner could be some sort of a robotic fleet orchestration
+    // system that cooperatively plans the tasks of multiple robots and commands them
+    // to navigate to specific points of intereset (POIs) and execute manipulation or
+    // pick and place tasks at the POIs. For now, we only have a simple mock-up of
+    // this planner and provide a random sequence of POIs for each agent.
 
-    // If the target has been reached, pick a new random drop off point as target.
-    if ((pos()-mainTarget).norm() < config.worldDropOffRadius)
+    //qDebug() << "pose:" << pose() << "main target:" << mainTarget << "norm:" << (mainTarget-pose()).norm() << "dist:" << mainTarget.dist(pose()) << "max:" << (mainTarget-pose()).norm();
+
+    // If the target has been reached, pick a new random target.
+    // The metric that decides whether a target has been reached is quite crucial for accuracy.
+    // Right now, only the Euklidean distance in (x,y) needs to be within 5cm.
+    if ((mainTarget-pose()).max() < config.agentTargetReachedDistance
+            || ((trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl) && mainTarget.distxy(pose()) < config.agentTargetReachedDistance))
     {
-        if (targetDropOffId != 0)
-            score++;
-
-        if (targetDropOffId == dropOffPointQueue.size())
-        {
-            qDebug() << "agent" << getAgentId() << "MISSION COMPLETE.";
-            targetDropOffId++;
-        }
-
-        if (targetDropOffId < dropOffPointQueue.size())
-        {
-            mainTarget = dropOffPoints[dropOffPointQueue[targetDropOffId++]];
-            //qDebug() << "agent" << getAgentId() << "updated main target" << mainTarget << dropOffPointQueue[targetDropOffId-1];
-        }
+        score++;
+        targetNavGoalId = (targetNavGoalId + 1) % navGoalQueue.size();
+        mainTarget = navGoals[navGoalQueue[targetNavGoalId]];
+        //qDebug() << "agent" << getAgentId() << "updated main target" << mainTarget << dropOffPointQueue[targetDropOffId-1];
     }
 
     //##############
@@ -320,48 +369,50 @@ void UnicycleAgent::act()
     // controller plans towards the intermediate target and is thus not influenced by the carrot.
     // For the path computation, expanded obstacles are used so that paths cannot lead through too narrow
     // spaces and keep distance from obstacles. Sometimes, for example due to localization errors, the
-    // starting point or the target might end up inside an obstacle, where no path can be found. We make
-    // the path computation robust by moving the start and the target into free space.
+    // starting point or the target might end up inside an obstacle, where no path can be found. The path
+    // computation is made robust to such disturbances by moving the start and the target into free space. 
 
     StopWatch sw;
     sw.start();
 
-    // 1. Compute the world path.
-    worldPathSuccess = worldMap.computeStaticPath(pos(), mainTarget);
-    const Vector<Vec2>& pp = worldMap.getPath();
+    // 1. Compute the world path and determine the intermediate target.
+    worldPathSuccess = worldMap.computeStaticPath(pos(), mainTarget.pos());
+    worldPath = worldMap.getPath()-pose();
     if (worldPathSuccess)
     {
-        // Transform the path to local coordinates.
-        worldPath = pp-pose();
-
         // Determine the intermediate target.
         // The intermediate target is the intersection of the static world path and the
         // boundary of the sensed grid. The intermediate target is expressed in local coordinates.
-        Box box = sensedGrid.boundingBox();
+        Box box = costmap.boundingBox();
         box.grow(-0.1); // Exclude the exact boundary to avoid problems.
-        intermediateTarget = box.intersection(worldPath);
+        intermediateTarget = box.intersection(worldPath.getVertices());
+
+        if (box.intersects(mainTarget.pos() - pose()))
+            intermediateTarget.setHeading(mainTarget.heading() - orientation());
     }
     else
     {
         // It's a big issue if we cannot find the world path. Probably there is no way to the target at all.
         // We can keep going for a short while with the path and the intermediate target we had last.
 
-        qDebug() << "agent" << getAgentId() << state.frameId << "Static world path computation failed from" << pos() << "to:" << mainTarget;
-        state.stop = 1;
-        worldMap.computeStaticPath(pos(), mainTarget, 50);
+        qDebug() << state.frameId << "World path computation failed from" << pos() << "to:" << mainTarget;
+        //state.stop = true;
+        worldMap.computeStaticPath(pos(), mainTarget.pos(), 50);
     }
 
-    // 2. Compute the static path in case it is needed as a fallback.
+    state.pathLength = worldPath.length();
+
+    // 4. Compute the static path in case it is needed as a fallback.
     staticPathSuccess = localMap.computeStaticPath(Vec2(), intermediateTarget.pos());
     staticPath = localMap.getPath();
 
 //    if (isFirstAgent() && !staticPathSuccess)
 //        qDebug() << state.frameId << "Static path computation failed to:" << intermediateTarget;
 
-    // 3. Now compute the "dynamic" path up to the intermediate target using the sensed polygons and
+    // 5. Now compute the "dynamic" path up to the intermediate target using the sensed polygons and
     // the moving obstacles that are seen in the local map. Sometimes, moving obstacles cover the
-    // target. Such obstacles are erased from the model before path computation. Also, moving obstacles can
-    // block narrow passages and then no dynamic path can be found at all.
+    // target. Such obstacles are erased from the model before path computation. Also, moving obstacles
+    // can block narrow passages and then no dynamic path can be found at all.
     localMap.resetSearch();
     dynamicPathSuccess = localMap.computeDynamicPath(Vec2(), intermediateTarget.pos());
     dynamicPath = localMap.getPath();
@@ -374,51 +425,23 @@ void UnicycleAgent::act()
         //localMap.computeDynamicPath(Vec2(), intermediateTarget.pos(), 50);
     }
 
-
-    // Carrot extraction.
-
-    // If the dynamic path is good, take the carrot from it.
+    // 6. Determine the used path to extract the carrot from.
     if (dynamicPathSuccess && command.useDynamicPath)
-    {
-        double dt = config.DWA_carrotOffset;
-        if (trajectoryPlanningMethod == command.PD)
-            dt = config.UPD_carrotOffset;
-        VelocityProfile vp;
-        Unicycle u;
-        u.setVel(vel());
-        Hpm2D h = vp.getWaypoint(u, dynamicPath, dt);
-        carrot.setPos(h.pos());
-        carrot.setHeading(h.heading());
-    }
-
-    // If the dynamic path failed, extract the carrot from the static path instead.
+        usedPath = dynamicPath;
     else if (staticPathSuccess)
-    {
-        double dt = config.DWA_carrotOffset;
-        if (trajectoryPlanningMethod == command.PD)
-            dt = config.UPD_carrotOffset;
-        VelocityProfile vp;
-        Unicycle u;
-        u.setVel(vel());
-        Hpm2D h = vp.getWaypoint(u, staticPath, dt);
-        carrot.setPos(h.pos());
-        carrot.setHeading(h.heading());
-    }
-
-    // If both the dynamic and the static path failed, try the world path.
+        usedPath = staticPath;
     else if (worldPathSuccess)
-    {
-        double dt = config.DWA_carrotOffset;
-        if (trajectoryPlanningMethod == command.PD)
-            dt = config.UPD_carrotOffset;
-        VelocityProfile vp;
-        Unicycle u;
-        u.setVel(vel());
-        Hpm2D h = vp.getWaypoint(u, worldPath, dt);
-        carrot.setPos(h.pos());
-        carrot.setHeading(h.heading());
-    }
+        usedPath = worldPath;
 
+    // 7. Carrot extraction.
+    carrot.setNull();
+    double dt = config.DWA_carrotOffset;
+    if (trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl)
+        dt = config.UPD_carrotOffset;
+    VelocityProfile vp;
+    Unicycle u;
+    u.setVel(vel());
+    carrot = vp.getWaypoint(u, usedPath.getVertices(), dt).pos();
     //qDebug() << "extracted carrot:" << carrot << dynamicPathSuccess << staticPathSuccess << worldPathSuccess;
 
     pathTime = sw.elapsedTimeMs();
@@ -433,13 +456,68 @@ void UnicycleAgent::act()
     // on a collision course (emergency brake reflex) or it is stuck in one place for too
     // long (stuckness reflex).
 
+
+    // Emergency brake reflex.
+    // The emergency break reflex activates when the agent is on a collision course.
+    // When the brake reflex is active, the reflex stops the robot by commanding zero velocity
+    // for the duration of one second.
+    if (command.emergencyBrakeReflex)
+    {
+        Polygon uni = predicted(config.ebPredictionTime) - pose();
+        uni.transform();
+        if (ebActive || !localMap.polygonCollisionCheck(uni).isEmpty())
+        {
+            // Activation
+            if (!ebActive)
+            {
+                ebActive = true;
+                ebActivationCounter = command.frequency;
+            }
+
+            // Deactivation
+            if (ebActivationCounter == 0)
+                ebActive = false;
+
+            ebActivationCounter--;
+            setTxVel(0,0);
+            return;
+        }
+    }
+
+    // Safety zone reflex.
+    // The safety zone in front of the robot is dynamically computed depending on the velocity.
+    // If any obstacle is detected within the safety box, an emergency stop is triggered.
+    if (command.safetyZoneReflex)
+    {
+        if (safetyActive)
+        {
+            //qDebug() << safetyActivationTime << stopWatch.programTime();
+            if (stopWatch.programTime() - safetyActivationTime > 3)
+                safetyActive = false;
+            setTxVel(0, 0);
+            return;
+        }
+
+        if (v > 0.16)
+        {
+            Polygon sz = getSafetyPolygon(v);
+            if (!localMap.polygonCollisionCheck(sz).isEmpty())
+            {
+                safetyActive = true;
+                safetyActivationTime = stopWatch.programTime();
+                setTxVel(0, 0);
+                return;
+            }
+        }
+    }
+
+
     // Stuckness reflex.
     // When the agent has been stuck for a while, this reflex executes PD control towards the intermediate target
     // for a whort time. You can observe this behavior when you switch to keyboard control with "K" and then do
     // nothing just watch. It can only detect when an agent is not moving, but not when the agent is stuck in an
     // infinite loop.
     stuckDetectionCounter = (vel().norm() < 0.3 && !isStuck) ? stuckDetectionCounter+1 : 0;
-
     //qDebug() << state.frameId << stuckDetectionCounter << "vel:" << vel().norm() << "stucks:" << stucks;
 
     // Activation.
@@ -457,7 +535,7 @@ void UnicycleAgent::act()
     if (isStuck)
     {
         stuckTimer--;
-        stucknessImpulse = carrot.pos();
+        stucknessImpulse = carrot;
         if (stucknessImpulse.norm() > 1.0)
             stucknessImpulse.normalize();
         //qDebug() << "Agent" << getName() << "is stuck. awayFromObst" << awayFromObst;
@@ -469,65 +547,7 @@ void UnicycleAgent::act()
         }
     }
 
-    // Emergency brake reflex.
-    // The emergency break reflex activates when the agent is on a collision course with a velocity
-    // higher than what is permitted in order to execute a safe braking maneuver and come to a full
-    // stop before the collision occurs. As a safety margin, only 80% of the possbile effort is
-    // assumed for the braking. When the brake reflex is active, the reflex cancels out the part of
-    // the acceleration space that would lead to a collision, i.e., it applies the "brake" itself
-    // and leaves the trajectory controller to apply any remaining acceleration that then should be
-    // even safer. The activation of the brake reflex is based on two prospected impact points that
-    // are computed by ray casting a forward ray from the front left and the front right corner of
-    // the agent. The distance of the shorter ray determines what velocity is permitted in order to
-    // be able to come to a stop before the impact. In order to avoid activation jittering, there is
-    // an inbuilt hysteresis where the reflex deactivates only below a lower velocity margin than
-    // what is needed to activate the reflex.
 
-    // The math: combine x(t) and v(t) to v(x)
-    // x(t) = x0 + v0*t + (1/2)a*t*t;
-    // v(t) = v0 + a*t
-    // v(x) = t(x)*a + v0;
-    // x² + px + q = 0
-    // x = -p/2 +- sqrt(p²/4 - q)
-    // (1/2)a*t*t + v0*t + x0 = x(t)
-    // t² + (2*v0/a)*t + 2*(x0-x(t))/a = 0
-    // t(x) = -v0/a +- sqrt(v0²/a² - 2dx/a)
-    // t(x) = -v0/a +- a*sqrt(v0² - 2adx)
-    // t(x) = (-v0 +- sqrt(v0² - 2adx)) / a
-    // v(x) = sqrt(v0² + 2ax)
-
-    double aIn = 0.8*config.agentLinearAccelerationLimit;
-    double aOut = 0.6*config.agentLinearAccelerationLimit;
-    double minDistance = 0.15;
-    double w = 0.5*config.agentWidth;
-    double h = 0.5*config.agentHeight;
-    Vec2 tl = Vec2(sgn(v)*w,h);
-    Vec2 tr = Vec2(sgn(v)*w,-h);
-    Vec2 impactPoint1 = localMap.rayIntersection(tl, Vec2(sgn(v)*2,h));
-    Vec2 impactPoint2 = localMap.rayIntersection(tr, Vec2(sgn(v)*2,-h));
-    impactPoint = impactPoint1.norm() < impactPoint2.norm() ? impactPoint1 : impactPoint2;
-    double distToImpact = min((impactPoint1-tl).norm(), (impactPoint2-tr).norm()) - minDistance;
-    double impactVelocityIn = sgn(v)*sqrt(2*aIn*distToImpact); // Activation velocity.
-    double impactVelocityOut = sgn(v)*sqrt(2*aOut*distToImpact); // Deactivation velocity.
-    if (distToImpact <= 0 || sgn(v)*(v-impactVelocityIn) > 0 || (ebActive && (sgn(v)*(v-impactVelocityOut) > 0)))
-    {
-        // 0 = v(x) = sqrt(v0² + 2ax)
-        // 0 = v0² + 2ax
-        // a = -v0²/2x
-        ebActive = command.emergencyBrakeReflex;
-        ebA = (-(v*v)*sgn(v)) / (2*distToImpact); // The acceleration that needs to be set to stop at minDistance before impact.
-        if (distToImpact <= 0)
-            ebA = -v/timeStep;
-//        qDebug() << state.frameId << "Emergency break active!"
-//                 << "acc:" << acc()
-//                 << "dist:" << distToImpact << (distToImpact <= 0)
-//                 << "v:" << v << impactVelocityIn << impactVelocityOut << (sgn(v)*(v-impactVelocityIn) > 0)
-//                 << "a:" << ebA;
-    }
-    else
-    {
-        ebActive = false;
-    }
 
 
     //####################
@@ -536,44 +556,83 @@ void UnicycleAgent::act()
     // Action planning. High rate dynamic trajectory planning with bounded computation time.
     // The controller layer computes and sets the acceleration of the agent using Aborting A* or DWA or a PD controller.
 
-    // Keyboard control override.
-    joystickCarrot = carrot.pos();
+    // Joystick and keyboard control override.
+    joystickCarrot = carrot;
     if (command.joystick && isFirstAgent())
     {
-        ruleBase.query(rays, carrot.pos());
+        ruleBase.query(rays, carrot);
         joystickCarrot = Vec2(-command.ay, command.ax) + pos() - pose();
-        Vec2 acc = pdControlTo(joystickCarrot);
-        if (ebActive)
-            acc.x = min(acc.x, ebA); // Apply the emergency break.
-        setAcc(acc);
+        setAcc(pdControlTo(joystickCarrot));
     }
     else if (command.keyboard && isFirstAgent())
     {
-        Vec2 acc(command.ax, command.ay);
-        if (ebActive)
-            acc.x = min(acc.x, ebA); // Apply the emergency break.
-        setAcc(acc);
+        setAcc(command.ax, command.ay);
     }
     else if (trajectoryPlanningMethod == command.PD)
     {
+        // Simple PD controller that steers towards the carrot.
+        // It's a decent controller to follow a path, but it cannot
+        // avoid obstacles and cannot fullfill the target orientation.
+        // The PD controller can be used for acceleration (setAcc())
+        // and for velocity control (setTxVel()) with different parameters.
+        // I found that for velocity control only the p parameters are needed.
+
         StopWatch sw;
         sw.start();
 
-        // Simple PD controller that steers towards the carrot.
-        // When the dynamic path fails or deviates too strongly, a and b are set to zero.
-        Vec2 acc = pdControlTo(carrot.pos());
-        if (ebActive)
-            acc.x = min(acc.x, ebA); // Apply the emergency break.
+        setAcc(pdControlTo(carrot));
+
+        trajectoryTime = sw.elapsedTimeMs();
+        if (isFirstAgent())
+            state.trajectoryTime = sw.elapsedTimeMs();
+    }
+    else if (trajectoryPlanningMethod == command.Bezier)
+    {
+        // This is a Bezier curve-based controller.
+        // It is a little more powerful than the PD controller as it can
+        // attain a target orientation.
+
+        StopWatch sw;
+        sw.start();
+
+        Pose2D localTarget = mainTarget - pose();
+        Bezier2D bez;
+        Vec2 v1(1,0);
+        v1.rotate(localTarget.heading());
+        bez.setP1(localTarget.pos()-config.bezierStretch*localTarget.pos().norm()*v1);
+        bez.addKeyframe(0, 0, 0, 0, 0);
+        bez.addKeyframe(0, localTarget.x, 0, localTarget.y, 0);
+        carrot = bez.evaluateAt(config.bezierDt).pos();
+
+        Vec2 acc = pdControlTo(carrot);
         setAcc(acc);
 
-        // Measure execution time.
+        trajectoryTime = sw.elapsedTimeMs();
+        if (isFirstAgent())
+            state.trajectoryTime = sw.elapsedTimeMs();
+    }
+    else if (trajectoryPlanningMethod == command.Reel)
+    {
+        // Reel controller for docking.
+
+        StopWatch sw;
+        sw.start();
+
+        Pose2D localTarget = mainTarget - pose();
+        Vec2 v1(1,0);
+        v1.rotate(localTarget.heading());
+        Vec2 reel = -localTarget.pos().projectedOnVector(-v1);
+        reel.normalize(max(reel.norm()-config.reelCarrotOffset, 0.0));
+        carrot = localTarget.pos()+reel;
+        setAcc(pdControlTo(carrot));
+
         trajectoryTime = sw.elapsedTimeMs();
         if (isFirstAgent())
             state.trajectoryTime = sw.elapsedTimeMs();
     }
     else if (trajectoryPlanningMethod == command.DWA)
     {
-        // This is a Unicycle DWA used to control a nonholonomic agent.
+        // This is a Dynamic Window Approach (DWA) for unicycles.
 
         StopWatch sw;
         sw.start();
@@ -582,33 +641,36 @@ void UnicycleAgent::act()
         localUni.setVel(vel());
 
         // Dynamic Window Approach based on nonholonomic trajectory types:
-        // arc, B0 spline, and Fresnel integrals.
+        // arc, B0 spline, and Fresnel integral.
         //unicycleDWA.setDebug(config.debugLevel);
         unicycleDWA.setTrajectoryType(trajectoryType);
         unicycleDWA.setGeometricModel(localMap);
-        unicycleDWA.setGridModel(sensedGrid);
+        unicycleDWA.setGridModel(costmap);
         unicycleDWA.setStart(localUni);
-        unicycleDWA.setCarrot(carrot.pos());
+        unicycleDWA.setCarrot(carrot);
         Vec2 acc = unicycleDWA.search();
-        if (ebActive)
-            acc.x = min(acc.x, ebA); // Apply the emergency break.
         setAcc(acc);
 
-        // Measure execution time.
         trajectoryTime = sw.elapsedTimeMs();
         if (isFirstAgent())
             state.trajectoryTime = sw.elapsedTimeMs();
     }
     else if (trajectoryPlanningMethod == command.STAA)
     {
+        // The Short Term Aborting A* controller is the most powerful
+        // controller we have.
+
         StopWatch sw;
         sw.start();
 
+        // Construct the start state including the current velocity.
         Unicycle localUni;
         localUni.setVel(vel());
 
+        // Note: we assume zero velocity for the target state.
+
         shortTermAbortingAStar.setGeometricModel(localMap);
-        shortTermAbortingAStar.setGridModel(sensedGrid);
+        shortTermAbortingAStar.setGridModel(costmap);
         shortTermAbortingAStar.setStartState(localUni);
         shortTermAbortingAStar.setTargetState(intermediateTarget);
         if (command.stucknessReflex)
@@ -637,12 +699,31 @@ void UnicycleAgent::act()
     }
     else if (trajectoryPlanningMethod == command.RuleBase)
     {
-        Vec2 ccarrot = ruleBase.query(rays, carrot.pos());
+        Vec2 ccarrot = ruleBase.query(rays, carrot);
         Vec2 acc = pdControlTo(ccarrot);
-        if (ebActive)
-            acc.x = min(acc.x, ebA); // Apply the emergency break.
         setAcc(acc);
         //qDebug() << ccarrot << ccarrot.pos().norm2() << pdControlTo(ccarrot.pos()) << acc();
+    }
+    else if (trajectoryPlanningMethod == command.SpeedControl)
+    {
+        // Speed control
+        // Trying to avoid the safety zone reflex activation.
+
+        setAcc(pdControlTo(carrot));
+
+        Polygon st = getSafetyPolygon(v);
+        Vec2 cp = localMap.getClosestPoint(Vec2());
+        double d = localMap.distance(Vec2());
+        double vp = (d < 0.5) ? 0.5 : (6.0/5.0)*(d-(0.5/6.0));
+        vp = (d < 0.5) ? 0.5 : d*(1.5/2.6);
+        vp *= 0.75;
+        //qDebug() << "closest point:" << cp << cp.norm() << d << "dx:" << st.getVertices().first() << "v:" << v << "vp:" << vp;
+        if (v > vp)
+        {
+            //qDebug() << "reducing vel from" << v << vp;
+            setTxVel(vp, w);
+            return;
+        }
     }
 }
 
@@ -650,7 +731,7 @@ void UnicycleAgent::learn()
 {
     if (command.learn)
     {
-        ruleBase.addRule(rays, carrot.pos(), joystickCarrot);
+        ruleBase.addRule(rays, carrot, joystickCarrot);
         if (isFirstAgent())
             ruleBase.save("data/rulebase.dat");
     }
@@ -686,55 +767,100 @@ void UnicycleAgent::computeRayModel()
 // After calling this function, the laserSensor will be loaded with data.
 void UnicycleAgent::simulateLaserSensor()
 {
+    LaserInfo laserInfo;
+    laserInfo.angleMax = config.simLaserAngleRange;
+    laserInfo.angleMin = -config.simLaserAngleRange;
+    laserInfo.angleIncrement = 2.0*config.simLaserAngleRange/config.simLaserRays;
+    laserInfo.rangeMax = config.simLaserLength;
+    laserInfo.rays = config.simLaserRays;
+    laserSensor.setLaserInfo(laserInfo);
+
+
     GeometricModel localWorldPolygons = worldPolygons;
     localWorldPolygons -= pose();
-    localWorldPolygons.clip(Box(config.laserLength, -config.laserLength, -config.laserLength, config.laserLength));
+    localWorldPolygons.clip(Box(config.simLaserLength, -config.simLaserLength, -config.simLaserLength, config.simLaserLength));
 
     GeometricModel localWorldDynamicObstacles;
     localWorldDynamicObstacles.setObstacles(worldDynamicObstacles);
     localWorldDynamicObstacles -= pose();
     Vec2 base(1,0);
-    base.normalize(config.laserLength);
+    base.normalize(config.simLaserLength);
     rays.clear();
     Vector<Vec2> laserPoints;
-    for (int i = 0; i < config.laserRays; i++)
+    Vector<double> laserRanges;
+    for (int i = 0; i < config.simLaserRays; i++)
     {
-        Vec2 ray1 = base.rotated(-config.laserAngleRange + i*2*config.laserAngleRange/(config.laserRays-1));
+        Vec2 ray1 = base.rotated(-config.simLaserAngleRange + i*2*config.simLaserAngleRange/(config.simLaserRays-1));
         Vec2 ray2 = localWorldPolygons.rayIntersection(Vec2(), ray1);
         Vec2 ray3 = localWorldDynamicObstacles.rayIntersection(Vec2(), ray2);
         laserPoints << ray3;
+        laserRanges << ray3.length();
     }
 
-    laserSensor.writePointBuffer(laserPoints);
+    //laserSensor.writePointBuffer(laserPoints);
+    laserSensor.writeRangeBuffer(laserRanges);
 }
 
 // This is a simple PD controller that computes accelerations towards the target q.
-// It also includes a dead band around q where the control output is zero.
+// The PD controller can be used for acceleration (setAcc()) and for velocity control
+// (setTxVel()) with different parameters. I found that for velocity control only the
+// p parameters are needed.
 Vec2 UnicycleAgent::pdControlTo(const Vec2 &q) const
 {
     Vec2 forward(1,0);
     double projectedTransErr = q * forward;
     double rotErr = forward.angleTo(q);
-    double a = config.UPD_Kp_lin * projectedTransErr + config.UPD_Kd_lin * v;
-    double b = config.UPD_Kp_rot * rotErr + config.UPD_Kd_rot * w;
-//    if (q.norm2() < 0.025) // Dead band.
-//        return Vec2();
+    double a = config.UPD_Plin * projectedTransErr + config.UPD_Dlin * v;
+    double b = config.UPD_Prot * rotErr + config.UPD_Drot * w;
+    if (q.norm() < 0.01) // Dead band.
+        return Vec2();
     return Vec2(a,b);
 }
 
-// Takes in a normalized force vector and computes the accelerations.
+// Takes in a normalized force vector and computes the accelerations as if
+// the car were pushed by the force.
 Vec2 UnicycleAgent::forceReaction(const Vec2 &q) const
 {
     Vec2 forward(1,0);
     Vec2 sideward(0,1);
     double projectedTransErr = q * forward;
     double projectedRotErr = q * sideward;
-    double a = config.UPD_Kp_lin * projectedTransErr + config.UPD_Kd_lin * v;
-    double b = (config.UPD_Kp_rot * projectedRotErr + config.UPD_Kd_rot * w);
-    //qDebug() << "in:" << q << "trans:" << projectedTransErr << v << a << "rot:" << projectedRotErr << w << b;
-//    if (q.norm2() < 0.025) // Dead band.
-//        return Vec2();
+    double a = config.UPD_Plin * projectedTransErr + config.UPD_Dlin * v;
+    double b = (config.UPD_Prot * projectedRotErr + config.UPD_Drot * w);
     return Vec2(a,b);
+}
+
+// Extracts a carrot dist meters along the path. The orientation of the returned
+// Pose2D aligns with the path at the intersected point. If dist is larger than
+// the entire length of the path, the last point of the path is returned.
+Pose2D UnicycleAgent::extractCarrot(const Vector<Vec2> &path, double dist) const
+{
+    if (path.isEmpty())
+        return Pose2D();
+
+    uint i = 0;
+    while (i < path.size()-2 && dist > (path[i+1]-path[i]).norm())
+    {
+        dist -= (path[i+1]-path[i]).norm();
+        i++;
+    }
+
+    Pose2D carrot;
+    carrot.setPos(path[i] + min((dist/(path[i+1]-path[i]).norm()), 1.0) * (path[i+1]-path[i]));
+    carrot.setHeading((path[i+1]-path[i]).fangle());
+    return carrot;
+}
+
+Polygon UnicycleAgent::getSafetyPolygon(double vel) const
+{
+    Polygon sz;
+    if (vel > 0.16)
+    {
+        double x = max(0.0, vel * 2.6/1.5);
+        double y = vel <= 0.5 ? 0.5 : (0.5 + 0.5/0.6 * (vel-0.5));
+        sz << Vec2(x, y) << Vec2(0,y) << Vec2(0, -y) << Vec2(x, -y);
+    }
+    return sz;
 }
 
 // Robot control step.
@@ -801,43 +927,87 @@ void UnicycleAgent::draw(QPainter *painter) const
         return;
     }
 
+    // World visibility graph.
     if (command.showWorldVisibilityGraph)
         worldMap.drawVisibilityGraph(painter); // This is used for global path searches.
 
     // The main target.
     if (command.showTargets && mainTarget.norm() > EPSILON)
-        drawUtil.drawCross(painter, mainTarget, drawUtil.pen, drawUtil.brushRed, 0.125);
+        drawUtil.drawNoseCircle(painter, mainTarget, drawUtil.penThick, drawUtil.brushRed, 0.25);
 
-    // Everything hereafter is drawn in local coordinates.
+    // Everything hereafter is drawn in local coordinates!
     painter->save();
     painter->translate(pos());
     painter->rotate(orientation()*RAD_TO_DEG);
 
-    // The sensed grid.
-    if (command.showSensedGrid)
+    // Safety Zone
+    if (command.showSafetyZone)
     {
-        sensedGrid.draw(painter, drawUtil.brushOrange);
-        sensedGrid.drawBorder(painter);
+        Polygon sz = getSafetyPolygon(v);
+        if (!localMap.polygonCollisionCheck(sz).isEmpty())
+            sz.draw(painter, drawUtil.pen, drawUtil.brushRed, 0.3);
+        else
+            sz.draw(painter, drawUtil.pen, drawUtil.brushRed, 0.03);
+    }
+
+    // Speed Controller
+    if (command.trajectoryPlanningMethod == command.SpeedControl)
+    {
+        Vec2 cp = localMap.getClosestPoint(Vec2());
+        drawUtil.drawLine(painter, Vec2(), cp, drawUtil.penRedThin);
+    }
+
+    // Bezier controller
+    if (command.trajectoryPlanningMethod == command.Bezier)
+    {
+        Pose2D localTarget = mainTarget - pose();
+        Bezier2D bez;
+        Vec2 v1(1,0);
+        v1.rotate(localTarget.heading());
+        bez.setP1(localTarget.pos()-config.bezierStretch*localTarget.pos().norm()*v1);
+        bez.addKeyframe(0, 0, 0, 0, 0);
+        bez.addKeyframe(0, localTarget.x, 0, localTarget.y, 0);
+        bez.draw(painter, drawUtil.penGreenDashed);
+    }
+
+    // Reel controller
+    if (command.trajectoryPlanningMethod == command.Reel)
+    {
+        Pose2D localTarget = mainTarget - pose();
+        Vec2 v1(1,0);
+        v1.rotate(localTarget.heading());
+        Vec2 reel = -localTarget.pos().projectedOnVector(-v1);
+        reel.normalize(max(reel.norm()-config.reelCarrotOffset, 0.0));
+
+        painter->save();
+        painter->setPen(drawUtil.penGrayThinDashed);
+        if (!reel.isNull())
+            painter->drawLine(localTarget.pos(), localTarget.pos()+reel);
+        painter->restore();
+    }
+
+
+    // The sensed grid.
+    if (command.showCostmap)
+    {
+        costmap.draw(painter, drawUtil.brushOrange);
+        costmap.drawBorder(painter);
     }
 
     // The Dijkstra map.
     if (command.showDijkstraMap)
-    {
-        sensedGrid.drawDijkstraMap(painter);
-    }
+        costmap.drawDijkstraMap(painter);
 
-    // The local geometric map.
-    if (command.showSensedPolygons)
+    // The local map.
+    if (command.showLocalMap)
     {
         localMap.draw(painter, drawUtil.penThick, drawUtil.brushRed, drawUtil.brushOrange);
-        sensedGrid.drawBorder(painter);
+        costmap.drawBorder(painter);
     }
 
     // The Visibility Polygon.
     if (command.showVisibilityPolygon)
-    {
-        visibilityPolygon.draw(painter, drawUtil.pen, drawUtil.brushGreen);
-    }
+        visibilityPolygon.draw(painter, drawUtil.pen, drawUtil.brushLightGreen, 0.4);
 
     // The ray model.
     if (command.showRayModel)
@@ -867,26 +1037,20 @@ void UnicycleAgent::draw(QPainter *painter) const
         painter->restore();
     }
 
-    // The rule base visualization (similar to ray model).
+    // The rule base controller visualization (similar to ray model).
     if (trajectoryPlanningMethod == command.RuleBase)
-    {
         ruleBase.draw(painter);
-    }
 
     // The simulated lidar.
     if (command.showLaser > 0)
         laserSensor.draw(painter);
-
 
     // The body.
     if (command.showBody)
     {
         Polygon body = *this;
         body -= pose();
-        if (isBot())
-            body.draw(painter, drawUtil.penThick, drawUtil.brushRed, 1.0);
-        else
-            body.draw(painter, drawUtil.penThick, drawUtil.brushYellow, 1.0);
+        body.draw(painter, drawUtil.penThick, drawUtil.brushYellow, 1.0);
     }
 
     // The pos dot.
@@ -913,20 +1077,15 @@ void UnicycleAgent::draw(QPainter *painter) const
         drawUtil.drawArrow(painter, Vec2(), vv, drawUtil.penThick);
 
     // The emergency brake reflex.
-    if (ebActive && trajectoryPlanningMethod != command.STAA)
+    if (command.emergencyBrakeReflex)
     {
-        // Impact point.
-        painter->save();
-        painter->setPen(drawUtil.penRed);
-        painter->setBrush(drawUtil.brushRed);
-        painter->translate(impactPoint);
-        painter->scale(0.05, 0.05);
-        painter->drawEllipse(QPointF(0, 0), 1, 1);
-        painter->restore();
-
-        // Break impulse vector.
-        if (!impactPoint.isNull())
-            drawUtil.drawArrow(painter, impactPoint, Vec2(), drawUtil.penRedThicker);
+        Polygon uni = predicted(config.ebPredictionTime) - pose();
+        uni.transform();
+        //qDebug() << localMap.polygonCollisionCheck(uni, true);
+        if (!localMap.polygonCollisionCheck(uni).isEmpty())
+            uni.draw(painter, drawUtil.penRedThick, Qt::NoBrush, 0.5);
+        else
+            uni.draw(painter, drawUtil.penBlueThick, Qt::NoBrush, 0.5);
     }
 
     // The stuckness impulse.
@@ -935,57 +1094,30 @@ void UnicycleAgent::draw(QPainter *painter) const
 
     // The intermediate target as a blue cross.
     if (command.showTargets && intermediateTarget.pos().norm() > EPSILON)
-        drawUtil.drawCross(painter, intermediateTarget.pos(), drawUtil.pen, drawUtil.brushBlue, 0.08);
+        drawUtil.drawNoseCircle(painter, intermediateTarget, drawUtil.penThick, drawUtil.brushBlue, 0.2);
 
     // The carrot as a small orange cross.
-    if (command.showTargets && carrot.pos().norm() > EPSILON
-        && (command.trajectoryPlanningMethod == command.DWA
-            || command.trajectoryPlanningMethod == command.PD
-            || command.trajectoryPlanningMethod == command.RuleBase))
-        drawUtil.drawCross(painter, carrot.pos(), drawUtil.pen, drawUtil.brushOrange, 0.06);
+    if (command.showTargets && carrot.norm() > EPSILON)
+        drawUtil.drawCross(painter, carrot, drawUtil.penThick, drawUtil.brushOrange, 0.05);
 
     // The joystick carrot as a small green cross.
     if (command.showTargets && joystickCarrot.norm() > EPSILON && command.joystick)
         drawUtil.drawCross(painter, joystickCarrot, drawUtil.pen, drawUtil.brushGreen, 0.06);
 
     // The paths. World, dynamic and static.
-    if (command.showWorldPath)
+    if (command.showPaths)
     {
         // Draw the world path.
         if (worldPathSuccess)
-        {
-            painter->save();
-            painter->setPen(drawUtil.penBlueThick);
-            painter->setBrush(drawUtil.brushBlue);
-            painter->setOpacity(0.2);
-            for (int i = 1; i < worldPath.size(); i++)
-                painter->drawLine(QLineF(worldPath[i].x, worldPath[i].y, worldPath[i-1].x, worldPath[i-1].y));
-            painter->restore();
-        }
+            worldPath.draw(painter, drawUtil.penBlueThick, 0.2);
 
         // Draw the dynamic path.
         if (dynamicPathSuccess)
-        {
-            painter->save();
-            painter->setPen(drawUtil.penRedThick);
-            painter->setBrush(drawUtil.brushRed);
-            painter->setOpacity(0.2);
-            for (int i = 1; i < dynamicPath.size(); i++)
-                painter->drawLine(QLineF(dynamicPath[i].x, dynamicPath[i].y, dynamicPath[i-1].x, dynamicPath[i-1].y));
-            painter->restore();
-        }
+            dynamicPath.draw(painter, drawUtil.penRedThick, 0.2);
 
         // Draw the static path.
         if (staticPathSuccess)
-        {
-            painter->save();
-            painter->setPen(drawUtil.penGreenThick);
-            painter->setBrush(drawUtil.brushGreen);
-            painter->setOpacity(0.2);
-            for (int i = 1; i < staticPath.size(); i++)
-                painter->drawLine(QLineF(staticPath[i].x, staticPath[i].y, staticPath[i-1].x, staticPath[i-1].y));
-            painter->restore();
-        }
+            staticPath.draw(painter, drawUtil.penGreenThick, 0.2);
     }
 
     // Local Visibility graph.
@@ -993,15 +1125,13 @@ void UnicycleAgent::draw(QPainter *painter) const
         localMap.drawVisibilityGraph(painter);
         //shortTermAbortingAStar.drawVisibilityGraph(painter); // This is used for local path searches in the heuristic of AA*.
 
-    // Controller visualization.
+    // The DWA controller
     if (trajectoryPlanningMethod == command.DWA)
-    {
         unicycleDWA.draw(painter);
-    }
+
+    // The STAA controller
     if (trajectoryPlanningMethod == command.STAA)
-    {
         shortTermAbortingAStar.draw(painter);
-    }
 
     painter->restore();
 }

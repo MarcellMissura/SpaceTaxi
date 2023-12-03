@@ -82,6 +82,8 @@ MainWindow::MainWindow(QWidget *parent)
     toggleConfig();
     //showFullScreen();
 
+    connect(&graphicsViewWidget, SIGNAL(poseRecorded(const Pose2D&)), this, SLOT(poseRecorded(const Pose2D&)));
+
 
     // Animation components.
     cfi = 0;
@@ -198,39 +200,18 @@ void MainWindow::buildMenu()
     simulationDebugAction->setChecked(command.showSimulationDebugDraw);
     connect(simulationDebugAction, SIGNAL(triggered()), this, SLOT(toggleSimulationDebug()));
 
-    QAction* showTrajectoryTraceAction = viewMenu->addAction(tr("&Trajectory Trace"));
-    showTrajectoryTraceAction->setToolTip(tr("Toggles the trajectory trace."));
-    //showTrajectoryTraceAction->setShortcut(QKeySequence(tr("T")));
-    showTrajectoryTraceAction->setCheckable(true);
-    showTrajectoryTraceAction->setChecked(command.showTrajectoryTrace);
-    connect(showTrajectoryTraceAction, SIGNAL(triggered()), this, SLOT(toggleTrajectoryTrace()));
+    QAction* showLabelsAction = viewMenu->addAction(tr("&Labels"));
+    showLabelsAction->setToolTip(tr("Toggles all labels."));
+    //showLabelsAction->setShortcut(QKeySequence(tr("F")));
+    showLabelsAction->setCheckable(true);
+    showLabelsAction->setChecked(command.showLabels);
+    connect(showLabelsAction, SIGNAL(triggered()), this, SLOT(toggleLabels()));
 
     viewMenu->addSeparator();
 
-    QAction* showBodyAction = viewMenu->addAction(tr("&Body"));
-    showBodyAction->setToolTip(tr("Toggles the body."));
-    showBodyAction->setShortcut(QKeySequence(tr("B")));
-    showBodyAction->setCheckable(true);
-    showBodyAction->setChecked(command.showBody);
-    connect(showBodyAction, SIGNAL(triggered()), this, SLOT(toggleBody()));
-
-    QAction* showDropOffPointsAction = viewMenu->addAction(tr("&DropOff Points"));
-    showDropOffPointsAction->setToolTip(tr("Toggles the drop off points."));
-    showDropOffPointsAction->setShortcut(QKeySequence(tr("D")));
-    showDropOffPointsAction->setCheckable(true);
-    showDropOffPointsAction->setChecked(command.showDropOffPoints);
-    connect(showDropOffPointsAction, SIGNAL(triggered()), this, SLOT(toggleDropOffPoints()));
-
-    QAction* showTargetsAction = viewMenu->addAction(tr("&Targets"));
-    showTargetsAction->setToolTip(tr("Toggles the targets."));
-    showTargetsAction->setShortcut(QKeySequence(tr("T")));
-    showTargetsAction->setCheckable(true);
-    showTargetsAction->setChecked(command.showTargets);
-    connect(showTargetsAction, SIGNAL(triggered()), this, SLOT(toggleTargets()));
-
     QAction* showWorldObstaclesAction = viewMenu->addAction(tr("&World Polygons"));
     showWorldObstaclesAction->setToolTip(tr("Toggles the world polygons."));
-    showWorldObstaclesAction->setShortcut(QKeySequence(tr("O")));
+    showWorldObstaclesAction->setShortcut(QKeySequence(tr("Shift+W")));
     showWorldObstaclesAction->setCheckable(true);
     showWorldObstaclesAction->setChecked(command.showWorldPolygons);
     connect(showWorldObstaclesAction, SIGNAL(triggered()), this, SLOT(toggleWorldPolygons()));
@@ -242,12 +223,35 @@ void MainWindow::buildMenu()
     showWorldMapAction->setChecked(command.showWorldMap);
     connect(showWorldMapAction, SIGNAL(triggered()), this, SLOT(toggleWorldMap()));
 
-    QAction* showLidarAction = viewMenu->addAction(tr("&Simulated Lidar"));
-    showLidarAction->setToolTip(tr("Toggles the lidar model."));
-    showLidarAction->setShortcut(QKeySequence(tr("L")));
+    QAction* showNavGoalsAction = viewMenu->addAction(tr("&Nav Goals"));
+    showNavGoalsAction->setToolTip(tr("Toggles the nav goals."));
+    showNavGoalsAction->setShortcut(QKeySequence(tr("N")));
+    showNavGoalsAction->setCheckable(true);
+    showNavGoalsAction->setChecked(command.showNavGoals);
+    connect(showNavGoalsAction, SIGNAL(triggered()), this, SLOT(toggleNavGoals()));
+
+    viewMenu->addSeparator();
+
+    QAction* showBodyAction = viewMenu->addAction(tr("&Body"));
+    showBodyAction->setToolTip(tr("Toggles the body."));
+    showBodyAction->setShortcut(QKeySequence(tr("B")));
+    showBodyAction->setCheckable(true);
+    showBodyAction->setChecked(command.showBody);
+    connect(showBodyAction, SIGNAL(triggered()), this, SLOT(toggleBody()));
+
+    QAction* showTargetsAction = viewMenu->addAction(tr("&Targets"));
+    showTargetsAction->setToolTip(tr("Toggles the targets."));
+    showTargetsAction->setShortcut(QKeySequence(tr("T")));
+    showTargetsAction->setCheckable(true);
+    showTargetsAction->setChecked(command.showTargets);
+    connect(showTargetsAction, SIGNAL(triggered()), this, SLOT(toggleTargets()));
+
+    QAction* showLidarAction = viewMenu->addAction(tr("&Laser Sensor"));
+    showLidarAction->setToolTip(tr("Toggles the simulated laser sensor."));
+    showLidarAction->setShortcut(QKeySequence(tr("Shift+L")));
     showLidarAction->setCheckable(true);
     showLidarAction->setChecked(command.showLaser);
-    connect(showLidarAction, SIGNAL(triggered()), this, SLOT(toggleLidar()));
+    connect(showLidarAction, SIGNAL(triggered()), this, SLOT(toggleLaser()));
 
     QAction* showRayModelAction = viewMenu->addAction(tr("&Ray Model"));
     showRayModelAction->setToolTip(tr("Toggles the ray model."));
@@ -262,17 +266,23 @@ void MainWindow::buildMenu()
     showVisibilityPolygonAction->setChecked(command.showVisibilityPolygon);
     connect(showVisibilityPolygonAction, SIGNAL(triggered()), this, SLOT(toggleVisibilityPolygon()));
 
-    QAction* showOccupancyGridAction = viewMenu->addAction(tr("&Sensed Grid"));
+    QAction* showSafetyZoneAction = viewMenu->addAction(tr("&Safety Zone"));
+    //showSafetyZoneAction->setShortcut(QKeySequence(tr("S")));
+    showSafetyZoneAction->setCheckable(true);
+    showSafetyZoneAction->setChecked(command.showSafetyZone);
+    connect(showSafetyZoneAction, SIGNAL(triggered()), this, SLOT(toggleSafetyZone()));
+
+    QAction* showOccupancyGridAction = viewMenu->addAction(tr("&Costmap"));
     showOccupancyGridAction->setShortcut(QKeySequence(tr("S")));
     showOccupancyGridAction->setCheckable(true);
-    showOccupancyGridAction->setChecked(command.showSensedGrid);
-    connect(showOccupancyGridAction, SIGNAL(triggered()), this, SLOT(toggleSensedGrid()));
+    showOccupancyGridAction->setChecked(command.showCostmap);
+    connect(showOccupancyGridAction, SIGNAL(triggered()), this, SLOT(toggleCostmap()));
 
-    QAction* showWorldModelAction = viewMenu->addAction(tr("&Sensed Polygons"));
+    QAction* showWorldModelAction = viewMenu->addAction(tr("&Local Map"));
     showWorldModelAction->setShortcut(QKeySequence(tr("P")));
     showWorldModelAction->setCheckable(true);
-    showWorldModelAction->setChecked(command.showSensedPolygons);
-    connect(showWorldModelAction, SIGNAL(triggered()), this, SLOT(toggleGeometricModel()));
+    showWorldModelAction->setChecked(command.showLocalMap);
+    connect(showWorldModelAction, SIGNAL(triggered()), this, SLOT(toggleLocalMap()));
 
     QAction* showDijkstraMapAction = viewMenu->addAction(tr("&Dijkstra Map"));
     //showDijkstraMapAction->setShortcut(QKeySequence(tr("D")));
@@ -294,12 +304,12 @@ void MainWindow::buildMenu()
     showLocalVisGraphAction->setChecked(command.showLocalVisibilityGraph);
     connect(showLocalVisGraphAction, SIGNAL(triggered()), this, SLOT(toggleLocalVisibilityGraph()));
 
-    showWorldPathAction = viewMenu->addAction(tr("&World Path"));
-    showWorldPathAction->setToolTip(tr("Toggles the world path."));
+    showWorldPathAction = viewMenu->addAction(tr("&Paths"));
+    showWorldPathAction->setToolTip(tr("Toggles the paths."));
     //showWorldPathAction->setShortcut(QKeySequence(tr("W")));
     showWorldPathAction->setCheckable(true);
-    showWorldPathAction->setChecked(command.showWorldPath);
-    connect(showWorldPathAction, SIGNAL(triggered()), this, SLOT(toggleWorldPath()));
+    showWorldPathAction->setChecked(command.showPaths);
+    connect(showWorldPathAction, SIGNAL(triggered()), this, SLOT(togglePaths()));
 
     viewMenu->addSeparator();
 
@@ -381,49 +391,6 @@ void MainWindow::buildMenu()
 
     QMenu* controllerMenu = menuBar->addMenu(tr("&Controller"));
 
-    QActionGroup* pathPlannerActionGroup = new QActionGroup(controllerMenu);
-
-    QAction* pathAstarAction = pathPlannerActionGroup->addAction(tr("&Grid A*"));
-    controllerMenu->addAction(pathAstarAction);
-    pathAstarAction->setCheckable(true);
-    pathAstarAction->setChecked(command.pathPlanningMethod == command.GridAStar);
-    connect(pathAstarAction, SIGNAL(triggered()), &pathSelectionMapper, SLOT(map()));
-
-    QAction* lazyThetaStarAction = pathPlannerActionGroup->addAction(tr("&Grid Lazy Theta*"));
-    controllerMenu->addAction(lazyThetaStarAction);
-    //lazyThetaStarAction->setShortcut(QKeySequence(tr("L")));
-    lazyThetaStarAction->setCheckable(true);
-    lazyThetaStarAction->setChecked(command.pathPlanningMethod == command.LazyThetaStar);
-    connect(lazyThetaStarAction, SIGNAL(triggered()), &pathSelectionMapper, SLOT(map()));
-
-    QAction* dijkstraAction = pathPlannerActionGroup->addAction(tr("&Dijkstra Map"));
-    controllerMenu->addAction(dijkstraAction);
-    dijkstraAction->setCheckable(true);
-    dijkstraAction->setChecked(command.pathPlanningMethod == command.Dijkstra);
-    connect(dijkstraAction, SIGNAL(triggered()), &pathSelectionMapper, SLOT(map()));
-
-    QAction* naiveConstructAction = pathPlannerActionGroup->addAction(tr("&Visibility Graph Naive"));
-    controllerMenu->addAction(naiveConstructAction);
-    naiveConstructAction->setCheckable(true);
-    naiveConstructAction->setChecked(command.pathPlanningMethod == command.NaiveConstruct);
-    connect(naiveConstructAction, SIGNAL(triggered()), &pathSelectionMapper, SLOT(map()));
-
-    QAction* minimalConstructAction = pathPlannerActionGroup->addAction(tr("&Minimal Construct"));
-    controllerMenu->addAction(minimalConstructAction);
-    minimalConstructAction->setShortcut(QKeySequence(tr("M")));
-    minimalConstructAction->setCheckable(true);
-    minimalConstructAction->setChecked(command.pathPlanningMethod == command.MinimalConstruct);
-    connect(minimalConstructAction, SIGNAL(triggered()), &pathSelectionMapper, SLOT(map()));
-
-    pathSelectionMapper.setMapping(pathAstarAction, command.GridAStar);
-    pathSelectionMapper.setMapping(lazyThetaStarAction, command.LazyThetaStar);
-    pathSelectionMapper.setMapping(dijkstraAction, command.Dijkstra);
-    pathSelectionMapper.setMapping(naiveConstructAction, command.NaiveConstruct);
-    pathSelectionMapper.setMapping(minimalConstructAction, command.MinimalConstruct);
-    connect(&pathSelectionMapper, SIGNAL(mapped(int)), this, SLOT(togglePathPlanner(int)));
-
-    controllerMenu->addSeparator();
-
     QActionGroup* trajectoryPlannerActionGroup = new QActionGroup(controllerMenu);
 
     QAction* pdAction = trajectoryPlannerActionGroup->addAction(tr("&PD Control"));
@@ -432,17 +399,29 @@ void MainWindow::buildMenu()
     pdAction->setChecked(command.trajectoryPlanningMethod == command.PD);
     connect(pdAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
 
+    QAction* bezierControlAction = trajectoryPlannerActionGroup->addAction(tr("&Bezier Control"));
+    controllerMenu->addAction(bezierControlAction);
+    bezierControlAction->setCheckable(true);
+    bezierControlAction->setChecked(command.trajectoryPlanningMethod == command.Bezier);
+    connect(bezierControlAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
+
+    QAction* reelControlAction = trajectoryPlannerActionGroup->addAction(tr("&Reel Control"));
+    controllerMenu->addAction(reelControlAction);
+    reelControlAction->setCheckable(true);
+    reelControlAction->setChecked(command.trajectoryPlanningMethod == command.Reel);
+    connect(reelControlAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
+
     QAction* dwaAction = trajectoryPlannerActionGroup->addAction(tr("&DWA"));
     controllerMenu->addAction(dwaAction);
     dwaAction->setCheckable(true);
     dwaAction->setChecked(command.trajectoryPlanningMethod == command.DWA);
     connect(dwaAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
 
-    QAction* staasAction = trajectoryPlannerActionGroup->addAction(tr("&ST Aborting A*"));
-    controllerMenu->addAction(staasAction);
-    staasAction->setCheckable(true);
-    staasAction->setChecked(command.trajectoryPlanningMethod == command.STAA);
-    connect(staasAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
+    QAction* staaAction = trajectoryPlannerActionGroup->addAction(tr("&STAA*"));
+    controllerMenu->addAction(staaAction);
+    staaAction->setCheckable(true);
+    staaAction->setChecked(command.trajectoryPlanningMethod == command.STAA);
+    connect(staaAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
 
     QAction* rbAction = trajectoryPlannerActionGroup->addAction(tr("&RuleBase"));
     controllerMenu->addAction(rbAction);
@@ -450,10 +429,19 @@ void MainWindow::buildMenu()
     rbAction->setChecked(command.trajectoryPlanningMethod == command.RuleBase);
     connect(rbAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
 
+    QAction* scAction = trajectoryPlannerActionGroup->addAction(tr("&SpeedControl"));
+    controllerMenu->addAction(scAction);
+    scAction->setCheckable(true);
+    scAction->setChecked(command.trajectoryPlanningMethod == command.SpeedControl);
+    connect(scAction, SIGNAL(triggered()), &trajectoryPlannerSelectionMapper, SLOT(map()));
+
     trajectoryPlannerSelectionMapper.setMapping(pdAction, command.PD);
+    trajectoryPlannerSelectionMapper.setMapping(bezierControlAction, command.Bezier);
+    trajectoryPlannerSelectionMapper.setMapping(reelControlAction, command.Reel);
     trajectoryPlannerSelectionMapper.setMapping(dwaAction, command.DWA);
-    trajectoryPlannerSelectionMapper.setMapping(rbAction, command.RuleBase);
-    trajectoryPlannerSelectionMapper.setMapping(staasAction, command.STAA);
+    trajectoryPlannerSelectionMapper.setMapping(scAction, command.RuleBase);
+    trajectoryPlannerSelectionMapper.setMapping(staaAction, command.STAA);
+    trajectoryPlannerSelectionMapper.setMapping(scAction, command.SpeedControl);
     connect(&trajectoryPlannerSelectionMapper, SIGNAL(mapped(int)), this, SLOT(toggleTrajectoryControl(int)));
 
     controllerMenu->addSeparator();
@@ -464,6 +452,13 @@ void MainWindow::buildMenu()
     emergencyBrakeAction->setCheckable(true);
     emergencyBrakeAction->setChecked(command.emergencyBrakeReflex);
     connect(emergencyBrakeAction, SIGNAL(triggered()), this, SLOT(toggleEmergencyBrakeReflex()));
+
+    QAction* safetyZoneReflexAction = controllerMenu->addAction(tr("&Safety Zone Reflex"));
+    safetyZoneReflexAction->setToolTip(tr("Toggles the safety zone reflex."));
+    //forceFieldReflexAction->setShortcut(QKeySequence(tr("F")));
+    safetyZoneReflexAction->setCheckable(true);
+    safetyZoneReflexAction->setChecked(command.safetyZoneReflex);
+    connect(safetyZoneReflexAction, SIGNAL(triggered()), this, SLOT(toggleSafetyZoneReflex()));
 
     QAction* stucknessReflexAction = controllerMenu->addAction(tr("&Stuckness Reflex"));
     stucknessReflexAction->setToolTip(tr("Toggles the stuckness reflex."));
@@ -476,21 +471,20 @@ void MainWindow::buildMenu()
     QMenu* commandMenu = menuBar->addMenu(tr("&Command"));
 
     QAction* selectPoseAction = commandMenu->addAction(tr("&Select Pose"));
-    selectPoseAction->setToolTip(tr("Select initial pose for localisation."));
-    selectPoseAction->setShortcut(QKeySequence(tr("E")));
+    selectPoseAction->setToolTip(tr("Select initial pose for localization."));
+    selectPoseAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     selectPoseAction->setCheckable(true);
     selectPoseAction->setChecked(command.selectPose);
     connect(selectPoseAction, SIGNAL(triggered()), this, SLOT(toggleSelectPose()));
 
     QAction* selectTargetAction = commandMenu->addAction(tr("&Select Target"));
     selectTargetAction->setToolTip(tr("Select target pose for navigation."));
-    selectTargetAction->setShortcut(QKeySequence(tr("T")));
+    selectTargetAction->setShortcut(QKeySequence(tr("Ctrl+T")));
     selectTargetAction->setCheckable(true);
     selectTargetAction->setChecked(command.selectTarget);
     connect(selectTargetAction, SIGNAL(triggered()), this, SLOT(toggleSelectTarget()));
 
     commandMenu->addSeparator();
-
 
     QAction* experimenterAction = commandMenu->addAction(tr("&Experimenter"));
     experimenterAction->setToolTip(tr("Toggles experimenter."));
@@ -503,7 +497,7 @@ void MainWindow::buildMenu()
 
     QAction* teachingAction = commandMenu->addAction(tr("&Teaching"));
     teachingAction->setToolTip(tr("Toggles the teaching mode."));
-    teachingAction->setShortcut(QKeySequence(tr("Ctrl+T")));
+    //teachingAction->setShortcut(QKeySequence(tr("Ctrl+T")));
     teachingAction->setCheckable(true);
     teachingAction->setChecked(command.learn);
     connect(teachingAction, SIGNAL(triggered()), this, SLOT(toggleTeaching()));
@@ -538,14 +532,6 @@ void MainWindow::buildMenu()
     dynamicPathAction->setChecked(command.useDynamicPath);
     connect(dynamicPathAction, SIGNAL(triggered()), this, SLOT(toggleDynamicPath()));
 
-    QAction* ghostModeAction = controllerMenu->addAction(tr("&Ghost Mode"));
-    ghostModeAction->setToolTip(tr("Toggles the dumb agents flag."));
-    //forceFieldReflexAction->setShortcut(QKeySequence(tr("F")));
-    ghostModeAction->setCheckable(true);
-    ghostModeAction->setChecked(command.ghostMode);
-    connect(ghostModeAction, SIGNAL(triggered()), this, SLOT(toggleGhostMode()));
-
-
     commandMenu->addSeparator();
 
     QActionGroup* predictionActionGroup = new QActionGroup(commandMenu);
@@ -573,7 +559,6 @@ void MainWindow::buildMenu()
     predictionTypeSelectionMapper.setMapping(noPredictionAction, command.None);
     connect(&predictionTypeSelectionMapper, SIGNAL(mapped(int)), this, SLOT(togglePredictionType(int)));
 
-
     commandMenu->addSeparator();
 
     QActionGroup* heuristicActionGroup = new QActionGroup(commandMenu);
@@ -595,6 +580,12 @@ void MainWindow::buildMenu()
     rtrAction->setCheckable(true);
     rtrAction->setChecked(command.heuristic == command.RTR);
     connect(rtrAction, SIGNAL(triggered()), &heuristicSelectionMapper, SLOT(map()));
+
+    QAction* dockRtrAction = heuristicActionGroup->addAction(tr("&Dock RTR Heuristic"));
+    commandMenu->addAction(dockRtrAction);
+    dockRtrAction->setCheckable(true);
+    dockRtrAction->setChecked(command.heuristic == command.DOCK_RTR);
+    connect(dockRtrAction, SIGNAL(triggered()), &heuristicSelectionMapper, SLOT(map()));
 
     QAction* rtrMinAction = heuristicActionGroup->addAction(tr("&RTR Min Heuristic"));
     commandMenu->addAction(rtrMinAction);
@@ -623,9 +614,9 @@ void MainWindow::buildMenu()
     heuristicSelectionMapper.setMapping(euklidieanAction, command.Euklidean);
     heuristicSelectionMapper.setMapping(pathEuklidieanAction, command.PathEuklidean);
     heuristicSelectionMapper.setMapping(rtrAction, command.RTR);
+    heuristicSelectionMapper.setMapping(dockRtrAction, command.DOCK_RTR);
     heuristicSelectionMapper.setMapping(rtrMinAction, command.RTR_MIN);
     heuristicSelectionMapper.setMapping(rtrMaxAction, command.RTR_MAX);
-    heuristicSelectionMapper.setMapping(mcAction, command.MinimalConstruct);
     heuristicSelectionMapper.setMapping(gridDijkstraAction, command.GridDijkstra);
     connect(&heuristicSelectionMapper, SIGNAL(mapped(int)), this, SLOT(toggleHeuristic(int)));
 
@@ -660,6 +651,12 @@ void MainWindow::buildMenu()
 
     QActionGroup* frequencyActionGroup = new QActionGroup(commandMenu);
 
+    QAction* hz5Action = frequencyActionGroup->addAction(tr("&5Hz"));
+    commandMenu->addAction(hz5Action);
+    hz5Action->setCheckable(true);
+    hz5Action->setChecked(command.frequency == 5);
+    connect(hz5Action, SIGNAL(triggered()), &frequencySelectionMapper, SLOT(map()));
+
     QAction* hz10Action = frequencyActionGroup->addAction(tr("&10Hz"));
     commandMenu->addAction(hz10Action);
     hz10Action->setCheckable(true);
@@ -678,10 +675,20 @@ void MainWindow::buildMenu()
     hz30Action->setChecked(command.frequency == 30);
     connect(hz30Action, SIGNAL(triggered()), &frequencySelectionMapper, SLOT(map()));
 
+    frequencySelectionMapper.setMapping(hz5Action, 5);
     frequencySelectionMapper.setMapping(hz10Action, 10);
     frequencySelectionMapper.setMapping(hz20Action, 20);
     frequencySelectionMapper.setMapping(hz30Action, 30);
     connect(&frequencySelectionMapper, SIGNAL(mapped(int)), this, SLOT(toggleFrequency(int)));
+
+    commandMenu->addSeparator();
+
+    QAction* ghostModeAction = commandMenu->addAction(tr("&Ghost Mode"));
+    ghostModeAction->setToolTip(tr("Toggles the dumb agents flag."));
+    //forceFieldReflexAction->setShortcut(QKeySequence(tr("F")));
+    ghostModeAction->setCheckable(true);
+    ghostModeAction->setChecked(command.ghostMode);
+    connect(ghostModeAction, SIGNAL(triggered()), this, SLOT(toggleGhostMode()));
 
 
     menuBar->addSeparator();
@@ -889,15 +896,19 @@ void MainWindow::toggleKeyboard()
         messageIn("Keyboard control disabled.");
 }
 
-void MainWindow::toggleTrajectoryTrace()
+void MainWindow::toggleSafetyZoneReflex()
 {
-    command.showTrajectoryTrace = !command.showTrajectoryTrace;
+    command.safetyZoneReflex = !command.safetyZoneReflex;
+    if (command.safetyZoneReflex)
+        messageIn("Safety zone reflex enabled.");
+    else
+        messageIn("Safety zone reflex disabled.");
     update();
 }
 
-void MainWindow::toggleDropOffPoints()
+void MainWindow::toggleNavGoals()
 {
-    command.showDropOffPoints = !command.showDropOffPoints;
+    command.showNavGoals = !command.showNavGoals;
     graphicsScene.init();
     update();
 }
@@ -906,6 +917,12 @@ void MainWindow::toggleTargets()
 {
     command.showTargets = !command.showTargets;
     update();
+}
+
+void MainWindow::toggleLabels()
+{
+    command.showLabels = !command.showLabels;
+    graphicsViewWidget.update();
 }
 
 void MainWindow::toggleWorldPolygons()
@@ -921,21 +938,27 @@ void MainWindow::toggleWorldMap()
     update();
 }
 
-void MainWindow::toggleWorldPath()
+void MainWindow::togglePaths()
 {
-    command.showWorldPath = !command.showWorldPath;
+    command.showPaths = !command.showPaths;
     update();
 }
 
-void MainWindow::toggleGeometricModel()
+void MainWindow::toggleLocalMap()
 {
-    command.showSensedPolygons = !command.showSensedPolygons;
+    command.showLocalMap = !command.showLocalMap;
     update();
 }
 
 void MainWindow::toggleVisibilityPolygon()
 {
     command.showVisibilityPolygon = !command.showVisibilityPolygon;
+    update();
+}
+
+void MainWindow::toggleSafetyZone()
+{
+    command.showSafetyZone = !command.showSafetyZone;
     update();
 }
 
@@ -951,9 +974,9 @@ void MainWindow::toggleRayModel()
     update();
 }
 
-void MainWindow::toggleLidar()
+void MainWindow::toggleLaser()
 {
-    command.showLaser = (command.showLaser+1) % 3;
+    command.showLaser = (command.showLaser+1) % 4;
     update();
 }
 
@@ -984,9 +1007,9 @@ void MainWindow::clearRuleBase()
     messageIn("Rule base cleared.");
 }
 
-void MainWindow::toggleSensedGrid()
+void MainWindow::toggleCostmap()
 {
-    command.showSensedGrid = !command.showSensedGrid;
+    command.showCostmap = !command.showCostmap;
     update();
 }
 
@@ -1055,33 +1078,32 @@ void MainWindow::toggleBody()
 void MainWindow::toggleSelectPose()
 {
     command.selectPose = !command.selectPose;
-    if (command.selectPose) {
+    if (command.selectPose)
         messageIn("Pose selection enabled.");
-    } else {
+    else
         messageIn("Pose selection disabled.");
-    }
+    graphicsViewWidget.togglePoseSelection();
 }
 
 void MainWindow::toggleSelectTarget()
 {
     command.selectTarget = !command.selectTarget;
-    if (command.selectTarget) {
+    if (command.selectTarget)
         messageIn("Target selection enabled.");
-    } else {
+    else
         messageIn("Target selection disabled.");
-    }
+    graphicsViewWidget.togglePoseSelection();
 }
 
 void MainWindow::poseRecorded(const Pose2D &pose)
 {
     if (command.selectPose)
     {
-        //state.robot.setInitialPose(pose);
-        messageIn("Initial pose set.");
+        //messageIn("Initial pose set.");
     }
     else if (command.selectTarget)
     {
-        //state.robot.setMainTarget(pose);
+        state.world.setMainTarget(pose);
         messageIn("Navigation target set.");
     }
     command.selectPose = false;
@@ -1097,12 +1119,6 @@ void MainWindow::toggleGhostMode()
         messageIn("Ghost mode disabled.");
 }
 
-void MainWindow::togglePathPlanner(int d)
-{
-    command.pathPlanningMethod = d;
-    update();
-}
-
 void MainWindow::toggleTrajectoryControl(int d)
 {
     command.trajectoryPlanningMethod = d;
@@ -1110,12 +1126,20 @@ void MainWindow::toggleTrajectoryControl(int d)
 
     if (d == command.DWA)
         messageIn("DWA");
+    else if (d == command.Arc)
+        messageIn("Arc Control");
+    else if (d == command.Bezier)
+        messageIn("Bezier Control");
+    else if (d == command.Reel)
+        messageIn("Reel Control");
     else if (d == command.STAA)
         messageIn("ST Aborting A*");
     else if (d == command.PD)
         messageIn("PD Control");
     else if (d == command.RuleBase)
         messageIn("RuleBase");
+    else if (d == command.SpeedControl)
+        messageIn("Speed Control");
     else
         messageIn("Invalid Trajectory Planner " + d);
 
@@ -1146,6 +1170,8 @@ void MainWindow::toggleHeuristic(int d)
         messageIn("PathEuklidean heuristic");
     else if (d == command.RTR)
         messageIn("RTR heuristic");
+    else if (d == command.DOCK_RTR)
+        messageIn("Dock RTR heuristic");
     else if (d == command.RTR_MIN)
         messageIn("RTR Min heuristic");
     else if (d == command.RTR_MAX)
@@ -1180,7 +1206,9 @@ void MainWindow::toggleFrequency(int f)
         mainControlLoop.start();
     }
 
-    if (f == 10)
+    if (f == 5)
+        messageIn("Switched to 5Hz.");
+    else if (f == 10)
         messageIn("Switched to 10Hz.");
     else if (f == 20)
         messageIn("Switched to 20Hz.");
@@ -1498,6 +1526,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (recording)
         {
             command.ax = config.agentLinearAccelerationLimit;
+            command.v = 0.8*config.agentLinearVelocityLimitForward;
         }
         else
         {
@@ -1510,6 +1539,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (recording)
         {
             command.ax = -config.agentLinearAccelerationLimit;
+            command.v = -0.8*config.agentLinearVelocityLimitBackward;
         }
         else
         {
@@ -1522,6 +1552,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (recording)
         {
             command.ay = -config.agentAngularAccelerationLimit;
+            command.w = -0.8*config.agentAngularVelocityLimit;
         }
         else
         {
@@ -1533,6 +1564,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (recording)
         {
             command.ay = config.agentAngularAccelerationLimit;
+            command.w = 0.8*config.agentAngularVelocityLimit;
         }
         else
         {
@@ -1565,7 +1597,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     {
         if (recording)
         {
-            command.ax = 0.0;
+            command.ax = 0;
+            command.v = 0;
         }
         else
         {
@@ -1577,7 +1610,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     {
         if (recording)
         {
-            command.ax = 0.0;
+            command.ax = 0;
+            command.v = 0;
         }
         else
         {
@@ -1589,14 +1623,16 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     {
         if (recording)
         {
-            command.ay = 0.0;
+            command.ay = 0;
+            command.w = 0;
         }
     }
     else if (event->key() == Qt::Key_Left)
     {
         if (recording)
         {
-            command.ay = 0.0;
+            command.ay = 0;
+            command.w = 0;
         }
     }
 }

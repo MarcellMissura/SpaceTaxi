@@ -1,6 +1,6 @@
 #include "Obstacle.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
+#include "board/Config.h"
+#include "board/State.h"
 #include "lib/util/DrawUtil.h"
 
 // The Obstacle class represents a static obstacle that is a Polygon and

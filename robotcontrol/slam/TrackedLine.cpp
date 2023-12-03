@@ -1,7 +1,7 @@
 #include "TrackedLine.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
-#include "blackboard/Command.h"
+#include "board/Config.h"
+#include "board/State.h"
+#include "board/Command.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 
@@ -9,7 +9,6 @@ TrackedLine::TrackedLine() : Line()
 {
     observationCount = 0;
     totalWeight = 1;
-    firstSeen = 0;
     lastSeen = 0;
     active = false;
     seenP1 = false;
@@ -23,7 +22,6 @@ TrackedLine::TrackedLine(const Line& l, uint frameId) : Line(l)
     type = l.getType();
     observationCount = 0;
     totalWeight = 1;
-    firstSeen = frameId;
     lastSeen = frameId;
     active = false;
     seenP1 = false;
@@ -38,7 +36,6 @@ TrackedLine::TrackedLine(const Line& l, bool seenP1, bool seenP2, uint frameId) 
     type = l.getType();
     observationCount = 0;
     totalWeight = 1;
-    firstSeen = frameId;
     lastSeen = frameId;
     active = false;
     this->seenP1 = seenP1;
@@ -78,6 +75,20 @@ bool TrackedLine::isActive() const
     return active;
 }
 
+// Returns a reference to the observer nodes of this line. Only pointers are stored
+// to the nodes, which are in saved in the GeometricMap, and pointers are evil.
+const LinkedList<PoseGraphNode *> &TrackedLine::getObserverNodes() const
+{
+    return observerNodes;
+}
+
+// Sets (overwrites) the observer nodes of this line.
+void TrackedLine::setObserverNodes(const LinkedList<PoseGraphNode *> &on)
+{
+    observerNodes = on;
+    return;
+}
+
 // Records a line observation and updates the tracked line with a lightweight
 // projection union algorithm. Line observations with too much projection distance
 // or too little overlap are ignored. Returns true if the observation has been accepted.
@@ -90,55 +101,62 @@ bool TrackedLine::addLineObservation(const TrackedLine &l, double weight, bool d
     if (weight == 0)
         return false;
 
-//    if (debug)
-//        qDebug() << "Updating map line" << confirmedLinePairs[i].mapLine << "with" << confirmedLinePairs[i].prospectedLine();
-
-
-    // Right now, a quite generous lineSlamMaxMergeDist is chosen due to the overhang when discovering
-    // a new line (leads to a large overlap cost). If this becomes a problem, the projection distance
-    // and the overlap need to be tested separately.
+    // Test the line-line distance.
     if (lineLineDist(l) > config.slamMergeMaxLineDist)
     {
         if (debug)
-            qDebug() << state.frameId << "Line observation dropped due to high line-line-dist:" << lineLineDist(l) << "lines:" << l.id << id;
+            qDebug() << state.frameId << "Line observation dropped due to high line-line-dist:" << lineLineDist(l, debug) << "lines:" << l.id << id;
         return false;
     }
 
+    // This is only used for visualization and can be removed.
     if (command.keepLineObservations)
     {
-        lineObservations << l; // This is only used for visualization and can be removed.
+        lineObservations << l;
         lineObservations << l.lineObservations;
     }
 
+    // Flip for correct alignment.
     if (l.lineVector()*lineVector() < 0)
-    {
-        //qDebug() << state.frameId << "tracked line update opposing line directions detected!" << *this << l << l.lineVector() << lineVector();
         flip();
-    }
 
     // Compute the weighted average interpolation line.
-    Vec2 n = normal();
-    Vec2 v1 = orthogonalDistance(l.p1())*n;
-    Vec2 v2 = orthogonalDistance(l.p2())*n;
+    Line oldLine = *this;
     double f1 = totalWeight/(totalWeight+weight);
     double f2 = weight/(totalWeight+weight);
-    Vec2 pp1 = (f1+f2)*p1()+f2*v1;
-    Vec2 pp2 = (f1+f2)*p2()+f2*v2;
-    Line oldLine = *this;
-    set(pp1, pp2);
-    totalWeight += weight;
+    if (length2() > l.length2())
+    {
+        Vec2 n = normal();
+        Vec2 v1 = orthogonalDistance(l.p1())*n;
+        Vec2 v2 = orthogonalDistance(l.p2())*n;
+        Vec2 pp1 = (f1+f2)*p1()+f2*v1;
+        Vec2 pp2 = (f1+f2)*p2()+f2*v2;
+        set(pp1, pp2);
+        totalWeight += weight;
 
-    //qDebug() << "Tracked line" << line << "observation:" << l << "weight overlap:" << weight << overlap << "total weight:" << totalWeight;
+        // Apply the projection-union to determine the length.
+        projectionUnion(l);
+    }
+    else
+    {
+        Vec2 n = l.normal();
+        Vec2 v1 = l.orthogonalDistance(p1())*n;
+        Vec2 v2 = l.orthogonalDistance(p2())*n;
+        Vec2 pp1 = (f1+f2)*l.p1()+f1*v1;
+        Vec2 pp2 = (f1+f2)*l.p2()+f1*v2;
+        set(pp1, pp2);
+        totalWeight += weight;
 
-    // Apply the projection-union to determine the length.
-    projectionUnion(l);
+        // Apply the projection-union to determine the length.
+        projectionUnion(oldLine);
+    }
 
     // Overwrite seen vertices with the gliding weighted mean.
     if (seenP1)
     {
         Vec2 ppp1 = projection(oldLine.p1());
         if (l.seenP1)
-            ppp1 = f1*pp1+f2*projection(l.p1());
+            ppp1 = f1*p1()+f2*projection(l.p1());
         setP1(ppp1);
     }
     else if (l.seenP1)
@@ -151,7 +169,7 @@ bool TrackedLine::addLineObservation(const TrackedLine &l, double weight, bool d
     {
         Vec2 ppp2 = projection(oldLine.p2());
         if (l.seenP2)
-            ppp2 = f1*pp2+f2*projection(l.p2());
+            ppp2 = f1*p2()+f2*projection(l.p2());
         setP2(ppp2);
     }
     else if (l.seenP2)
@@ -159,6 +177,12 @@ bool TrackedLine::addLineObservation(const TrackedLine &l, double weight, bool d
         setP2(projection(l.p2()));
         seenP2 = true;
     }
+
+//    if (debug)
+//    {
+//        qDebug() << "Merging this line" << *this << "with" << l;
+//        qDebug() << "v1 v2:" << v1 << v2 << "f1 f2:" << f1 << f2 << "pp1 pp2:" << pp1 << pp2;
+//    }
 
     sort();
     lastSeen = state.frameId;
@@ -169,29 +193,36 @@ bool TrackedLine::addLineObservation(const TrackedLine &l, double weight, bool d
     return true;
 }
 
-
-// Records a line observation and updates the tracked line with a lightweight
-// projection union algorithm. Line observations with too much projection distance
-// or too little overlap are ignored. Returns true if the observation has been accepted.
-bool TrackedLine::testLineObservation(const TrackedLine &l, double weight, bool debug)
+// Merges the TrackedLine l with this one.
+bool TrackedLine::mergeLine(const TrackedLine &l, bool debug)
 {
-    // We merge line observations with the tracked line by their line-line cost.
-    // If the cost is below a theshold, the observed line is integrated into the weighted average
-    // of all observed lines so far. The new length of the map line is determined by a projected
-    // union of all involved lines projected onto the map line.
-    if (weight == 0)
-        return false;
-
-
-    // Right now, a quite generous lineSlamMaxMergeDist is chosen due to the overhang when discovering
-    // a new line (leads to a large overlap cost). If this becomes a problem, the projection distance
-    // and the overlap need to be tested separately.
-    if (lineLineDist(l) > config.slamMergeMaxLineDist)
+    if (addLineObservation(l, l.totalWeight))
     {
-        return false;
+        if (debug)
+            qDebug() << state.frameId << "mergeLine: Merging map lines" << id << "and" << l.getId();
+
+        observerNodes.unify(l.getObserverNodes());
+
+        ListIterator<PoseGraphNode*> nodeIt = l.getObserverNodes().begin();
+        while (nodeIt.hasNext())
+        {
+            ListIterator<TrackedLine*> lineIt = nodeIt.next()->seenMapLines.begin();
+            while (lineIt.hasNext())
+            {
+                if (lineIt.cur()->getId() == l.getId())
+                {
+                    nodeIt.cur()->seenMapLines.remove(lineIt);
+                    break;
+                }
+                else
+                {
+                    lineIt.next();
+                }
+            }
+        }
     }
 
-    return true;
+    return false;
 }
 
 // Computes the line-line-distance metric from TrackedLine l to this line. TrackedLine l is
@@ -216,11 +247,13 @@ double TrackedLine::lineLineDist(const TrackedLine &l, bool debug) const
     double cost = proj - min(overlap-config.slamMergeMinOverlap, 0.0);
 
     if (debug)
+    {
         qDebug() << "lineLineDist" << l.id << id
-                 << "lines:" << l << *this
+                 //<< "lines:" << l << *this
                  << "proj:" << proj
                  << "overlap:" << overlap << min(overlap-config.slamMergeMinOverlap, 0.0)
                  << "cost:" << cost;
+    }
 
     return cost;
 }
@@ -250,17 +283,19 @@ double TrackedLine::linePoseDist(const TrackedLine &l, const Pose2D &inputPose, 
     double overlap = projectionOverlap(rotatedInputLine);
 
     // The cost of the total transformation is simply the sum of the components.
-    // The overlap cost is not very precise and expresses by how much line l would need to move
+    // The overlap cost is not very precise and expresses by how much a line l would need to move
     // horizontally to this line for the shorter of the two lines to be completely covered by the other.
-    double cost = fabs(angleDiff) + fabs(ortho) + min(l.length(), length()) - overlap;
+    // I found that lines that overlap by at least 0.5 meters are always a good match regardless of
+    // their lengths, so I decided to saturate the lengths at 1.0 meters.
+    double cost = fabs(angleDiff) + fabs(ortho) + max(min(l.length(), length(), 1.0) - overlap, 0.0);
 
     if (debug)
         qDebug() << "linePoseDist" << l.id << id << "angleDiff:" << angleDiff << "ortho:" << ortho
-                 //<< "lengths:" << l.length() << length()
+                 << "lengths:" << l.length() << length()
                  //<< "line:" << *this
                  //<< "rot line:" << rotatedInputLine
                  //<< "input pose:" << inputPose
-                 << "overlap:" << overlap << (min(l.length(), length()) - overlap) << "cost:" << cost;
+                 << "overlap:" << overlap << max(min(l.length(), length(), 1.0) - overlap, 0.0) << "cost:" << cost;
 
     return cost;
 }
@@ -400,31 +435,24 @@ void operator-=(LinkedList<TrackedLine> &v, const Pose2D &p)
     }
 }
 
-
 // Writes the line into a data stream.
 void TrackedLine::streamOut(QDataStream &out) const
 {
     Line::streamOut(out);
-    out << lineObservations;
     out << seenP1;
     out << seenP2;
     out << totalWeight;
     out << observationCount;
-    out << firstSeen;
-    out << lastSeen;
 }
 
 // Reads the line from a data stream.
 void TrackedLine::streamIn(QDataStream &in)
 {
     Line::streamIn(in);
-    in >> lineObservations;
     in >> seenP1;
     in >> seenP2;
     in >> totalWeight;
     in >> observationCount;
-    in >> firstSeen;
-    in >> lastSeen;
 }
 
 QDebug operator<<(QDebug dbg, const TrackedLine &n)
@@ -432,7 +460,7 @@ QDebug operator<<(QDebug dbg, const TrackedLine &n)
     dbg.setAutoInsertSpaces(false);
     dbg << n.id << (n.isBlockingLine()?"b":"s")
         << " age: (" << n.observationCount << ", " << n.lastSeen << ")"
-        << " [" << n.x1() << ", " << n.y1() << "] to [" << n.x2() << ", " << n.y2() <<"] length: " << n.length() << " observers: " << n.observerNodes.size() << " active: " << n.isActive() << " ";
+        << " [" << n.x1() << ", " << n.y1() << "] to [" << n.x2() << ", " << n.y2() <<"] length: " << n.length() << " observers: " << n.getObserverNodes().size() << " active: " << n.isActive() << " ";
     dbg.setAutoInsertSpaces(true);
     return dbg;
 }
@@ -442,7 +470,7 @@ QDebug operator<<(QDebug dbg, const TrackedLine* n)
     dbg.setAutoInsertSpaces(false);
     dbg << n->id << (n->isBlockingLine()?"b":"s")
         << " age: (" << n->observationCount << ", " << n->lastSeen << ")"
-        << " [" << n->x1() << ", " << n->y1() << "] to [" << n->x2() << ", " << n->y2() <<"] length: " << n->length() << " observers: " << n->observerNodes.size() << " active: " << n->isActive() << " ";
+        << " [" << n->x1() << ", " << n->y1() << "] to [" << n->x2() << ", " << n->y2() <<"] length: " << n->length() << " observers: " << n->getObserverNodes().size() << " active: " << n->isActive() << " ";
     dbg.setAutoInsertSpaces(true);
     return dbg;
 }

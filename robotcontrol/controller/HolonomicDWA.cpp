@@ -2,7 +2,7 @@
 #include "blackboard/Config.h"
 #include "blackboard/State.h"
 #include "blackboard/Command.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/geometry/Collision.h"
 
 // This is a custom implementation of the Dynamic Window Approach (DWA)
@@ -225,7 +225,7 @@ void HolonomicDWA::draw(QPainter *painter) const
         QPen pen;
         pen.setWidth(1);
         pen.setCosmetic(true);
-        pen.setColor(colorUtil.getHeightMapColor(traj.f, 0, trajectories.at(bestTrajectoryId).f));
+        pen.setColor(drawUtil.getHeightMapColor(traj.f, 0, trajectories.at(bestTrajectoryId).f));
         painter->setPen(pen);
         painter->setOpacity(0.5);
 

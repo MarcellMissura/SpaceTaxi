@@ -1,6 +1,6 @@
 #include "Line.h"
+#include "board/Config.h"
 #include "lib/util/DrawUtil.h"
-#include "blackboard/Config.h"
 #include "GL/gl.h"
 #include <cmath>
 
@@ -232,7 +232,7 @@ double Line::distance(const Vec2 &p) const
     return (p-closestPoint(p)).norm();
 }
 
-// Returns the orthogonal distance between this line and the point p,
+// Returns the signed orthogonal distance between this line and the point p,
 // even if the orthogonal of the line through point p is outside of the line.
 // The sign of the orthogonalDistance is positive when the point is on the
 // left of the line and negative when the point is on the right of the line
@@ -637,8 +637,8 @@ bool Line::intersects(const Line &l, bool debug) const
     if (fabs(p21) < EPSILON) p21 = 0;
     if (fabs(p22) < EPSILON) p22 = 0;
 
-    if (debug)
-        qDebug() << "            ps:" << p11 << p12 << "and" << p21 << p22 << "should have opposing signs for intersection." << p11*p12 << p21*p22;
+//    if (debug)
+//        qDebug() << "            ps:" << p11 << p12 << "and" << p21 << p22 << "should have opposing signs for intersection." << p11*p12 << p21*p22;
     return (p11*p12 <= 0 && p21*p22 <= 0);
 }
 
@@ -796,9 +796,9 @@ void Line::drawLabel(QPainter *painter, const QPen &pen, double opacity, double 
     painter->setPen(pen);
     painter->setOpacity(opacity);
     Vec2 c = center();
-    painter->translate(c.x + 0.03, c.y + 0.04);
+    painter->translate(c.x + 0.01, c.y + 0.02);
     painter->rotate(RAD_TO_DEG*rotation);
-    painter->scale(0.1, -0.1);
+    painter->scale(0.05, -0.05);
     painter->drawText(QPointF(), QString::number(id));
     painter->restore();
 }

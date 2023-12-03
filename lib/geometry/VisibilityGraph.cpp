@@ -1,7 +1,7 @@
 ﻿#include "VisibilityGraph.h"
 #include "GeometricModel.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
+#include "board/Config.h"
+#include "board/State.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/StopWatch.h"
 #include "lib/util/GLlib.h"
@@ -166,10 +166,10 @@ void VisibilityGraph::startNodeChanged(int debug)
     // the initial pushing of the start node in a known graph is in O(N log N) and it increases
     // the size of the q for all subseqent push operations. On the other hand, every line collision
     // test is in O(N) and by saving the whole graph, O(N²) line collision tests do not need to be
-    // spent. But this is all just theory and I am not entire certain how a complete reset approach
-    // play out against a graph-preserving approach in real applications. In cases where saving the
-    // graph actually turns out to be harmful, the graph can be reset to a blank state by calling
-    // resetGraph().
+    // spent. But this is all just theory and I am not entirely certain how a complete reset
+    // approach plays out against a graph-preserving approach in real applications. In cases where
+    // saving the graph actually turns out to be harmful, the graph can be reset to a blank state
+    // by calling resetGraph().
     ListIterator<Node> it = nodes.begin();
     it.next(); // Skip start node.
     while (it.hasNext())
@@ -248,11 +248,15 @@ bool VisibilityGraph::minimalConstruct(const Vec2& start, const Vec2 &target, in
         qDebug() << "Start:" << start << "Target:" << target;
     }
 
-    if (*startNode == start && *targetNode == target || start == target)
+    if (!path.isEmpty() && *startNode == start && *targetNode == target)
     {
-        //qDebug() << "  Nothing to do." << (*startNode == start) << (*targetNode == target) << (start == target);
+        if (debug > 0)
+            qDebug() << "  Nothing to do." << (*startNode == start) << (*targetNode == target) << (start == target);
         return true;
     }
+
+    StopWatch sw;
+    sw.start();
 
     // Clear the priority queue and the computed path.
     q.clear();
@@ -268,8 +272,9 @@ bool VisibilityGraph::minimalConstruct(const Vec2& start, const Vec2 &target, in
         targetNodeChanged();
     }
 
-    if (start != *startNode || start.isNull())
-    {
+    //qDebug() << "start changed?" << (start != *startNode) << start << *startNode;
+    //if (start != *startNode || start.isNull())
+    //{
         // Change the location of the start node.
         startNode->x = start.x;
         startNode->y = start.y;
@@ -277,7 +282,7 @@ bool VisibilityGraph::minimalConstruct(const Vec2& start, const Vec2 &target, in
         // The start node needs to be connected with every known node, especially
         // with the target node. This is what the initMinimalConstruct() function does.
         startNodeChanged(debug);
-    }
+    //}
 
     // And let's go.
     while (!q.isEmpty())
@@ -308,7 +313,7 @@ bool VisibilityGraph::minimalConstruct(const Vec2& start, const Vec2 &target, in
             {
                 if (debug > 2)
                 {
-                    qDebug() << "   Line from " << *bestScoreNode->parent << "to" << *bestScoreNode << "collides with Polygon" << pit.getId();
+                    qDebug() << "   Line from " << *bestScoreNode->parent << "to" << *bestScoreNode << "collides with Polygon" << pit.getId() << "ccw:" << pit.isCCW();
                     //qDebug() << "      end point intersect tests:" << pit.intersects(*bestScoreNode->parent) << pit.intersects(*bestScoreNode);
                 }
 
@@ -383,7 +388,7 @@ bool VisibilityGraph::minimalConstruct(const Vec2& start, const Vec2 &target, in
                     qDebug() << *node << node << *node->parent;
                 }
 
-                path.push_back(*node);
+                path << *node;
                 if (node->parent != 0)
                     node->parent->successor = node;
                 node = node->parent;
@@ -700,7 +705,7 @@ void VisibilityGraph::findParent(Node* orphan, int debug)
 }
 
 // Returns the last computed path.
-const Vector<Vec2> &VisibilityGraph::getPath() const
+const Path &VisibilityGraph::getPath() const
 {
     return path;
 }
@@ -801,21 +806,13 @@ void VisibilityGraph::draw() const
 // Draws the path computed by the visibility graph on a QPainter.
 void VisibilityGraph::drawPath(QPainter *painter) const
 {
-    painter->save();
-    painter->setPen(drawUtil.penBlueThick);
-    painter->setBrush(drawUtil.brushBlue);
-    painter->setOpacity(0.2);
-    for (int i = 1; i < path.size(); i++)
-        painter->drawLine(QLineF(path[i].x, path[i].y, path[i-1].x, path[i-1].y));
-    painter->restore();
+    path.draw(painter, drawUtil.penBlueThick, 0.2);
 }
 
 // Draws the path computed by the visibility graph on a QPainter.
 void VisibilityGraph::drawPath() const
 {
-    glColor3f(0.0,0.0,0.8);
-    for (int i = 1; i < path.size(); i++)
-        GLlib::drawLine(path[i], path[i-1], 0.01);
+    path.draw(drawUtil.penBlueThick, 0.2);
 }
 
 QDebug operator<<(QDebug dbg, const VisibilityGraph &w)

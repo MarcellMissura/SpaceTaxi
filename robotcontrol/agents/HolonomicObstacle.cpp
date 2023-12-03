@@ -1,6 +1,6 @@
 #include "HolonomicObstacle.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
+#include "board/Config.h"
+#include "board/State.h"
 
 // The HolonomicObstacle class represents a shape that moves like
 // the Synchronized Holonomic Model. It has velocity and acceleration

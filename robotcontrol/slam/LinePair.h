@@ -48,5 +48,6 @@ public:
 };
 
 QDebug operator<<(QDebug dbg, const LinePair &n);
+QDebug operator<<(QDebug dbg, const LinePair *n);
 
 #endif

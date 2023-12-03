@@ -13,6 +13,7 @@ class Pose2D
 public:
 
     double x,y,z;
+    double confidence;
 
     Pose2D();
     Pose2D(const Vec2 &o, double zo=0);
@@ -43,8 +44,9 @@ public:
     void rotate(double a);
     void turn(double a);
     Pose2D turned(double a) const;
-    double norm() const;
 
+    double max() const;
+    double norm() const;
     double dist(const Pose2D& p) const;
     double distxy(const Pose2D& p) const;
 
@@ -139,6 +141,8 @@ public:
         return;
     }
 };
+
+extern Pose2D operator*(double s, const Pose2D &o);
 
 extern Vec2 operator+(const Vec2& v, const Pose2D& p);
 extern Vec2 operator-(const Vec2& v, const Pose2D& p);

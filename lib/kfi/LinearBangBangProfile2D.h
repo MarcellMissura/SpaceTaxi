@@ -1,15 +1,15 @@
 #ifndef VELOCITYPROFILE_H
 #define VELOCITYPROFILE_H
 #include "lib/util/Vector.h"
-#include "lib/pml/hpm2D.h"
-#include "BangBang.h"
+#include "lib/kfi/Keyframe2D.h"
+#include "lib/kfi/BangBang.h"
 
-class VelocityProfile
+class LinearBangBangProfile2D
 {
 public:
 
-    Vector<Keyframe> keyframes;
-    Vector<Keyframe> ctrl;
+    Vector<Keyframe2D> keyframes;
+    Vector<Keyframe2D> ctrl;
 
     double VU;
     double VL;
@@ -17,8 +17,8 @@ public:
 
 public:
 
-    VelocityProfile();
-    ~VelocityProfile(){}
+    LinearBangBangProfile2D();
+    ~LinearBangBangProfile2D(){}
 
     Hpm2D getWaypoint(const Hpm2D& currentState, const Vector<Vec2> &path, double time) const;
     double getTotalTime(const Hpm2D& currentState, const Vector<Vec2> &path) const;

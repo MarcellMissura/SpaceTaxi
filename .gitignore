@@ -18,6 +18,6 @@ ui_*.h
 moc_*
 .qglviewer.xml
 *.orig
-data/statehistory.dat
 callgrind.out.*
+data/*
 SpaceTaxi

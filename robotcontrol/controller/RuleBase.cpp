@@ -1,6 +1,6 @@
 #include "RuleBase.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "board/Config.h"
+#include "board/Command.h"
 #include "lib/util/DrawUtil.h"
 #include <QFile>
 

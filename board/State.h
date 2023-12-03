@@ -15,16 +15,29 @@ struct State
     int frameId; // An all purpose frame id starting at 0 and counting up henceforth.
     bool stop; // Stops the robot control execution. Used for debugging.
 
+    // Performance measurements.
     double time; // Current robot control time since program start. Mandatory field.
-    double realTime; // Current real time since program start.
     double iterationTime; // How long did the last iteration really take? (10 ms?)
     double executionTime; // The execution time of the last rc iteration. (<< 10 ms)
+    double receptionTime; // How much time between laser data?
     double drawTime; // Execution time of the draw function in ms.
     double bufferTime; // Copying into buffer time in ms.
     double senseTime; // Runtime of the sense function in ms.
+    double laserTime; // Runtime of the laser data processing functions in ms.
+    double localMapTime; // Runtime of the local map processing functions in ms.
+    double perTime; // Runtime of the laser data processing functions in ms.
+    double slamTime; // Runtime of the entire slam function in ms.
+    double localizationTime; // Runtime of global and local snapping in ms.
+    double mapUpdateTime; // Runtime of updating the map in ms.
     double actTime; // Copying into buffer time in ms.
     double pathTime; // Runtime of the path planning in ms.
     double trajectoryTime; // Runtime of the trajectory planning in ms.
+
+    // Map performance values.
+    double mapRam; // in MB.
+
+    // Path performance values.
+    double pathLength; // in meters
 
     // A* performance values.
     int aasExpansions;
@@ -44,6 +57,8 @@ struct State
     // Copies of the taxies so that they can be buffered and plotted.
     UnicycleAgent uniTaxi;
 
+    static QMutex bigMutex;
+
 public:
 
     State();
@@ -51,6 +66,7 @@ public:
     void init();
     void buffer(int maxLength = 0);
     void bufferToFile() const;
+    void resetFile() const;
     void clear();
     void save() const;
     void load(QString fileName = "");

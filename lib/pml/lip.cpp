@@ -1,6 +1,6 @@
 #include "lip.h"
+#include "lib/globals.h"
 #include <math.h>
-#include "globals.h"
 
 // This is a one dimensional linear inverted pendulum model.
 

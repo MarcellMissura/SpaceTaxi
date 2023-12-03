@@ -10,9 +10,9 @@
 #include "gui/GraphicsViewWidget.h"
 #include "gui/GraphicsScene.h"
 #include "lib/util/Joystick.h"
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
-#include "blackboard/Command.h"
+#include "board/State.h"
+#include "board/Config.h"
+#include "board/Command.h"
 #include "MainControlLoop.h"
 #include "Experimenter.h"
 
@@ -102,29 +102,30 @@ public slots:
     void toggleSelectTarget();
     void poseRecorded(const Pose2D& pose);
 
-    void toggleGeometricModel();
+    void toggleLocalMap();
     void toggleSimulationDebug();
     void toggleTeaching();
     void clearRuleBase();
-    void toggleTrajectoryTrace();
-    void toggleDropOffPoints();
+    void toggleNavGoals();
     void toggleTargets();
+    void toggleLabels();
     void toggleWorldPolygons();
     void toggleWorldMap();
-    void toggleWorldPath();
+    void togglePaths();
     void toggleWorldVisibilityGraph();
     void toggleLocalVisibilityGraph();
     void toggleVisibilityPolygon();
-    void toggleLidar();
-    void toggleSensedGrid();
+    void toggleSafetyZone();
+    void toggleLaser();
+    void toggleCostmap();
     void toggleDijkstraMap();
-    void togglePathPlanner(int d);
     void toggleTrajectoryControl(int d);
     void togglePredictionType(int d);
     void toggleHeuristic(int d);
     void toggleTrajectoryType(int d);
     void toggleFrequency(int f);
     void toggleRayModel();
+    void toggleSafetyZoneReflex();
     void toggleEmergencyBrakeReflex();
     void toggleStucknessReflex();
     void toggleTimeAbort();

@@ -7,7 +7,7 @@ class Keyframe
 {
 public:
     Keyframe();
-    Keyframe(double dt, double x, double v, double a=0);
+    Keyframe(double t, double x, double v, double a=0);
     ~Keyframe(){}
 
     double t; // absolute time
@@ -15,6 +15,7 @@ public:
     double x;
     double v;
     double a;
+    double j;
     int idx;
 
     void set(double t, double x, double v, double a=0);

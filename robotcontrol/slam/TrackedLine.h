@@ -13,7 +13,6 @@ public:
     Vector<TrackedLine> lineObservations; // Storage for line observations that went into computing an "average".
     LinkedList<PoseGraphNode*> observerNodes;
 
-    uint firstSeen; // The frameId of the first observation.
     uint lastSeen; // The frameId of the last observation.
     uint observationCount; // How many times has this line been observed?
     bool seenP1; // Has p1 been seen?
@@ -35,8 +34,11 @@ public:
 
     bool isActive() const;
 
+    const LinkedList<PoseGraphNode*>& getObserverNodes() const;
+    void setObserverNodes(const LinkedList<PoseGraphNode*>& on);
+
     bool addLineObservation(const TrackedLine& l, double weight = 1.0, bool debug=false);
-    bool testLineObservation(const TrackedLine& l, double weight = 1.0, bool debug=false);
+    bool mergeLine(const TrackedLine& l, bool debug=false);
 
     double lineLineDist(const TrackedLine& l, bool debug=false) const;
     double linePoseDist(const TrackedLine& l, const Pose2D& inputPose, bool debug=false) const;

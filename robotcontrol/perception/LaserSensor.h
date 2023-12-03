@@ -26,14 +26,14 @@ struct LaserInfo
 
     LaserInfo()
     {
-        rays = 540;
-        angleIncrement = 0.00872665;
-        angleMax = 2.35619;
-        angleMin = -2.35619;
-        rangeMax = 29.5;
-        rangeMin = 0.01;
-        timeIncrement = 4.62107e-05;
-        scanTime = 0.025;
+        rays = 0;
+        angleIncrement = 0.0;
+        angleMax = 0.0;
+        angleMin = 0.0;
+        rangeMax = 0.0;
+        rangeMin = 0.0;
+        timeIncrement = 0.0;
+        scanTime = 0.0;
 
         // T-bot
         // rays: 540
@@ -57,16 +57,22 @@ class LaserSensor
     // Pose of the laser scanner in the robot's base frame.
     Pose2D laserToBasePose;
 
-    // Range buffer and range history for median filter.
+    // Range buffer and unit vectors.
     Vector<double> rangeBuffer;
-    RingBuffer<Vector<double> > rangeHistory;
     Vector<Vec2> unitVectors;
 
     // Allocated point buffer for the point cloud.
     Vector<Vec2> pointBuffer;
 
+    Vector<Vector<uint>> pointSegments;
+    Vector<Vector<uint>> lineSegments;
+    Vector<uint> segment;
+
     // Mutex for thread safety.
     mutable QMutex mutex;
+
+    // For visualization.
+    mutable Vector<Polygon> triangles;
 
 public:
 
@@ -91,16 +97,11 @@ public:
     Vector<Vec2> readPointBuffer() const;
 
     // Feature extraction.
-    Vector<Vec2> getNormals() const;
+    Vector<Vec2> extractNormals() const;
     const Vector<TrackedLine> &extractLines(bool debug=false) const;
-    const Polygon &getVisibilityPolygon() const;
-    Polygon extractTriangleMarker(int debug=0) const;
-
-    // Smoothing filters.
-    void filter();
-    void temporalFilter();
-    void speckleRemoval();
-    void spatialFilter();
+    const Polygon &extractVisibilityPolygon() const;
+    const Vector<Polygon> &extractSensedPolygons() const;
+    Polygon extractTriangle(int debug=0) const;
 
     // Drawing functions.
     void draw(QPainter* painter) const;
@@ -111,6 +112,15 @@ public:
     void streamIn(QDataStream &in);
 
 private:
+
+    // Smoothing filters.
+    void speckleRemoval();
+    void spatialFilter();
+
+    // Segmentation.
+    void segmentation();
+    void reduction();
+    void douglasPeuckerSub(uint fromIdx, uint toIdx);
 
     bool isLineOkay(const Line &l, bool debug=false) const;
 };

@@ -27,6 +27,12 @@ double PoseGraphNode::dist(const Pose2D &p) const
     return pose.distxy(p);
 }
 
+// Returns the distance between the Pose2D p and the pose of this node.
+double PoseGraphNode::poseDist(const Pose2D &p) const
+{
+    return pose.dist(p);
+}
+
 // Sets the pose of the graph node.
 void PoseGraphNode::setPose(const Pose2D &p)
 {
@@ -166,7 +172,12 @@ void PoseGraphNode::streamOut(QDataStream &out) const
     out << id;
     out << pose;
     out << lastPose;
+    out << observedNeighborhood;
+
+    // There are pointers and cannot be saved to file.
+    // They have to be dealt with elsewhere.
     //out << seenMapLines;
+    //out << neighbours;
 }
 
 // Reads the LineMap from a data stream.
@@ -175,7 +186,10 @@ void PoseGraphNode::streamIn(QDataStream &in)
     in >> id;
     in >> pose;
     in >> lastPose;
+    in >> observedNeighborhood;
+
     //in >> seenMapLines;
+    //in >> neighbours;
 }
 
 QDataStream& operator<<(QDataStream& out, const PoseGraphNode &o)

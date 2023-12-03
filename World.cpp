@@ -1,8 +1,8 @@
 #include "World.h"
-#include "globals.h"
-#include "blackboard/Command.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
+#include "lib/globals.h"
+#include "board/Command.h"
+#include "board/Config.h"
+#include "board/State.h"
 #include "lib/util/Statistics.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/Vec2.h"
@@ -35,7 +35,7 @@ World::World() : b2ContactListener()
 {
     width = 10; // width of the world in meters, will be overwritten when loading a map
     height = 10; // width of the world in meters, will be overwritten when loading a map
-    mapId = 3;
+    mapId = 4;
     numAgents = 1;
     simulationTimeStep = 1.0/command.frequency; // Default 10 Hz.
     box2DSim.SetContactListener(this);
@@ -56,7 +56,7 @@ void World::reset()
     polygons.clear(); // The raw polygons the map is made of.
     worldMap.clear(); // The expanded static obstacles as percieved by the agents.
     unicycleAgents.clear(); // The moving unicycle agents.
-    dropOffPoints.clear(); // The drop off points (pois).
+    navGoals.clear(); // The nav goals.
 
     // Reset the obstacle ids.
     // This is so that when a new map is built, the ids are counted again from 0.
@@ -103,37 +103,37 @@ void World::buildVoid()
     width = 10;
     height = 15;
 
-    // drop off points
+    // nav goals
     Vec2 b(0,config.voidRadius*qMin(width,height));
     Vec2 m(width/2, height/2);
     for (double phi = 0; phi < PII; phi += PII/config.voidDropOffPoints)
     {
         Vec2 v = b.rotated(phi);
-        dropOffPoints.push_back(m+v);
+        navGoals.push_back(m+v);
     }
 
     // Special experiment setup.
-    dropOffPoints.clear();
-    dropOffPoints << Vec2(1, 7.5) << Vec2(5, 5.5) << Vec2(9, 7.5) << Vec2(5, 11.5);
+    navGoals.clear();
+    navGoals << Vec2(1, 7.5) << Vec2(5, 5.5) << Vec2(9, 7.5) << Vec2(5, 11.5);
 }
 
-// A very simple setting with two drop off points and one obstacle in the middle.
+// A very simple setting with two nav goals and one obstacle in the middle.
 void World::buildSimple()
 {
     width = 20;
     height = 20;
 
-    // drop off points
-    //dropOffPoints.push_back(Vec2(width/2, height/5));
-    //dropOffPoints.push_back(Vec2(width/2, 4*height/5));
+    // nav goals
+    //navGoals.push_back(Vec2(width/2, height/5));
+    //navGoals.push_back(Vec2(width/2, 4*height/5));
 
-    // drop off points
+    // nav goals
     Vec2 b(0,config.simpleRadius*qMin(width,height));
     Vec2 m(width/2, height/2);
     for (double phi = 0; phi < PII; phi += PII/config.simpleDropOffPoints)
     {
         Vec2 v = b.rotated(phi);
-        dropOffPoints.push_back(m+v);
+        navGoals.push_back(m+v);
     }
 
     double thickness = 0.1;
@@ -145,7 +145,6 @@ void World::buildSimple()
     x = height/2;
     y = 0;
     Polygon p1(x, y, dx, dy);
-    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p1); // right
 
     dx = thickness;
@@ -153,7 +152,6 @@ void World::buildSimple()
     x = -height/2;
     y = 0;
     Polygon p2(x, y, dx, dy);
-    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p2); // left
 
     dx = height/2;
@@ -161,7 +159,6 @@ void World::buildSimple()
     x = 0;
     y = -width/2;
     Polygon p3(x, y, dx, dy);
-    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p3); // bottom
 
     dx = height/2;
@@ -169,7 +166,6 @@ void World::buildSimple()
     x = 0;
     y = width/2;
     Polygon p4(x, y, dx, dy);
-    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p4); // top
 
     polygons.translate(width/2, height/2);
@@ -197,9 +193,9 @@ void World::buildUTrap()
     width = 15;
     height = 15;
 
-    // drop off points
-    dropOffPoints.push_back(Vec2(width/2, height/2));
-    dropOffPoints.push_back(Vec2(width/2, height/2-4.5));
+    // nav goals
+    navGoals.push_back(Vec2(width/2, height/2));
+    navGoals.push_back(Vec2(width/2, height/2-4.5));
 
     double thickness = 0.1;
     double dx,dy,x,y;
@@ -210,7 +206,6 @@ void World::buildUTrap()
     x = height/2;
     y = 0;
     Polygon p1(x, y, dx, dy);
-    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p1); // right
 
     dx = thickness;
@@ -218,7 +213,6 @@ void World::buildUTrap()
     x = -height/2;
     y = 0;
     Polygon p2(x, y, dx, dy);
-    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p2); // left
 
     dx = height/2;
@@ -226,7 +220,6 @@ void World::buildUTrap()
     x = 0;
     y = -width/2;
     Polygon p3(x, y, dx, dy);
-    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p3); // bottom
 
     dx = height/2;
@@ -234,7 +227,6 @@ void World::buildUTrap()
     x = 0;
     y = width/2;
     Polygon p4(x, y, dx, dy);
-    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p4); // top
 
     polygons.translate(width/2, height/2);
@@ -266,39 +258,39 @@ void World::buildApartment()
 
     // Docking ports.
 
-    // drop off points
-    dropOffPoints.push_back(Vec2(0.8, 3.3));
-    dropOffPoints.push_back(Vec2(7.4, 3.8));
-    dropOffPoints.push_back(Vec2(10.5, 3.8));
-    dropOffPoints.push_back(Vec2(2.6, 3.2));
-    dropOffPoints.push_back(Vec2(10.5, 10.5));
-    dropOffPoints.push_back(Vec2(3.4, 10.7));
-    dropOffPoints.push_back(Vec2(6.3, 10));
-    dropOffPoints.push_back(Vec2(0, 10.5));
-    dropOffPoints.push_back(Vec2(0, 14));
-    dropOffPoints.push_back(Vec2(3, 14));
-    dropOffPoints.push_back(Vec2(6, 14));
-    dropOffPoints.push_back(Vec2(9, 14));
-    dropOffPoints.push_back(Vec2(12, 14));
-    dropOffPoints.push_back(Vec2(15, 14));
-    dropOffPoints.push_back(Vec2(1, 17)); // 10
-    dropOffPoints.push_back(Vec2(1, 19));
-    dropOffPoints.push_back(Vec2(4.5, 17.6));
-    dropOffPoints.push_back(Vec2(6.5, 20.5));
-    dropOffPoints.push_back(Vec2(7.7, 18.1));
-    dropOffPoints.push_back(Vec2(2.6, 18.3));
-    dropOffPoints.push_back(Vec2(16, 20.1));
-    dropOffPoints.push_back(Vec2(14, 18));
-    dropOffPoints.push_back(Vec2(16, 18));
-    dropOffPoints.push_back(Vec2(18, 18));
-    dropOffPoints.push_back(Vec2(18.06, 14.04));
-    dropOffPoints.push_back(Vec2(14.07, 11));
-    dropOffPoints.push_back(Vec2(18.8, 10.04));
-    dropOffPoints.push_back(Vec2(14.4, 6.1));
-    dropOffPoints.push_back(Vec2(18.1, 4.6));
-    dropOffPoints.push_back(Vec2(14.1, 4.5));
-    dropOffPoints.push_back(Vec2(15.8, 5.3));
-    dropOffPoints.push_back(Vec2(20.9, 5.0));
+    // nav goals
+    navGoals.push_back(Vec2(0.8, 3.3));
+    navGoals.push_back(Vec2(7.4, 3.8));
+    navGoals.push_back(Vec2(10.5, 3.8));
+    navGoals.push_back(Vec2(2.6, 3.2));
+    navGoals.push_back(Vec2(10.5, 10.5));
+    navGoals.push_back(Vec2(3.4, 10.7));
+    navGoals.push_back(Vec2(6.3, 10));
+    navGoals.push_back(Vec2(0, 10.5));
+    navGoals.push_back(Vec2(0, 14));
+    navGoals.push_back(Vec2(3, 14));
+    navGoals.push_back(Vec2(6, 14));
+    navGoals.push_back(Vec2(9, 14));
+    navGoals.push_back(Vec2(12, 14));
+    navGoals.push_back(Vec2(15, 14));
+    navGoals.push_back(Vec2(1, 17)); // 10
+    navGoals.push_back(Vec2(1, 19));
+    navGoals.push_back(Vec2(4.5, 17.6));
+    navGoals.push_back(Vec2(6.5, 20.5));
+    navGoals.push_back(Vec2(7.7, 18.1));
+    navGoals.push_back(Vec2(2.6, 18.3));
+    navGoals.push_back(Vec2(16, 20.1));
+    navGoals.push_back(Vec2(14, 18));
+    navGoals.push_back(Vec2(16, 18));
+    navGoals.push_back(Vec2(18, 18));
+    navGoals.push_back(Vec2(18.06, 14.04));
+    navGoals.push_back(Vec2(14.07, 11));
+    navGoals.push_back(Vec2(18.8, 10.04));
+    navGoals.push_back(Vec2(14.4, 6.1));
+    navGoals.push_back(Vec2(18.1, 4.6));
+    navGoals.push_back(Vec2(14.1, 4.5));
+    navGoals.push_back(Vec2(15.8, 5.3));
+    navGoals.push_back(Vec2(20.9, 5.0));
 
     double dx,dy,x,y;
 
@@ -308,7 +300,6 @@ void World::buildApartment()
     x = height/2;
     y = 0;
     Polygon p1(x, y, dx, dy);
-    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p1); // right
 
     dx = thickness;
@@ -316,7 +307,6 @@ void World::buildApartment()
     x = -height/2;
     y = 0;
     Polygon p133(x, y, dx, dy);
-    p133.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p133); // left
 
     dx = height/2;
@@ -324,7 +314,6 @@ void World::buildApartment()
     x = 0;
     y = -width/2;
     Polygon p3(x, y, dx, dy);
-    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p3);
 
     dx = height/2;
@@ -332,7 +321,6 @@ void World::buildApartment()
     x = 0;
     y = width/2;
     Polygon p4(x, y, dx, dy);
-    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p4);
 
     // Living room.
@@ -341,7 +329,6 @@ void World::buildApartment()
     x = -height/2+dx;
     y = 0;
     Polygon p5(x, y, dx, dy);
-    p5.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p5);
 
     dx = 1.75;
@@ -349,7 +336,6 @@ void World::buildApartment()
     x = -0.75;
     y = 0;
     Polygon p6(x, y, dx, dy);
-    p6.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p6);
 
     dx = thickness;
@@ -357,7 +343,6 @@ void World::buildApartment()
     x = 1;
     y = -width/4;
     Polygon p7(x, y, dx, dy);
-    p7.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p7);
 
     // Kitchen
@@ -366,7 +351,6 @@ void World::buildApartment()
     x = -height/2+dx;
     y = 2;
     Polygon p8(x, y, dx, dy);
-    p8.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p8);
 
     dx = 3;
@@ -374,7 +358,6 @@ void World::buildApartment()
     x = -0.8;
     y = 2;
     Polygon p9(x, y, dx, dy);
-    p9.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p9);
 
     dx = thickness;
@@ -382,7 +365,6 @@ void World::buildApartment()
     x = 0;
     y = 3.5;
     Polygon p10(x, y, dx, dy);
-    p10.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p10);
 
     dx = thickness;
@@ -390,7 +372,6 @@ void World::buildApartment()
     x = -1.8;
     y = 2.85;
     Polygon p11(x, y, dx, dy);
-    p11.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p11);
 
 
@@ -399,7 +380,6 @@ void World::buildApartment()
     x = height/2-dx;
     y = 2;
     Polygon p12(x, y, dx, dy);
-    p12.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p12);
 
     dx = 1.3;
@@ -407,7 +387,6 @@ void World::buildApartment()
     x = height/2-dx;
     y = 0;
     Polygon p18(x, y, dx, dy);
-    p18.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p18);
 
     dx = 1.7;
@@ -415,7 +394,6 @@ void World::buildApartment()
     x = height/2-dx;
     y = -2;
     Polygon p13(x, y, dx, dy);
-    p13.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p13);
 
     dx = 0.3;
@@ -423,7 +401,6 @@ void World::buildApartment()
     x = 1.3;
     y = -2;
     Polygon p14(x, y, dx, dy);
-    p14.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p14);
 
     dx = thickness;
@@ -431,7 +408,6 @@ void World::buildApartment()
     x = 3.5;
     y = 0;
     Polygon p15(x, y, dx, dy);
-    p15.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p15);
 
     dx = thickness;
@@ -439,7 +415,6 @@ void World::buildApartment()
     x = 3.5;
     y = 1.75;
     Polygon p16(x, y, dx, dy);
-    p16.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p16);
 
     dx = thickness;
@@ -447,7 +422,6 @@ void World::buildApartment()
     x = 3.5;
     y = -1.75;
     Polygon p17(x, y, dx, dy);
-    p17.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p17);
 
     // Couch 1
@@ -690,8 +664,8 @@ void World::buildApartment()
     Box bb = polygons.getBoundingBox();
     polygons.translate(-bb.bottomLeft());
     polygons.transform();
-    for (uint i = 0; i < dropOffPoints.size(); i++)
-        dropOffPoints[i] -= bb.bottomLeft();
+    for (uint i = 0; i < navGoals.size(); i++)
+        navGoals[i] -= bb.bottomLeft();
     width = bb.width();
     height = bb.height();
 }
@@ -702,15 +676,15 @@ void World::buildTunnel()
     width = 75;
     height = 60;
 
-    // Drop off points
-    dropOffPoints.push_back(Vec2(width/6, height/5));
-    dropOffPoints.push_back(Vec2(width/6, 4*height/5));
+    // nav goals
+    navGoals.push_back(Vec2(width/6, height/5));
+    navGoals.push_back(Vec2(width/6, 4*height/5));
 
-    dropOffPoints.push_back(Vec2(3*width/6, height/5));
-    dropOffPoints.push_back(Vec2(3*width/6, 4*height/5));
+    navGoals.push_back(Vec2(3*width/6, height/5));
+    navGoals.push_back(Vec2(3*width/6, 4*height/5));
 
-    dropOffPoints.push_back(Vec2(5*width/6, height/5));
-    dropOffPoints.push_back(Vec2(5*width/6, 4*height/5));
+    navGoals.push_back(Vec2(5*width/6, height/5));
+    navGoals.push_back(Vec2(5*width/6, 4*height/5));
 
     // Polygons
     double w,h,x,y;
@@ -790,8 +764,8 @@ void World::buildTunnel()
     polygons.transform();
     polygons.scale(scale);
     polygons.transform();
-    for (uint i = 0; i < dropOffPoints.size(); i++)
-        dropOffPoints[i] *= scale;
+    for (uint i = 0; i < navGoals.size(); i++)
+        navGoals[i] *= scale;
     width *= scale;
     height *= scale;
 }
@@ -1033,13 +1007,13 @@ void World::buildOffice()
     for (int k = 0; k < building.size(); k++)
         building[k].transform();
     polygons.addPolygons(building);
-    dropOffPoints << dop;
+    navGoals << dop;
 
 
-    // Scale all obstacles and drop off points by the room size.
+    // Scale all obstacles and nav goals by the room size.
     polygons.scale(roomSize);
-    for (int i = 0; i < dropOffPoints.size(); i++)
-        dropOffPoints[i].scale(roomSize, roomSize);
+    for (int i = 0; i < navGoals.size(); i++)
+        navGoals[i].scale(roomSize, roomSize);
 }
 
 void World::buildWarehouse()
@@ -1052,52 +1026,52 @@ void World::buildWarehouse()
     width = 2*avenueWidth + shelves*shelfWidth + (shelves-1)*aisleWidth;
     height = 3*avenueWidth + 2*shelfHeight;
 
-    // Drop off points
+    // nav goals
     for (uint i = 0; i < shelves; i++)
     {
-        double d = config.gmDilationRadius-0.02;
+        double d = config.gmPolygonDilation-0.02;
 
         Vec2 v;
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
         v.y = height - avenueWidth - shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
         v.y = height - avenueWidth - shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
         v.y = height - avenueWidth - shelfHeight + shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
         v.y = height - avenueWidth - shelfHeight + shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
         v.y = avenueWidth + shelfHeight - shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
         v.y = avenueWidth + shelfHeight - shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) - d;
         v.y = avenueWidth + shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
 
         v.x = avenueWidth + i*(shelfWidth+aisleWidth) + shelfWidth + d;
         v.y = avenueWidth + shelfHeight/4;
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
     }
 
-    dropOffPoints.push_back(Vec2(avenueWidth/2, avenueWidth/2));
-    dropOffPoints.push_back(Vec2(width-avenueWidth/2, avenueWidth/2));
-    dropOffPoints.push_back(Vec2(width-avenueWidth/2, height-avenueWidth/2));
-    dropOffPoints.push_back(Vec2(avenueWidth/2, height-avenueWidth/2));
+    navGoals.push_back(Vec2(avenueWidth/2, avenueWidth/2));
+    navGoals.push_back(Vec2(width-avenueWidth/2, avenueWidth/2));
+    navGoals.push_back(Vec2(width-avenueWidth/2, height-avenueWidth/2));
+    navGoals.push_back(Vec2(avenueWidth/2, height-avenueWidth/2));
 
     // Polygons
     double w,h,x,y;
@@ -1160,7 +1134,7 @@ void World::buildClutter()
     width = config.clutterWidth;
     height = config.clutterHeight;
 
-    // Random drop off points
+    // Random nav goals
     for (int i = 0; i < config.clutterDropOffPoints; i++)
     {
         Vec2 v;
@@ -1171,25 +1145,25 @@ void World::buildClutter()
             v.randomize();
             v.scale(width, height);
             good = true;
-            for (uint j = 0; j < dropOffPoints.size(); j++)
+            for (uint j = 0; j < navGoals.size(); j++)
             {
-                if ((dropOffPoints[j]-v).norm() < 2*config.worldDropOffRadius)
+                if ((navGoals[j]-v).norm() < 2*config.navGoalRadius)
                 {
                     good = false;
                     break;
                 }
             }
 
-            if (v.x > width-(config.gmDilationRadius+config.worldDropOffRadius)
+            if (v.x > width-(config.gmPolygonDilation+config.navGoalRadius)
                 ||
-                v.x < (config.gmDilationRadius+config.worldDropOffRadius)
+                v.x < (config.gmPolygonDilation+config.navGoalRadius)
                     ||
-                v.y > height-(config.gmDilationRadius+config.worldDropOffRadius)
+                v.y > height-(config.gmPolygonDilation+config.navGoalRadius)
                     ||
-                v.y < (config.gmDilationRadius+config.worldDropOffRadius))
+                v.y < (config.gmPolygonDilation+config.navGoalRadius))
                 good = false;
         }
-        dropOffPoints.push_back(v);
+        navGoals.push_back(v);
     }
 
     double thickness = 0.1;
@@ -1201,7 +1175,6 @@ void World::buildClutter()
     x = height/2;
     y = 0;
     Polygon p1(x, y, dx, dy);
-    p1.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p1); // right
 
     dx = thickness;
@@ -1209,7 +1182,6 @@ void World::buildClutter()
     x = -height/2;
     y = 0;
     Polygon p2(x, y, dx, dy);
-    p2.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p2); // left
 
     dx = height/2;
@@ -1217,7 +1189,6 @@ void World::buildClutter()
     x = 0;
     y = -width/2;
     Polygon p3(x, y, dx, dy);
-    p3.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p3); // bottom
 
     dx = height/2;
@@ -1225,7 +1196,6 @@ void World::buildClutter()
     x = 0;
     y = width/2;
     Polygon p4(x, y, dx, dy);
-    p4.setColor(QColor::fromRgbF(0, 0, 0, 0.8));
     polygons.addPolygon(p4); // top
 
     polygons.translate(width/2, height/2);
@@ -1254,14 +1224,14 @@ void World::buildClutter()
             pol.turn(theta);
             pol.transform();
 
-            // drop off point intersection test
+            // nav goal intersection test
             good = true;
             Polygon o = pol;
-            o.grow(config.gmDilationRadius);
-            o.grow(config.worldDropOffRadius);
-            for (int j = 0; j < dropOffPoints.size(); j++)
+            o.grow(config.gmPolygonDilation);
+            o.grow(config.navGoalRadius);
+            for (int j = 0; j < navGoals.size(); j++)
             {
-                if (o.intersects(dropOffPoints[j]))
+                if (o.intersects(navGoals[j]))
                 {
                     good = false;
                     break;
@@ -1279,13 +1249,13 @@ void World::buildFromFile()
     width = 100;
     height = 65;
 
-    // drop off points
-    dropOffPoints.push_back(Vec2(width/10, height/3));
-    dropOffPoints.push_back(Vec2(width/2, height/10));
-    dropOffPoints.push_back(Vec2(9*width/10, height/3));
-    dropOffPoints.push_back(Vec2(width/10, 2*height/3));
-    dropOffPoints.push_back(Vec2(width/2, 9*height/10));
-    dropOffPoints.push_back(Vec2(9*width/10, 2*height/3));
+    // nav goals
+    navGoals.push_back(Vec2(width/10, height/3));
+    navGoals.push_back(Vec2(width/2, height/10));
+    navGoals.push_back(Vec2(9*width/10, height/3));
+    navGoals.push_back(Vec2(width/10, 2*height/3));
+    navGoals.push_back(Vec2(width/2, 9*height/10));
+    navGoals.push_back(Vec2(9*width/10, 2*height/3));
 
     QString line;
     QStringList tokenList;
@@ -1375,8 +1345,8 @@ void World::buildSimulation()
     {
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
-        bodyDef.linearDamping = config.agentLinearDamping;
-        bodyDef.angularDamping = config.agentAngularDamping;
+        bodyDef.linearDamping = config.simLinearDamping;
+        bodyDef.angularDamping = config.simAngularDamping;
         bodyDef.position.Set(unicycleAgents[i].pos().x, unicycleAgents[i].pos().y);
         bodyDef.angle = unicycleAgents[i].orientation();
         b2Body* body = box2DSim.CreateBody(&bodyDef);
@@ -1395,7 +1365,7 @@ void World::buildSimulation()
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
         fixtureDef.density = 1.0f;
-        fixtureDef.friction = config.agentFriction; // This doesn't really do much.
+        fixtureDef.friction = config.simFriction; // This doesn't really do much.
 
         // This is ghost mode. Agents can't collide with each other.
         if (command.ghostMode /*&& unicycleAgents[i].getAgentId() > 0*/) // uncomment the agent id > 0 check to enable collisions for bots only.
@@ -1506,10 +1476,17 @@ Vector<UnicycleObstacle> World::getUnicycleObstacles(int excludeId) const
     return obst;
 }
 
-// Returns the drop off points.
-const Vector<Vec2> &World::getDropOffPoints() const
+// Returns the nav goals.
+const Vector<Vec2> &World::getNavGoals() const
 {
-    return dropOffPoints;
+    return navGoals;
+}
+
+// Sets the main target for the first agent.
+void World::setMainTarget(const Pose2D &p)
+{
+    if (!unicycleAgents.empty())
+        unicycleAgents[0].setMainTarget(p);
 }
 
 // Contact detection callback function. The simulation calls this function
@@ -1603,25 +1580,25 @@ void World::setParams(int trajectoryPlanningMethod, int trajectoryType, int pred
 // drop-off point which are assumed to be non-colliding.
 void World::addAgents(uint numAgents)
 {
-    if (dropOffPoints.size() < numAgents)
+    if (navGoals.size() < numAgents)
     {
-        qDebug() << "Warning! Not enough drop off points to spawn all agents! dropOffPoints:" << dropOffPoints.size() << "agents:" << numAgents;
-        numAgents = dropOffPoints.size();
+        qDebug() << "Warning! Not enough nav goals to spawn all agents! dropOffPoints:" << navGoals.size() << "agents:" << numAgents;
+        numAgents = navGoals.size();
     }
 
-    // Permute the drop off poinsts to be used as random starting positions for the agents.
-    Vector<Vec2> permutedDropOffPoints = dropOffPoints;
-    for (uint d = 0; d < dropOffPoints.size(); d++)
-        permutedDropOffPoints.swap(d, Statistics::randomInt(0, dropOffPoints.size()-1));
+    // Permute the nav goals to be used as random starting positions for the agents.
+    Vector<Vec2> permutedNavGoals = navGoals;
+    for (uint d = 0; d < navGoals.size(); d++)
+        permutedNavGoals.swap(d, Statistics::randomInt(0, navGoals.size()-1));
 
     for (int i = 0; i < numAgents; i++)
     {
         UnicycleAgent ua;
         ua.setAgentId(i); // The first main agent has the id 0.
-        ua.init(permutedDropOffPoints[i]);
-        ua.setPos(permutedDropOffPoints[i]);
+        ua.init(permutedNavGoals[i]);
+        ua.setPos(permutedNavGoals[i]);
         ua.setOrientation(Statistics::uniformSample(-PI, PI));
-        ua.setWorldDropOffPoints(getDropOffPoints());
+        ua.setWorldNavGoals(getNavGoals());
         ua.setWorldMap(worldMap);
         ua.setWorldPolygons(polygons);
         unicycleAgents.push_back(ua); // Note that the because of the push the agent needs to be copyable.
@@ -1652,9 +1629,9 @@ QString World::getMapName(uint map) const
 
 void World::logObstaclesToTxt()
 {
-    if (dropOffPoints.size() < 2)
+    if (navGoals.size() < 2)
     {
-        qDebug() << "Not enough drop off points specified";
+        qDebug() << "Not enough nav goals specified";
         return;
     }
 
@@ -1665,9 +1642,9 @@ void World::logObstaclesToTxt()
     Logger log("data/polygons.txt");
 
     // Write the start and goal states.
-    log << dropOffPoints[0];
+    log << navGoals[0];
     log++;
-    log << dropOffPoints[1];
+    log << navGoals[1];
     log++;
     log++;
 
@@ -1741,14 +1718,14 @@ void World::draw(QPainter *painter) const
     if (command.showWorldPolygons)
         polygons.draw(painter, drawUtil.pen, drawUtil.brush, Qt::NoBrush);
 
-    // The drop off points.
-    if (command.showDropOffPoints)
+    // The nav goals.
+    if (command.showNavGoals)
     {
-        for (int i = 0; i < dropOffPoints.size(); i++)
+        for (int i = 0; i < navGoals.size(); i++)
         {
             painter->save();
-            double r = config.worldDropOffRadius;
-            painter->translate(dropOffPoints[i]);
+            double r = config.navGoalRadius;
+            painter->translate(navGoals[i]);
             painter->setPen(drawUtil.penThinDashed);
             painter->drawEllipse(QPointF(), r, r);
             painter->scale(0.03, -0.03);
@@ -1772,22 +1749,7 @@ void World::draw(QPainter *painter) const
 // well *before* the agents are drawn.
 void World::drawBackground(QPainter *painter) const
 {
-    QMutexLocker locker(&mutex);
-
-    // Trajectory trace.
-    // When enabled, it shows the history of all taxi positions in the state.
-    if (command.showTrajectoryTrace)
-    {
-        double s = 1.0/painter->transform().m11();
-        painter->save();
-
-        painter->setPen(drawUtil.penBlueThick);
-        painter->setBrush(drawUtil.brushRed);
-        for (int i = 0; i < state.size(); i++)
-            painter->drawEllipse(state[i].uniTaxi.pos(), s, s);
-
-        painter->restore();
-    }
+    //QMutexLocker locker(&mutex);
 }
 
 QDebug operator<<(QDebug dbg, const World &w)

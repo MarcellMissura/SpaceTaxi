@@ -33,6 +33,7 @@ public:
 
     // Scene population functions.
     void worldImport(const LinkedList<Polygon> &pols);
+    void prune(const Vec2& p);
 
     const LinkedList<Polygon>& getRootPolygons() const;
 
@@ -58,18 +59,20 @@ public:
     uint getObjectCount() const;
     int getVertexCount() const;
     Box getBoundingBox() const;
+    Vec2 getClosestPoint(const Vec2& v) const;
     double distance(const Vec2& v) const;
     double dynamicDistance(const Vec2& v) const;
     Vec2 closestNormal(const Vec2& p) const;
     Vec2 closestPoint(const Vec2& p) const;
     void closestPointNormal(const Vec2& p, Vec2 &closestPoint, Vec2 &closestNormal) const;
 
-
     // Order maintenance functions.
     void setObstacleIds(int id);
     void renumber();
     void reverseOrder();
     void simplify(double epsilon=0.05);
+    void pruneOut(double epsilon=0.05);
+    void pruneIn(double epsilon=0.05);
 
     // Transformation functions.
     void scale(double alpha);
@@ -84,11 +87,16 @@ public:
     GeometricModel operator-(const Pose2D &o);
     GeometricModel operator+(const Pose2D &o);
 
-    // Clipping and offsetting.
-    void unite(const Polygon& pol);
+    // Clipping, offsetting, and boolean operations.
     void unite(const GeometricModel& gm);
-    void dilate(double delta);
+    void unite(const Vector<Polygon>& rootPols, const Vector<Polygon>& pols);
+    void unite(const Polygon& pol);
     void clip(const Box& box);
+    void dilate(double delta);
+    void observationUpdate(const Vector<Polygon>& rootPolygons, const Vector<Polygon>& pols);
+    void clipRoot(const Vector<Polygon>& pol);
+    void clipPolygons(const Vector<Polygon>& pols);
+    void clipPolygons(const Polygon& pol);
 
     // Collision detection methods.
     bool isInFreeSpace(const Vec2& p, bool debug=false) const;
@@ -112,7 +120,7 @@ public:
     const Box& getBounds() const;
     bool computeStaticPath(const Vec2 &from, const Vec2 &to, int debug=0);
     bool computeDynamicPath(const Vec2 &from, const Vec2 &to, int debug=0);
-    const Vector<Vec2> &getPath() const;
+    const Path &getPath() const;
 
     // Drawing methods.
     void draw(const QPen &pen, const QBrush &brush, double opacity=0.5) const;

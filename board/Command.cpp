@@ -10,21 +10,22 @@ Command::Command()
 
     ax = 0;
     ay = 0;
+    v = 0;
+    w = 0;
 
     showBody = true;
     showTargets = true;
-    showSensedPolygons = false;
-    showSensedGrid = false;
+    showLocalMap = false;
+    showCostmap = false;
     showDijkstraMap = false;
-    showTrajectoryTrace = false;
     showSimulationDebugDraw = false;
     showWorldVisibilityGraph = false;
     showLocalVisibilityGraph = false;
-    showDropOffPoints = true;
+    showNavGoals = false;
     showWorldPolygons = true;
     showWorldMap = true;
     showRayModel = false;
-    showWorldPath = true;
+    showPaths = true;
     showLaser = 0;
     showPoseGraph = 1;
     showLineMap = 1;
@@ -35,24 +36,29 @@ Command::Command()
     showLabels = false;
     showRuler = false;
     showOdometry = false;
+    showSafetyZone = true;
 
+    bufferToFile = false;
     laserSpatialFilter = false;
     laserTemporalFilter = false;
-    laserSpeckleRemoval = true;
+    laserSpeckleRemoval = false;
     slamEnabled = false;
-    useOdomAsPrior = true;
+    useOdometry = true;
     mapUpdateEnabled = true;
     globalLocalization = false;
     keepLineObservations = false;
     keepPoseHistory = false;
     selectPose = false;
     selectTarget = false;
+    clearMap = false;
+    fillMap = false;
     emergencyBrakeReflex = false;
     stucknessReflex = false;
+    safetyZoneReflex = true;
     useTimeAbort = true;
     useDynamicPath = true;
     useClosing = true;
-    ghostMode = true;
+    ghostMode = false;
     draw = true;
     learn = false;
 

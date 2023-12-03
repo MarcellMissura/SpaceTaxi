@@ -312,7 +312,7 @@ public:
     }
 
     // Sorts the vector into a random order.
-    void randomOrder()
+    void permute()
     {
         for (uint i = 0; i < size(); i++)
             swap(i, ((double)rand()/RAND_MAX)*size());
@@ -339,13 +339,12 @@ QDebug operator<<(QDebug dbg, const Vector<T> &o)
 template <typename T>
 QDebug operator<<(QDebug dbg, const Vector<T> *o)
 {
-    dbg << "sz:" << o->size() << " | ";
-    dbg << "[";
+    dbg << "sz:" << o->size() << " | [\n";
     if (o->size() > 1)
         for (uint i = 0; i < o->size()-1; i++)
-            dbg << o->at(i) << "\n";
+            dbg << &o->at(i) << "\n";
     if (o->size() > 0)
-        dbg << o->last();
+        dbg << &o->last();
     dbg << "]";
     return dbg;
 }

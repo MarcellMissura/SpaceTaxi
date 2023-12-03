@@ -1,9 +1,9 @@
 #ifndef VECNI_H_
 #define VECNI_H_
+#include "lib/globals.h"
 #include <math.h>
 #include <QDebug>
 #include <QDataStream>
-#include "globals.h"
 
 //#include "VecNu.h"
 template <int N>

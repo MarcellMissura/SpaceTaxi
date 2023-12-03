@@ -50,7 +50,6 @@ private:
     static int idCounter;
     mutable int convexityFlag; // -1: nonconvex, 0: unknown, 1: convex
     mutable int windingFlag; // -1: cw, 0: unknown, 1: ccw
-    QColor color;
 
     LinkedList<Line> edges; // The edges of the polygon and with that also the vertices in p1.
 
@@ -70,7 +69,6 @@ public:
     void setId(int id);
     static void resetId();
     void rewriteEdgeIds();
-    void setColor(const QColor &col);
 
     void clear();
 
@@ -153,23 +151,26 @@ public:
     void scale(double sx, double sy);
     void scale(double s);
     void simplify(double epsilon=0.05);
-    void prune();
+    void prune(double delta=0.01);
+    void pruneOut(double delta=0.01);
+    void pruneIn(double delta=0.01);
 
     Vector<Line> clipLine(const Line& inputLine) const;
-    void clip(const Polygon& clp);
     void clipConvex(const Polygon& clipPolygon, bool debug=false);
     void clipBox(const Box& box, bool debug=false);
-    const Vector<Polygon>& clipped(const Polygon& clp) const;
-    const Vector<Polygon>& united(const Polygon& clp) const;
-    const Vector<Polygon>& united(const Vector<Polygon>& clp) const;
-    const Vector<Polygon>& offseted(double delta, double eps=0) const;
-    static const LinkedList<Polygon>& unify(const Vector<Polygon> &polygons);
-    static const LinkedList<Polygon>& unify(const LinkedList<Polygon> &polygons);
-    static const LinkedList<Polygon>& offset(const LinkedList<Polygon> &polygons, double delta, double eps=0);
+    const LinkedList<Polygon>& clipped(const Polygon& clp) const;
+    const LinkedList<Polygon>& clipped(const Vector<Polygon>& clp) const;
+    const Vector<Polygon>& offseted(double delta) const;
+
+    static const LinkedList<Polygon>& unify(const Vector<Polygon> &polygons, bool reverse=true);
+    static const LinkedList<Polygon>& unify(const LinkedList<Polygon> &polygons, bool reverse=true);
+    static const LinkedList<Polygon>& offset(const LinkedList<Polygon> &polygons, double delta);
+    static const LinkedList<Polygon>& clip(const LinkedList<Polygon> &subjects, const Vector<Polygon> &clippers, bool reverse=true);
 
     double intersects(const Hpm2D &inputKf) const;
     double intersects(const Unicycle &inputUni, bool debug=false) const;
     bool intersects(const Polygon &pol) const;
+    bool intersectsEdges(const Polygon &pol) const;
     bool intersects(const Line& l, bool intersectSightLines=false, bool debug=false) const;
     bool intersects(const Vec2& v, bool boundaryIntersect=true, bool debug=false) const;
     bool intersects(const Vec2& v, double radius) const;
@@ -177,8 +178,11 @@ public:
     IntersectionPoint rayIntersection(const Line& ray) const;
     IntersectionPoint pathIntersection(const Vector<Vec2>& path) const;
 
+    bool contains(const Polygon& pol) const;
+
     void draw(QPainter* painter, const QPen &pen, const QBrush &brush, double opacity=1.0) const;
     void drawLabel(QPainter* painter) const;
+    void drawEdgeLabels(QPainter* painter) const;
     void draw(const QPen &pen, const QBrush &color, double alpha=1.0) const;
 
     void streamOut(QDataStream& out) const;
@@ -196,6 +200,10 @@ extern Vector<Polygon> operator+(const Vector<Polygon>& v, const Pose2D& p);
 extern Vector<Polygon> operator-(const Vector<Polygon>& v, const Pose2D& p);
 extern void operator+=(Vector<Polygon>& v, const Pose2D& p);
 extern void operator-=(Vector<Polygon>& v, const Pose2D& p);
+extern LinkedList<Polygon> operator+(const LinkedList<Polygon>& v, const Pose2D& p);
+extern LinkedList<Polygon> operator-(const LinkedList<Polygon>& v, const Pose2D& p);
+extern void operator+=(LinkedList<Polygon>& v, const Pose2D& p);
+extern void operator-=(LinkedList<Polygon>& v, const Pose2D& p);
 
 QDebug operator<<(QDebug dbg, const Polygon &o);
 QDebug operator<<(QDebug dbg, const Polygon* o);

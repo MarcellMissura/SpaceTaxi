@@ -1,8 +1,8 @@
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
-#include <QDebug>
+#include "lib/globals.h"
 #include "Vector.h"
-#include "globals.h"
+#include <QDebug>
 
 // The RingBuffer class is a memory-preserving container of objects that are arranged in a contiguous
 // space in memory. The RingBuffer typically has a fixed size (if you set one) and discards the oldest

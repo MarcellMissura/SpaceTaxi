@@ -3,7 +3,8 @@
 
 #include "lib/util/Vector.h"
 #include "lib/pml/unicycle.h"
-#include "lib/geometry/VisibilityGraph.h"
+#include "lib/geometry/Path.h"
+#include "lib/geometry/Polygon.h"
 #include <QPainter>
 
 class UnicycleSearchNode : public Unicycle
@@ -21,7 +22,8 @@ public:
     double h;
     double f; // cost + heuristic
 
-    Vector<Vec2> path; // Needed only for visualization.
+    Path path; // Needed only for visualization.
+    Polygon sz; // Needed only for visualization.
 
     UnicycleSearchNode();
     ~UnicycleSearchNode(){}

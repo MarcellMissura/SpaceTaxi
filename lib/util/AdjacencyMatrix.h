@@ -20,6 +20,7 @@ public:
 
     void clear();
     void set(uint i, uint j);
+    void set(uint i, uint j, char v);
     void check(uint i, uint j);
     void unset(uint i, uint j);
     bool isSet(uint i, uint j) const;

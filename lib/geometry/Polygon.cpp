@@ -1,7 +1,7 @@
 #include "Polygon.h"
-#include "blackboard/State.h"
-#include "blackboard/Config.h"
 #include "Box.h"
+#include "board/State.h"
+#include "board/Config.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -160,12 +160,6 @@ Polygon::Polygon(const Vec2 &v0, const Vec2 &v1, const Vec2 &v2, const Vec2 &v3)
     edges.push_back(Line(v1, v2));
     edges.push_back(Line(v2, v3));
     edges.push_back(Line(v3, v0));
-}
-
-// Sets the color for this polygon to be drawn with.
-void Polygon::setColor(const QColor& col)
-{
-    color = col;
 }
 
 // Returns the id of the polygon.
@@ -447,6 +441,7 @@ void Polygon::ensureCW()
 // However, the result is cached so subsequent calls to this function are cheap.
 bool Polygon::isCCW() const
 {
+    //qDebug() << "Polygon::isCCW() id:" << getId() << "flag:" << windingFlag;
     if (windingFlag != 0)
         return (windingFlag > 0);
 
@@ -463,7 +458,8 @@ bool Polygon::isCCW() const
         it.next();
     } while (it.hasNext());
 
-    windingFlag = sgn0(signedArea);
+    windingFlag = sgn(signedArea);
+    //qDebug() << "  winding flag determined to:" << windingFlag << "from" << signedArea;
     return (windingFlag > 0);
 }
 
@@ -657,8 +653,8 @@ double Polygon::diameter() const
     return d;
 }
 
-// Computes the area of the polygon.
-// This is an O(N) operation.
+// Computes the area of the polygon. Computing the area also yields the winding
+// of the polygon as a side effect. This is an O(N) operation.
 double Polygon::area() const
 {
     double a = 0;
@@ -670,6 +666,7 @@ double Polygon::area() const
         a += v1.x*v2.y-v2.x*v1.y;
         it.next();
     } while (it.hasNext());
+    windingFlag = sgn0(a);
     return fabs(0.5*a);
 }
 
@@ -1152,6 +1149,108 @@ void Polygon::insertVertex(ListIterator<Line> &it, const Vec2 &v)
     edges.insert(it.nextIt(), newEdge);
 }
 
+// Sheds vertices that do not modify the area of the polygon by more than delta.
+void Polygon::prune(double delta)
+{
+    //qDebug() << "Polygon::prune(double delta):" << delta << "polId:" << getId() << "size:" << size();
+    ListIterator<Line> edgeIt = edgeIterator();
+    double signedArea = 0;
+    while (edgeIt.hasNext())
+    {
+        const Vec2& v0 = edgeIt.peekPrev().p1();
+        const Vec2& v1 = edgeIt.cur().p1();
+        const Vec2& v2 = edgeIt.cur().p2();
+        //double ar = v0.x*(v1.y-v2.y) + v1.x*(v2.y-v0.y) + v2.x*(v0.y-v1.y);
+        double ar1 = v1.x*v2.y-v2.x*v1.y;
+        signedArea += ar1;
+        double ar = v0.x*(v1.y-v2.y) + v0.y*(v2.x-v1.x) + ar1;
+        //qDebug() << "  edge" << edgeIt.cur() << "ar:" << ar;
+        if (fabs(0.5*ar) < delta)
+        {
+            removeEdge(edgeIt);
+            //qDebug() << "edge removed." << edgeIt.hasNext();
+        }
+        else
+        {
+            edgeIt.next();
+        }
+    }
+
+    //qDebug() << "Final size:" << size();
+
+    windingFlag = sgn(signedArea);
+    boundingBoxValid = false;
+    convexityFlag = 0;
+}
+
+// Sheds concave vertices that do not modify the area of the polygon by more than delta.
+// This way, the polygon only grows in the outward direction, but never inward.
+void Polygon::pruneOut(double delta)
+{
+    //qDebug() << "Polygon::prune(double delta):" << delta << "polId:" << getId() << "size:" << size();
+    ListIterator<Line> edgeIt = edgeIterator();
+    double signedArea = 0;
+    while (edgeIt.hasNext())
+    {
+        const Vec2& v0 = edgeIt.peekPrev().p1();
+        const Vec2& v1 = edgeIt.cur().p1();
+        const Vec2& v2 = edgeIt.cur().p2();
+        //double ar = v0.x*(v1.y-v2.y) + v1.x*(v2.y-v0.y) + v2.x*(v0.y-v1.y);
+        double ar1 = v1.x*v2.y-v2.x*v1.y;
+        signedArea += ar1; // also computes the signed area and with that the winding flag
+        double ar = v0.x*(v1.y-v2.y) + v0.y*(v2.x-v1.x) + ar1;
+        //qDebug() << "  edge" << edgeIt.cur() << "ar:" << ar;
+        if (0.5*ar >= 0 && 0.5*ar < delta)
+        {
+            removeEdge(edgeIt);
+            //qDebug() << "edge removed." << edgeIt.hasNext();
+        }
+        else
+        {
+            edgeIt.next();
+        }
+    }
+
+    //qDebug() << "Final size:" << size();
+
+    windingFlag = sgn(signedArea);
+    boundingBoxValid = false;
+}
+
+// Sheds convex vertices that do not modify the area of the polygon by more than delta
+// This way, the polygon only shrinks in the inward direction, but never grows outward.
+void Polygon::pruneIn(double delta)
+{
+    //qDebug() << "Polygon::prune(double delta):" << delta << "polId:" << getId() << "size:" << size();
+    ListIterator<Line> edgeIt = edgeIterator();
+    double signedArea = 0;
+    while (edgeIt.hasNext())
+    {
+        const Vec2& v0 = edgeIt.peekPrev().p1();
+        const Vec2& v1 = edgeIt.cur().p1();
+        const Vec2& v2 = edgeIt.cur().p2();
+        //double ar = v0.x*(v1.y-v2.y) + v1.x*(v2.y-v0.y) + v2.x*(v0.y-v1.y);
+        double ar1 = v1.x*v2.y-v2.x*v1.y;
+        signedArea += ar1; // also computes the signed area and with that the winding flag
+        double ar = v0.x*(v1.y-v2.y) + v0.y*(v2.x-v1.x) + ar1;
+        //qDebug() << "  edge" << edgeIt.cur() << "ar:" << ar;
+        if (0.5*ar <= 0 && 0.5*ar > -delta)
+        {
+            removeEdge(edgeIt);
+            //qDebug() << "edge removed." << edgeIt.hasNext();
+        }
+        else
+        {
+            edgeIt.next();
+        }
+    }
+
+    //qDebug() << "Final size:" << size();
+
+    windingFlag = sgn(signedArea);
+    boundingBoxValid = false;
+}
+
 // Simplifies this polygon according to the Douglas Peucker (DP) algorithm.
 // https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
 // As the result of this function, the polygon sheds vertices that do not modify
@@ -1196,29 +1295,6 @@ void Polygon::simplify(double epsilon)
     edges = dpResultBuffer;
 
     return;
-}
-
-// Sheds vertices that connect colinear neighbouring edges.
-// This will also remove spikes that stick out of the polygon.
-void Polygon::prune()
-{
-    ListIterator<Line> edgeIt = edgeIterator();
-    while (edgeIt.hasNext())
-    {
-        //qDebug() << edgeIt.cur() << edgeIt.peekPrev().lineVector().det(edgeIt.cur().lineVector());
-        if (fabs(edgeIt.peekPrev().lineVector().det(edgeIt.cur().lineVector())) < EPSILON)
-        {
-            removeEdge(edgeIt);
-            edgeIt = edgeIterator();
-        }
-        else
-            edgeIt.next();
-    }
-
-    boundingBoxValid = false;
-    convexityFlag = 0;
-    if (size() < 3)
-        clear();
 }
 
 // Recursive subroutine that computes the Douglas Peucker algorithm
@@ -1599,6 +1675,32 @@ bool Polygon::intersects(const Polygon &pol) const
     return false;
 }
 
+// Returns true if one of the edges of pol intersects with one of the edges of this polygon.
+// This function requires
+// the polygons to be in the same coordinate frame, i.e. to be transformed or to have the
+// same pose. The intersection test works as you would expect regardless of the windings
+// of the polygons.
+bool Polygon::intersectsEdges(const Polygon &pol) const
+{
+    //qDebug() << "  Polygon::intersects(p):" << p;
+    //qDebug() << "  this:" << *this;
+
+    // Bounding box check. Reject cases whose bounding boxes don't overlap.
+    boundingBox();
+    if (!aabb.intersects(pol.boundingBox()))
+        return false;
+
+    ListIterator<Line> sourceIterator = edgeIterator();
+    while (sourceIterator.hasNext())
+    {
+        const Line& e0 = sourceIterator.next();
+        if (pol.intersects(e0))
+            return true;
+    }
+
+    return false;
+}
+
 // Returns true if the polygon intersects with the point p. This is true if p is in
 // the interior area of the polygon. When boundaryIntersect is true (default), then
 // p also intersects with the polygon when it's right on one of the edges (epsilon
@@ -1722,8 +1824,8 @@ bool Polygon::intersects(const Vec2 &p, double radius) const
 // unless you set the intersectSightLines parameter to true.
 bool Polygon::intersects(const Line& l, bool intersectSightLines, bool debug) const
 {
-    if (debug)
-        qDebug() << "      Polygon::intersects(Line): pid:" << getId() << "l:" << l;
+//    if (debug)
+//        qDebug() << "      Polygon::intersects(Line): pid:" << getId() << "l:" << l;
 
     // Transform the line into the reference frame of the polygon.
     Line line = l - pose();
@@ -1738,12 +1840,13 @@ bool Polygon::intersects(const Line& l, bool intersectSightLines, bool debug) co
     while (it.hasNext())
     {
         const Line& edge = it.next();
-        if (debug)
-            qDebug() << "         checking line" << line << "with edge" << edge;
-        if ((edge.isBlockingLine() || intersectSightLines) && edge.intersects(line, debug))
+//        if (debug)
+//            qDebug() << "         checking line" << line << "with edge" << edge;
+        //if ((edge.isBlockingLine() || intersectSightLines) && edge.intersects(line, debug))
+        if (edge.intersects(line, debug))
         {
-            if (debug)
-                qDebug() << "         edge" << edge << "intersects with line" << line;// << "in point" << edge.intersection(line);
+//            if (debug)
+//                qDebug() << "         edge" << edge << "intersects with line" << line;// << "in point" << edge.intersection(line);
             return true;
         }
     }
@@ -1849,6 +1952,19 @@ IntersectionPoint Polygon::pathIntersection(const Vector<Vec2>& path) const
     return ip;
 }
 
+// Returns true if this polygon entirely contains the other.
+// This function requires the polygons to be in the same coordinate frame, i.e. to be transformed
+// or to have the same pose. The intersection test works as you would expect regardless of the
+// windings of the polygons.
+bool Polygon::contains(const Polygon &pol) const
+{
+    ListIterator<Line> it = pol.edgeIterator();
+    while (it.hasNext())
+        if (!intersects(it.next().p1()))
+            return false;
+    return true;
+}
+
 // Clips the line with this polygon, i.e. removes the parts of the line that are
 // covered by the polygon and returns the pieces of the line that are outside the
 // polygon. This can result in any number of line pieces. The line is given in world
@@ -1893,7 +2009,7 @@ Vector<Line> Polygon::clipLine(const Line &inputLine) const
 // remain that do not overlap the cp polygon. If this polygon is A and cp is B,
 // then you get A-B. Both polygons need to be in the same frame of reference,
 // i.e. both must have the same pose. All edge types are set to blocking.
-void Polygon::clip(const Polygon &cp)
+const LinkedList<Polygon> &Polygon::clipped(const Polygon &cp) const
 {
     PathD sub;
     ListIterator<Line> vit = edgeIterator();
@@ -1914,26 +2030,27 @@ void Polygon::clip(const Polygon &cp)
     PathsD pols, clips;
     pols.push_back(sub);
     clips.push_back(clp);
-    PathsD solution = Difference(pols, clips, FillRule::EvenOdd);
 
-    if (solution.size() > 1)
-        qDebug() << "Polygon::clip() returned more than one polygon." << solution.size();
+    thread_local LinkedList<Polygon> resultPolygons;
+    resultPolygons.clear();
 
-    for (uint i = 0; i < solution.size(); i++)
-    {
-        clear();
-        for (uint j = 0; j < solution[i].size(); j++)
-            appendVertex(solution[i][j].x, solution[i][j].y);
-        break;
-    }
+    // Execute the Clipper union operation.
+    ClipperD clipper(4); // 4 digits precision
+    clipper.AddSubject(pols);
+    clipper.AddClip(clips);
+    clipper.ReverseSolution = true;
+    clipper.Execute(ClipType::Difference, FillRule::NonZero, resultPolygons);
+
+    return resultPolygons;
 }
 
 // Clips this polygon with the cp polygon such that only the parts of this polygon
 // remain that do not overlap the cp polygon. If this polygon is A and cp is B,
 // then you get A-B. Both polygons need to be in the same frame of reference,
 // i.e. both must have the same pose. All edge types are set to blocking.
-const Vector<Polygon>& Polygon::clipped(const Polygon &cp) const
+const LinkedList<Polygon>& Polygon::clipped(const Vector<Polygon> &cp) const
 {
+    PathsD pols;
     PathD sub;
     ListIterator<Line> vit = edgeIterator();
     while (vit.hasNext())
@@ -1941,30 +2058,32 @@ const Vector<Polygon>& Polygon::clipped(const Polygon &cp) const
         Vec2 v = vit.next().p1();
         sub.push_back(PointD(v.x, v.y));
     }
-
-    PathD clp;
-    ListIterator<Line> cpit = cp.edgeIterator();
-    while (cpit.hasNext())
-    {
-        Vec2 v = cpit.next().p1();
-        clp.push_back(PointD(v.x, v.y));
-    }
-
-    PathsD pols, clips;
     pols.push_back(sub);
-    clips.push_back(clp);
-    PathsD solution = Difference(pols, clips, FillRule::NonZero, 4);
 
-    thread_local Vector<Polygon> polygons;
-    polygons.clear();
-    for (uint i = 0; i < solution.size(); i++)
+    PathsD clips;
+    for (uint i = 0; i < cp.size(); i++)
     {
-        Polygon pol;
-        for (uint j = 0; j < solution[i].size(); j++)
-            pol.appendVertex(solution[i][j].x, solution[i][j].y);
-        polygons << pol;
+        PathD clp;
+        ListIterator<Line> it = cp[i].edgeIterator();
+        while (it.hasNext())
+        {
+            const Vec2& v = it.next().p1();
+            clp.push_back(PointD(v.x, v.y));
+        }
+        clips.push_back(clp);
     }
-    return polygons;
+
+    thread_local LinkedList<Polygon> resultPolygons;
+    resultPolygons.clear();
+
+    // Execute the Clipper union operation.
+    ClipperD clipper(4); // 4 digits precision
+    clipper.AddSubject(pols);
+    clipper.AddClip(clips);
+    clipper.ReverseSolution = true;
+    clipper.Execute(ClipType::Difference, FillRule::NonZero, resultPolygons);
+
+    return resultPolygons;
 }
 
 // Clips this polygon with the convex cp polygon such that only the parts of this
@@ -2048,96 +2167,6 @@ void Polygon::clipBox(const Box &box, bool debug)
     return;
 }
 
-// Unites this polygon with the polygon cp. If this polygon is A and cp is B,
-// then you get A+B. Both polygons need to be in the same frame of reference,
-// i.e. both must have the same pose. All edge types are set to blocking.
-// The union operation can result in multiple polygons where the first polygon
-// in the result vector is the parent of the remaining polygons that are in CW order.
-const Vector<Polygon> &Polygon::united(const Polygon &cp) const
-{
-    // This function uses the Clipper2 library.
-    // http://www.angusj.com/clipper2/
-
-    PathD sub;
-    ListIterator<Line> vit = edgeIterator();
-    while (vit.hasNext())
-    {
-        const Vec2& v = vit.next().p1();
-        sub.push_back(PointD(v.x, v.y));
-    }
-
-    PathD clp;
-    ListIterator<Line> cpit = cp.edgeIterator();
-    while (cpit.hasNext())
-    {
-        const Vec2& v = cpit.next().p1();
-        clp.push_back(PointD(v.x, v.y));
-    }
-
-    PathsD pols;
-    pols.push_back(sub);
-    pols.push_back(clp);
-    PathsD result;
-    ClipperD clipper(4); // 4 is the precision
-    clipper.AddSubject(pols);
-    clipper.Execute(ClipType::Union, FillRule::NonZero, result);
-
-    thread_local Vector<Polygon> polygons;
-    polygons.clear();
-    for (uint i = 0; i < result.size(); i++)
-    {
-        Polygon pol;
-        for (uint j = 0; j < result[i].size(); j++)
-            pol.appendVertex(result[i][j].x, result[i][j].y);
-        polygons << pol;
-    }
-    return polygons;
-}
-
-// Unites this polygon with the Vector of polygons cp. If this polygon is A and cp is B,
-// then you get A+B. All polygons need to be in the same frame of reference,
-// i.e. all must have the same pose. All edge types are set to blocking.
-const Vector<Polygon>& Polygon::united(const Vector<Polygon> &cp) const
-{
-    // This function uses the Clipper2 library.
-    // http://www.angusj.com/clipper2/
-
-    PathD sub;
-    ListIterator<Line> vit = edgeIterator();
-    while (vit.hasNext())
-    {
-        Vec2 v = vit.next().p1() + pose();
-        sub.push_back(PointD(v.x, v.y));
-    }
-
-    PathsD pols;
-    pols.push_back(sub);
-    for (uint i = 0; i < cp.size(); i++)
-    {
-        PathD clp;
-        ListIterator<Line> cpit = cp[i].edgeIterator();
-        while (cpit.hasNext())
-        {
-            Vec2 v = cpit.next().p1() + cp[i].pose();
-            clp.push_back(PointD(v.x, v.y));
-        }
-        pols.push_back(clp);
-    }
-
-    PathsD solution = Union(pols, FillRule::NonZero, 4);
-
-    thread_local Vector<Polygon> polygons;
-    polygons.clear();
-    for (uint i = 0; i < solution.size(); i++)
-    {
-        Polygon pol;
-        for (uint j = 0; j < solution[i].size(); j++)
-            pol.appendVertex(solution[i][j].x, solution[i][j].y);
-        polygons << pol;
-    }
-    return polygons;
-}
-
 // Grows (or shrinks) the polygon by delta. Delta is the distance by how many meters the
 // polygon is grown or shrunk, if delta is negative. Offsetting is not the translation of
 // a polygon, but a modification of its size. After the growing, the resulting polygon is
@@ -2145,7 +2174,7 @@ const Vector<Polygon>& Polygon::united(const Vector<Polygon> &cp) const
 // deviate less than eps from the line through its neighbours. The offsetting of a polygon
 // can result in multiple polygons. This function returns all of them. The returned polygons
 // are in a transformed state.
-const Vector<Polygon>& Polygon::offseted(double delta, double eps) const
+const Vector<Polygon>& Polygon::offseted(double delta) const
 {
     // The offsetting operation is performed using the Clipper2 library.
     // http://www.angusj.com/clipper2/Docs/Overview.htm
@@ -2163,8 +2192,6 @@ const Vector<Polygon>& Polygon::offseted(double delta, double eps) const
     subj.push_back(path);
 
     PathsD solution = InflatePaths(subj, delta, JoinType::Round, EndType::Polygon, 4);
-    if (eps > 0)
-        solution = SimplifyPaths(solution, eps);
 
     thread_local Vector<Polygon> polygons;
     polygons.clear();
@@ -2193,14 +2220,14 @@ const Vector<Polygon>& Polygon::offseted(double delta, double eps) const
 // levelwise whereby the winding alternates from level to level. A change of
 // winding indicates the next level of hierarchy. The edge types of the result
 // polygons are set to blocking.
-const LinkedList<Polygon> &Polygon::unify(const Vector<Polygon> &polygons)
+const LinkedList<Polygon> &Polygon::unify(const Vector<Polygon> &polygons, bool reverse)
 {
     // This function uses the Clipper2 library.
     // http://www.angusj.com/clipper2/
 
     // It is still unclear whether it is better to use the PolyTree
     // structure to retrieve the polygon hierarchy, or if determining
-    // the winding is the better way.
+    // the winding is sufficient.
 
     PathsD pols;
     for (uint i = 0; i < polygons.size(); i++)
@@ -2221,9 +2248,23 @@ const LinkedList<Polygon> &Polygon::unify(const Vector<Polygon> &polygons)
     PolyTreeD polyTree;
     ClipperD clipper(4);
     clipper.AddSubject(pols);
+    clipper.ReverseSolution = reverse;
     //clipper.Execute(ClipType::Union, FillRule::NonZero, resultPolygons);
     clipper.Execute(ClipType::Union, FillRule::NonZero, polyTree);
     PolyTreeToPolygonsD(polyTree, resultPolygons);
+    ListIterator<Polygon> rit = resultPolygons.begin();
+    while (rit.hasNext())
+    {
+        //qDebug() << "id:" << rit.cur().getId() << "size:" << rit.cur().size() << "area:" << rit.cur().area() << "ccw:" << rit.cur().isCCW();
+        if (rit.cur().size() < 5 && rit.cur().area() < max(0.01, config.gmPolygonPruning))
+        {
+            resultPolygons.remove(rit);
+        }
+        else
+        {
+            rit.next();
+        }
+    }
 
     return resultPolygons;
 }
@@ -2240,7 +2281,7 @@ const LinkedList<Polygon> &Polygon::unify(const Vector<Polygon> &polygons)
 // levelwise whereby the winding alternates from level to level. A change of
 // winding indicates the next level of hierarchy. The edge types of the result
 // polygons are set to blocking.
-const LinkedList<Polygon> &Polygon::unify(const LinkedList<Polygon> &polygons)
+const LinkedList<Polygon> &Polygon::unify(const LinkedList<Polygon> &polygons, bool reverse)
 {
     // This function uses the Clipper2 library.
     // http://www.angusj.com/clipper2/
@@ -2267,9 +2308,23 @@ const LinkedList<Polygon> &Polygon::unify(const LinkedList<Polygon> &polygons)
     PolyTreeD polyTree;
     ClipperD clipper(4);
     clipper.AddSubject(pols);
+    clipper.ReverseSolution = reverse;
     //clipper.Execute(ClipType::Union, FillRule::NonZero, resultPolygons);
     clipper.Execute(ClipType::Union, FillRule::NonZero, polyTree);
     PolyTreeToPolygonsD(polyTree, resultPolygons);
+    ListIterator<Polygon> rit = resultPolygons.begin();
+    while (rit.hasNext())
+    {
+        //qDebug() << "id:" << rit.cur().getId() << "size:" << rit.cur().size() << "area:" << rit.cur().area() << "ccw:" << rit.cur().isCCW();
+        if (rit.cur().size() < 5 && rit.cur().area() < max(0.01, config.gmPolygonPruning))
+        {
+            resultPolygons.remove(rit);
+        }
+        else
+        {
+            rit.next();
+        }
+    }
 
     return resultPolygons;
 }
@@ -2283,7 +2338,7 @@ const LinkedList<Polygon> &Polygon::unify(const LinkedList<Polygon> &polygons)
 // of them. The returned polygons are in a transformed state. All input polygons need to be
 // in the same frame of reference, i.e., all must have the same pose. The order of the input
 // polygons does not matter, but their winding does have an influence on the result.
-const LinkedList<Polygon> &Polygon::offset(const LinkedList<Polygon> &polygons, double delta, double eps)
+const LinkedList<Polygon> &Polygon::offset(const LinkedList<Polygon> &polygons, double delta)
 {
     // The offsetting operation is performed using the Clipper2 library.
     // http://www.angusj.com/clipper2/Docs/Overview.htm
@@ -2306,9 +2361,6 @@ const LinkedList<Polygon> &Polygon::offset(const LinkedList<Polygon> &polygons, 
 
     PathsD solution = InflatePaths(subj, delta, JoinType::Round, EndType::Polygon, 4);
 
-    if (eps > 0)
-        solution = SimplifyPaths(solution, eps);
-
     thread_local LinkedList<Polygon> outPolygons;
     outPolygons.clear();
     for (uint i = 0; i < solution.size(); i++)
@@ -2318,7 +2370,50 @@ const LinkedList<Polygon> &Polygon::offset(const LinkedList<Polygon> &polygons, 
             pol.appendVertex(solution[i][j].x, solution[i][j].y);
         outPolygons << pol;
     }
+
     return outPolygons;
+}
+
+const LinkedList<Polygon> &Polygon::clip(const LinkedList<Polygon> &subjects, const Vector<Polygon> &clippers, bool reverse)
+{
+    PathsD pols;
+    ListIterator<Polygon> pit = subjects.begin();
+    while (pit.hasNext())
+    {
+        PathD sub;
+        ListIterator<Line> vit = pit.next().edgeIterator();
+        while (vit.hasNext())
+        {
+            const Vec2& v = vit.next().p1();
+            sub.push_back(PointD(v.x, v.y));
+        }
+        pols.push_back(sub);
+    }
+
+    PathsD clips;
+    for (uint i = 0; i < clippers.size(); i++)
+    {
+        PathD clp;
+        ListIterator<Line> it = clippers[i].edgeIterator();
+        while (it.hasNext())
+        {
+            const Vec2& v = it.next().p1();
+            clp.push_back(PointD(v.x, v.y));
+        }
+        clips.push_back(clp);
+    }
+
+    thread_local LinkedList<Polygon> resultPolygons;
+    resultPolygons.clear();
+
+    // Execute the Clipper union operation.
+    ClipperD clipper(4); // 4 digits precision
+    clipper.AddSubject(pols);
+    clipper.AddClip(clips);
+    clipper.ReverseSolution = true;
+    clipper.Execute(ClipType::Difference, FillRule::NonZero, resultPolygons);
+
+    return resultPolygons;
 }
 
 // Generates a CCW unit triangle.
@@ -2400,7 +2495,6 @@ void Polygon::setUnitNogon(uint n)
 // It does not matter whether the polygon is transformed or not.
 void Polygon::draw(QPainter *painter, const QPen &pen, const QBrush &brush, double opacity) const
 {
-
     painter->save();
     painter->translate(x, y);
     painter->rotate(theta*RAD_TO_DEG);
@@ -2447,6 +2541,14 @@ void Polygon::drawLabel(QPainter *painter) const
     painter->setOpacity(0.8);
     painter->drawText(QPointF(), QString::number(getId()));
     painter->restore();
+}
+
+// Draws a label with the polygon id on a QPainter.
+void Polygon::drawEdgeLabels(QPainter *painter) const
+{
+    ListIterator<Line> lit = edgeIterator();
+    while (lit.hasNext())
+        lit.next().drawLabel(painter);
 }
 
 // Draws the polygon in an OpenGL context.
@@ -2695,18 +2797,28 @@ void Polygon::untransform()
     setPos(c);
 }
 
-// Returns true if all vertices of this polygon are equal to the other.
+// Returns true if the pose and all vertices of this polygon are equal to the other.
 bool Polygon::operator==(const Polygon& other) const
 {
+    //qDebug() << "Polygon::operator==() called. this:" << *this << "other:" << other;
     ListIterator<Line> it1 = edgeIterator();
     ListIterator<Line> it2 = other.edgeIterator();
+    if (pose() != other.pose())
+    {
+        //qDebug() << "  poses don't match:" << pose() << other.pose();
+        return false;
+    }
     while (it1.hasNext() && it2.hasNext())
     {
         if (it1.cur() != it2.cur())
+        {
+            //qDebug() << "  vertex don't match:" << it1.cur() << it2.cur();
             return false;
+        }
         it1.next();
         it2.next();
     }
+
     return (it1.hasNext() == it2.hasNext());
 }
 
@@ -2742,47 +2854,118 @@ void operator-=(Polygon& pol, const Pose2D& p)
     pol.setPose(pol.pose()-p);
 }
 
-// Maps the polygon from the frame given by Pose to world coordinates.
-// The polygon is assumed to be in local in the frame given by Pose and is
-// transformed to world coordinates by Pose arithmetic.
-// Only the pose of the polygon is changed, but not the vertex coordinates.
+// Maps the vector of polygons from the frame given by Pose2D to world coordinates.
+// The polygons are assumed to be in local in the frame given by Pose and are
+// transformed to world coordinates by Pose arithmetic. The resulting polygons
+// are transformed.
 Vector<Polygon> operator+(const Vector<Polygon> &v, const Pose2D &p)
 {
     Vector<Polygon> tmp;
     tmp.resize(v.size());
     for (int i = 0; i < v.size(); ++i)
+    {
         tmp[i] = v[i] + p;
+        tmp[i].transform();
+    }
     return tmp;
 }
 
-// Maps the polygons into the local coordinates of the frame given by Pose.
-// Only the poses of the polygons are changed, but not the vertex coordinates.
+// Maps the vector of polygons into the local coordinates of the frame given by Pose2D.
+// The resulting polygons are transformed.
 Vector<Polygon> operator-(const Vector<Polygon> &v, const Pose2D &p)
 {
     Vector<Polygon> tmp;
     tmp.resize(v.size());
     for (int i = 0; i < v.size(); ++i)
+    {
         tmp[i] = v[i] - p;
+        tmp[i].transform();
+    }
     return tmp;
 }
 
-// Maps the polygons from the frame given by Pose to world coordinates.
+// Maps the vector of polygons from the frame given by Pose to world coordinates.
 // The polygons are assumed to be in local in the frame given by Pose and is
 // transformed to world coordinates by Pose arithmetic.
-// Only the poses of the polygons are changed, but not the vertex coordinates.
+// The resulting polygons are transformed.
 void operator+=(Vector<Polygon> &v, const Pose2D &p)
 {
     for (int i = 0; i < v.size(); ++i)
+    {
         v[i] += p;
+        v[i].transform();
+    }
 }
 
 // Maps the polygons into the local coordinates of the frame given by Pose.
-// Only the poses of the polygons are changed, but not the vertex coordinates.
+// The resulting polygons are transformed.
 void operator-=(Vector<Polygon> &v, const Pose2D &p)
 {
     for (int i = 0; i < v.size(); ++i)
+    {
         v[i] -= p;
+        v[i].transform();
+    }
 }
+
+// Maps the list of polygons from the frame given by Pose2D to world coordinates.
+// The polygons are assumed to be in local in the frame given by Pose and are
+// transformed to world coordinates by Pose arithmetic. The resulting polygons
+// are transformed.
+LinkedList<Polygon> operator+(const LinkedList<Polygon> &v, const Pose2D &p)
+{
+    LinkedList<Polygon> tmp;
+    ListIterator<Polygon> it = v.begin();
+    while (it.hasNext())
+    {
+        tmp << it.next() + p;
+        tmp.last().transform();
+    }
+    return tmp;
+}
+
+// Maps the list of polygons into the local coordinates of the frame given by Pose2D.
+// The resulting polygons are transformed.
+LinkedList<Polygon> operator-(const LinkedList<Polygon> &v, const Pose2D &p)
+{
+    LinkedList<Polygon> tmp;
+    ListIterator<Polygon> it = v.begin();
+    while (it.hasNext())
+    {
+        tmp << it.next() - p;
+        tmp.last().transform();
+    }
+    return tmp;
+}
+
+// Maps the list of polygons from the frame given by Pose to world coordinates.
+// The polygons are assumed to be in local in the frame given by Pose and is
+// transformed to world coordinates by Pose arithmetic.
+// The resulting polygons are transformed.
+void operator+=(LinkedList<Polygon> &v, const Pose2D &p)
+{
+    ListIterator<Polygon> it = v.begin();
+    while (it.hasNext())
+    {
+        Polygon& pol = it.next();
+        pol += p;
+        pol.transform();
+    }
+}
+
+// Maps the list of polygons into the local coordinates of the frame given by Pose.
+// The resulting polygons are transformed.
+void operator-=(LinkedList<Polygon> &v, const Pose2D &p)
+{
+    ListIterator<Polygon> it = v.begin();
+    while (it.hasNext())
+    {
+        Polygon& pol = it.next();
+        pol -= p;
+        pol.transform();
+    }
+}
+
 
 // Writes the polygon into a data stream.
 void Polygon::streamOut(QDataStream &out) const
@@ -2845,6 +3028,7 @@ QDebug operator<<(QDebug dbg, const Polygon* o)
             << "pose:" << o->pose()
             << "ccw:" << o->isCCW()
             << "conv:" << o->isConvex()
+            << "int:" << o->isSelfIntersecting()
             << "area:" << o->area()
             << "size:" << o->size();
     else
@@ -2852,6 +3036,7 @@ QDebug operator<<(QDebug dbg, const Polygon* o)
             << " pose: " << o->pose()
             << " ccw: " << o->isCCW()
             << " conv: " << o->isConvex()
+            << " int: " << o->isSelfIntersecting()
             << " area:" << o->area()
             << " size:" << o->size();
     return dbg;

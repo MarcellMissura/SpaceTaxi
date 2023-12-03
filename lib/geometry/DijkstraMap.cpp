@@ -68,7 +68,7 @@ void DijkstraMap::computeDijkstraMap(const GridModel& gridModel, const Vec2& tar
     setMax(gridModel.getMax());
     init();
 
-    // Allocate and initialize a vector of search nodes.
+    // Allocate and initialize a vector of nodes.
     Vec2u N = getN();
     nodes.resize(N.x);
     for (uint i = 0; i < N.x; i++)

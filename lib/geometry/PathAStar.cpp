@@ -1,5 +1,5 @@
 ﻿#include "PathAStar.h"
-#include "blackboard/State.h"
+#include "board/State.h"
 #include "lib/util/StopWatch.h"
 #include "lib/util/DrawUtil.h"
 

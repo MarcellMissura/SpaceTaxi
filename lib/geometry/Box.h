@@ -42,6 +42,7 @@ public:
     Vec2 topRight() const;
     Vec2 bottomLeft() const;
     Vec2 bottomRight() const;
+    Vec2 center() const;
 
     Vec2 pos() const;
     void setPos(const Vec2& p);

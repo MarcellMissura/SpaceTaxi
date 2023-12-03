@@ -182,3 +182,10 @@ QDebug operator<<(QDebug dbg, const LinePair &n)
         //<< "tr:" << n.tr();
     return dbg;
 }
+
+QDebug operator<<(QDebug dbg, const LinePair *n)
+{
+    dbg << n->inputLine->id
+        << n->mapLine->id;
+    return dbg;
+}

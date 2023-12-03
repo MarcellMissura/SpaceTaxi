@@ -1,4 +1,4 @@
-#include "DrawUtil.h"
+﻿#include "DrawUtil.h"
 #include <QtCore/qmath.h>
 #include "Statistics.h"
 
@@ -31,6 +31,7 @@ DrawUtil::DrawUtil()
     yellow = QColor("yellow");
     orange = QColor::fromRgb(255,165,0);
     red = QColor("red");
+    lightRed = QColor("lightred");
     green = QColor("green");
     lightGreen = QColor::fromRgb(100,255,100);
     blue = QColor("blue");
@@ -107,6 +108,11 @@ DrawUtil::DrawUtil()
     penLightGrayThin.setWidth(1);
     penLightGrayThin.setColor(lightGray);
 
+    penLightGrayThinDashed.setCosmetic(true);
+    penLightGrayThinDashed.setStyle(Qt::DashLine);
+    penLightGrayThinDashed.setWidth(1);
+    penLightGrayThinDashed.setColor(lightGray);
+
     penLightGrayThick.setCosmetic(true);
     penLightGrayThick.setWidth(3);
     penLightGrayThick.setColor(lightGray);
@@ -182,6 +188,11 @@ DrawUtil::DrawUtil()
     penBlue.setWidth(2);
     penBlue.setColor(blue);
 
+    penBlueDashed.setCosmetic(true);
+    penBlueDashed.setWidth(2);
+    penBlueDashed.setStyle(Qt::DashLine);
+    penBlueDashed.setColor(blue);
+
     penBlueThin.setCosmetic(true);
     penBlueThin.setWidth(1);
     penBlueThin.setColor(blue);
@@ -193,6 +204,11 @@ DrawUtil::DrawUtil()
     penGreen.setCosmetic(true);
     penGreen.setWidth(2);
     penGreen.setColor(green);
+
+    penGreenDashed.setCosmetic(true);
+    penGreenDashed.setWidth(2);
+    penGreenDashed.setStyle(Qt::DashLine);
+    penGreenDashed.setColor(green);
 
     penGreenThin.setCosmetic(true);
     penGreenThin.setWidth(1);
@@ -416,6 +432,16 @@ void DrawUtil::drawNoseCircle(QPainter* painter, const Pose2D& pose, const QPen&
     painter->setBrush(brush);
     painter->drawEllipse(QPointF(), radius, radius);
     painter->drawLine(QPointF(), QPointF(2*radius, 0));
+    painter->restore();
+    return;
+}
+
+// Draws a line from from to to on a QPainter using the given pen.
+void DrawUtil::drawLine(QPainter* painter, const Vec2& from, const Vec2& to, const QPen& pen)
+{
+    painter->save();
+    painter->setPen(pen);
+    painter->drawLine(from, to);
     painter->restore();
     return;
 }

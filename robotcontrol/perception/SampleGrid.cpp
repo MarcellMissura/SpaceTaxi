@@ -1,6 +1,6 @@
 #include "SampleGrid.h"
 #include "blackboard/Config.h"
-#include "lib/util/ColorUtil.h"
+#include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 #include <QGLViewer/qglviewer.h>
 
@@ -484,11 +484,11 @@ void SampleGrid::drawSamples(QPainter *painter) const
             for (int j = 0; j < samples[i].size(); j++)
             {
                 if (samples[i][j].p.isNull())
-                    painter->setPen(colorUtil.penThin);
+                    painter->setPen(drawUtil.penThin);
                 else if (samples[i][j].in)
-                    painter->setPen(colorUtil.penGreenThin);
+                    painter->setPen(drawUtil.penGreenThin);
                 else
-                    painter->setPen(colorUtil.penRedThin);
+                    painter->setPen(drawUtil.penRedThin);
                 painter->drawEllipse(samples[i][j].imagePx.x-circleSize/2, samples[i][j].imagePx.y-circleSize/2, circleSize, circleSize);
             }
         }
@@ -497,8 +497,8 @@ void SampleGrid::drawSamples(QPainter *painter) const
     // Draw the pruned sample set in red.
     if (true)
     {
-        painter->setPen(colorUtil.penRedThin);
-        painter->setBrush(colorUtil.brushRed);
+        painter->setPen(drawUtil.penRedThin);
+        painter->setBrush(drawUtil.brushRed);
         for (int i = 0; i < prunedSamples.size(); i++)
         {
             if (floorSegment.contains(prunedSamples[i]))
@@ -510,8 +510,8 @@ void SampleGrid::drawSamples(QPainter *painter) const
     // Draw the floor segment samples in green.
     if (true)
     {
-        painter->setPen(colorUtil.penGreenThin);
-        painter->setBrush(colorUtil.brushGreen);
+        painter->setPen(drawUtil.penGreenThin);
+        painter->setBrush(drawUtil.brushGreen);
         for (int i = 0; i < floorSegment.size()-1; i++)
             painter->drawEllipse(floorSegment[i].imagePx.x-circleSize/2, floorSegment[i].imagePx.y-circleSize/2, circleSize, circleSize);
     }
@@ -519,8 +519,8 @@ void SampleGrid::drawSamples(QPainter *painter) const
     // Draw the path of expansion.
     if (false)
     {
-        painter->setPen(colorUtil.penGreenThin);
-        painter->setBrush(colorUtil.brushGreen);
+        painter->setPen(drawUtil.penGreenThin);
+        painter->setBrush(drawUtil.brushGreen);
         for (int i = 0; i < floorSegment.size()-1; i++)
             painter->drawLine(floorSegment[i].imagePx.x, floorSegment[i].imagePx.y, floorSegment[i+1].imagePx.x, floorSegment[i+1].imagePx.y);
     }
@@ -528,8 +528,8 @@ void SampleGrid::drawSamples(QPainter *painter) const
     // Draw the neighbour lines to highlight the floor.
     if (false)
     {
-        painter->setPen(colorUtil.penGreenThin);
-        painter->setBrush(colorUtil.brushGreen);
+        painter->setPen(drawUtil.penGreenThin);
+        painter->setBrush(drawUtil.brushGreen);
         for (int i = 0; i < floorSegment.size()-1; i++)
         {
             const Vec2u& gridIdx = floorSegment[i].gridIdx;
@@ -554,7 +554,7 @@ void SampleGrid::drawSamples(QPainter *painter) const
         font.setPointSize(8);
         painter->setFont(font);
 
-        painter->setPen(colorUtil.penWhiteThin);
+        painter->setPen(drawUtil.penWhiteThin);
         for (int i = 0; i < samples.size(); i++)
         {
             const Sample& sam = samples[i][1];
@@ -683,7 +683,7 @@ void SampleGrid::drawSamples() const
         for (int i = 0; i < planes.size(); i++)
         {
             // Assign a color.
-            QColor c = colorUtil.getHeightMapColor(i, 0, planes.size());
+            QColor c = drawUtil.getHeightMapColor(i, 0, planes.size());
             glColor3f(c.redF(), c.greenF(), c.blueF());
 
             // All contained normals.

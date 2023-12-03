@@ -1,6 +1,6 @@
 #include "GridModel.h"
 #include "PathAStar.h"
-#include "blackboard/Config.h"
+#include "board/Config.h"
 #include "lib/util/Logger.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
@@ -526,16 +526,16 @@ void GridModel::invert()
     cv::bitwise_not(M,M);
 }
 
-// Returns a vector of polygons extracted from the grid.
-// The algorithm segments the grid by means of contour detection.
-// The segments are converted to polygons and simplified with the Douglas Peucker algorithm.
-// The polygons are non-convex and disjunct. The returned polygons have a zero pose and the
-// coordinates of their vertices are in the local coordinate frame of the grid.
+// Returns a list of polygons extracted from the grid. The algorithm segments the grid
+// by means of contour detection. The segments are converted to non-convex disjunct polygons.
+// The returned polygons have a zero pose and the coordinates of their vertices are in the
+// local coordinate frame of the grid.
 LinkedList<Polygon> GridModel::extractPolygons() const
 {
     Vec2 stride = getStride();
 
     // Contour detection.
+    // The most external contours are always sufficient when it comes to sensing polygons.
     std::vector<std::vector<cv::Point>> segmentsAsContour;
     std::vector<cv::Vec4i> hierachy;
     // RETR_EXTERNAL: retrieve only the most external (top-level) contours. (fastest)
@@ -560,9 +560,7 @@ LinkedList<Polygon> GridModel::extractPolygons() const
         pol.scale(stride.x, stride.y);
         pol.translate(getMin());
         pol.transform();
-        pol.simplify(config.gmDouglasPeuckerEpsilon);
-        if (pol.size() >= 3)
-            polygons << pol;
+        polygons << pol;
     }
 
     // The obstacles sensed from the grid ARE already transformed.

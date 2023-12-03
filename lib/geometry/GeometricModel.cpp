@@ -1,7 +1,7 @@
 #include "GeometricModel.h"
-#include "blackboard/Config.h"
-#include "blackboard/State.h"
-#include "blackboard/Command.h"
+#include "board/Config.h"
+#include "board/State.h"
+#include "board/Command.h"
 #include "lib/util/DrawUtil.h"
 #include "lib/util/GLlib.h"
 
@@ -13,8 +13,8 @@
 // are large, all surrounding polygons with CCW winding that demark free space. The static
 // polygons have CW winding and demark blocked space holes in the root polygons. The dilated
 // static polygons are also CW and are basically a dilated version of the blocked space polygons,
-// even though there does not need to be a one to one correspondence. The moving obstacles are
-// also CW wound and represent dynamic obstacles according to the unicycle model.
+// even though there does not need to be a one to one correspondence between them. The moving
+// obstacles are also CW wound and represent dynamic obstacles according to the unicycle model.
 
 // One of the main features of the class is the predict() function group that compute
 // estimates of the future state of the geometric world modeled by the GeometricModel.
@@ -282,6 +282,39 @@ Box GeometricModel::getBoundingBox() const
     return box;
 }
 
+// Returns the closest Point to point v in the geometric scene.
+Vec2 GeometricModel::getClosestPoint(const Vec2 &v) const
+{
+    double minDist = std::numeric_limits<double>::max();
+    Vec2 closestPoint = v;
+
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+    {
+        Vec2 cp = polyIt.next().closestPoint(v);
+        double d = (cp-v).norm2();
+        if (d < minDist)
+        {
+            minDist = d;
+            closestPoint = cp;
+        }
+    }
+
+    ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
+    while (obstIt.hasNext())
+    {
+        Vec2 cp = obstIt.next().closestPoint(v);
+        double d = (cp-v).norm2();
+        if (d < minDist)
+        {
+            minDist = d;
+            closestPoint = cp;
+        }
+    }
+
+    return closestPoint;
+}
+
 // Returns the shortest Euklidean distance between the point v
 // and the closest point between the polygons and the obstacles
 // in the scene (acting only on the real objects).
@@ -455,7 +488,7 @@ void GeometricModel::worldImport(const LinkedList<Polygon> &pols)
     // large CW polygon surrounding everything. This is the inner border
     // of the fence. 3. A bunch of smaller CCW polygons marking the
     // blocked space.
-    polygons = Polygon::unify(pols);
+    polygons = Polygon::unify(pols, false);
 
 
     // Now prune the result of the union to get rid of the outermost
@@ -495,7 +528,7 @@ void GeometricModel::worldImport(const LinkedList<Polygon> &pols)
     // Contract.
     // Contract the polygons with a negative offset in order to create the
     // actual map as the agent would build it.
-    polygons = Polygon::offset(polygons, -config.gmDilationRadius, config.gmDouglasPeuckerEpsilon);
+    polygons = Polygon::offset(polygons, -config.gmPolygonDilation);
 
 
     // Classify the polygons in the polygons list into CCW polygons that are
@@ -518,6 +551,22 @@ void GeometricModel::worldImport(const LinkedList<Polygon> &pols)
     renumber();
 
     return;
+}
+
+// Prunes the model assuming an agent located at the position p.
+// All root polygons that do not contain p are discarded.
+void GeometricModel::prune(const Vec2 &p)
+{
+    //qDebug() << "GeometricModel::prune(const Vec2 &p)" << p;
+    ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
+    while (rootPolyIt.hasNext())
+    {
+        const Polygon& pol = rootPolyIt.cur();
+        if (!pol.intersects(p))
+            rootPolygons.remove(rootPolyIt);
+        else
+            rootPolyIt.next();
+    }
 }
 
 // Overwrites the ids of all obstacles with the given one.
@@ -592,20 +641,80 @@ void GeometricModel::reverseOrder()
         obstIt.next().reverseOrder();
 }
 
-// Simplifies all polygons with the Dougals Peucker algorithm.
-// The obstacles are usually already simple so they remain untouched.
+// Simplifies the root polygons, the polygons and the dilated polygons
+// with the Dougals Peucker algorithm. The obstacles are already simple
+// so they remain untouched.
 void GeometricModel::simplify(double epsilon)
 {
     ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
     while (rootPolyIt.hasNext())
-        rootPolyIt.next().simplify(epsilon);
+    {
+        rootPolyIt.cur().simplify(epsilon);
+        if (rootPolyIt.cur().size() <= 3)
+            rootPolygons.remove(rootPolyIt);
+        else
+            rootPolyIt.next();
+    }
+
     ListIterator<Polygon> polyIt = polygons.begin();
     while (polyIt.hasNext())
-        polyIt.next().simplify(epsilon);
+    {
+        polyIt.cur().simplify(epsilon);
+        if (polyIt.cur().size() <= 3)
+            polygons.remove(polyIt);
+        else
+            polyIt.next();
+    }
+
     ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
     while (dilatedPolyIt.hasNext())
-        dilatedPolyIt.next().simplify(epsilon);
-    visibilityGraph.reset();
+    {
+        dilatedPolyIt.cur().simplify(epsilon);
+        if (dilatedPolyIt.cur().size() <= 3)
+            dilatedPolygons.remove(dilatedPolyIt);
+        else
+            dilatedPolyIt.next();
+    }
+
+    //visibilityGraph.reset();
+}
+
+// Prunes the root polygons, the polygons, and the dilated polygons
+// so that they shed concave vertices that only modify the area of
+// the polygon by a small amount (epsilon). This way, the polygons
+// can only grow outwards.
+void GeometricModel::pruneOut(double epsilon)
+{
+    ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
+    while (rootPolyIt.hasNext())
+        rootPolyIt.next().pruneIn(epsilon);
+
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+        polyIt.next().pruneOut(epsilon);
+
+    ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
+    while (dilatedPolyIt.hasNext())
+        dilatedPolyIt.next().pruneOut(epsilon);
+}
+
+// Prunes the root polygons, the polygons, and the dilated polygons
+// so that they shed convex vertices that only modify the area of
+// the polygon by a small amount (epsilon). This way, the polygons
+// can only shrink inwards.
+void GeometricModel::pruneIn(double epsilon)
+{
+    ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
+    while (rootPolyIt.hasNext())
+        rootPolyIt.next().pruneIn(epsilon);
+
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+        polyIt.next().pruneIn(epsilon);
+
+    ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
+    while (dilatedPolyIt.hasNext())
+        dilatedPolyIt.next().pruneIn(epsilon);
 }
 
 // Scales the whole model by alpha. Multiplies all coordinates with alpha.
@@ -637,7 +746,7 @@ void GeometricModel::scale(double alpha, double beta)
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
         obstIt.next().scale(alpha, beta);
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
 }
 
 // Rotates the scene counter clockwise by the angle "a" given in radians
@@ -656,7 +765,7 @@ void GeometricModel::rotate(double a)
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
         obstIt.next().rotate(a);
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
 }
 
 // Translates the scene by (dx,dy).
@@ -674,7 +783,7 @@ void GeometricModel::translate(double dx, double dy)
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
         obstIt.next().translate(dx, dy);
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
 }
 
 // Translates the scene by (v.x, v.y).
@@ -700,7 +809,7 @@ void GeometricModel::transform()
     while (obstIt.hasNext())
         obstIt.next().transform();
 
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
 }
 
 // Maps the entire scene into the frame given by Pose2D.
@@ -756,35 +865,65 @@ GeometricModel GeometricModel::operator+(const Pose2D &o)
     return copy;
 }
 
-// Unites the polygons in this geometric scene with the given polygon.
-// Obstacles are ignored. The winding of the polygon determines the
-// result of the union. If the winding is CCW, the polygon is taken as
-// a member of the freespace layer and united with the freespace polygons
-// where the child polygons on the blocked space layer can become holes
-// of pol. If the winding is CW, the polygon is taken as a member of the
-// deeper blocked space layer and united with the children that are
-// holes of the freespace polygons in the higher layer.
-// This function is currently used by GeometricMap for uniting one
-// visibility polygon with the observed neighborhood of a pose node.
-void GeometricModel::unite(const Polygon &pol)
+// Unites the root polygons and the dilated polygons in this geometric scene
+// with the given polygons. The winding of the polygons determines the result
+// of the union. If the winding is CCW, the polygon is taken as a member of
+// the freespace layer and united with the root polygons where the child
+// polygons on the blocked space layer can become holes of pol. If the winding
+// is CW, the polygon is taken as a member of the deeper blocked space layer
+// and united with the children that are holes of the freespace polygons in
+// the higher layer. This function is currently used by GeometricMap for
+// uniting one visibility polygon with the observed neighborhood of a pose node.
+void GeometricModel::unite(const Vector<Polygon> &rootPols, const Vector<Polygon> &pols)
 {
-    polygons << pol;
-    polygons << rootPolygons;
+    // Unify the root polygons.
+    rootPolygons << rootPols;
+    rootPolygons = Polygon::unify(rootPolygons, false);
+
+    // Remove holes.
+    ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
+    while (rootPolyIt.hasNext())
+    {
+        if (rootPolyIt.cur().isCW())
+            rootPolygons.remove(rootPolyIt);
+        else
+            rootPolyIt.next();
+    }
+
+    // Unify the polygons.
+    polygons << pols;
     polygons = Polygon::unify(polygons);
-    rootPolygons.clear();
+
+    // Remove holes.
     ListIterator<Polygon> polyIt = polygons.begin();
     while (polyIt.hasNext())
     {
         if (polyIt.cur().isCCW())
-        {
-            rootPolygons << polyIt.cur();
             polygons.remove(polyIt);
-        }
         else
-        {
             polyIt.next();
-        }
     }
+
+    return;
+}
+
+// Unites the polygons in this geometric scene with the given polygon.
+void GeometricModel::unite(const Polygon &pol)
+{
+    // Unify the polygons.
+    polygons << pol;
+    polygons = Polygon::unify(polygons);
+
+    // Remove holes.
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+    {
+        if (polyIt.cur().isCCW())
+            polygons.remove(polyIt);
+        else
+            polyIt.next();
+    }
+
     return;
 }
 
@@ -798,38 +937,111 @@ void GeometricModel::unite(const Polygon &pol)
 // polygon map.
 void GeometricModel::unite(const GeometricModel &gm)
 {
-    polygons << rootPolygons;
+    //qDebug() << state.frameId << "GeometricModel::unite(const GeometricModel &gm)" << &gm;
+    //qDebug() << "with" << this;
+
+    // Unify the root polygons.
+    rootPolygons << gm.getRootPolygons();
+    rootPolygons = Polygon::unify(rootPolygons, false);
+
+    // Remove holes.
+    ListIterator<Polygon> polyIt = rootPolygons.begin();
+    while (polyIt.hasNext())
+    {
+        if (polyIt.cur().isCW())
+            rootPolygons.remove(polyIt);
+        else
+            polyIt.next();
+    }
+
+    // Unify the polygons.
     polygons << gm.getPolygons();
-    polygons << gm.getRootPolygons();
     polygons = Polygon::unify(polygons);
-    rootPolygons.clear();
-    ListIterator<Polygon> polyIt = polygons.begin();
+
+    // Remove holes.
+    polyIt = polygons.begin();
     while (polyIt.hasNext())
     {
         if (polyIt.cur().isCCW())
-        {
-            rootPolygons << polyIt.cur();
             polygons.remove(polyIt);
-        }
         else
-        {
             polyIt.next();
-        }
     }
-    unicycleObstacles << gm.unicycleObstacles;
+
     return;
 }
 
-// Applies the offset operator on the polygons and overwrites
-// the dilatedPolygons with the result. The polygons and the
-// root polygons and the obstacles remain untouched.
+// Applies the offset operator on the polygons and overwrites the dilatedPolygons
+// with the result. The polygons and the root polygons and the obstacles remain untouched.
+// After the offsetting, the dilated polygons are smoothed with the Douglas Peucker algorithm.
 void GeometricModel::dilate(double delta)
 {
     if (polygons.isEmpty())
         return;
 
-    dilatedPolygons = Polygon::offset(polygons, delta, config.gmDouglasPeuckerEpsilon);
+    dilatedPolygons = Polygon::offset(polygons, delta);
 
+    // Remove holes.
+    ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
+    while (dilatedPolyIt.hasNext())
+    {
+        if (dilatedPolyIt.cur().isCCW())
+            dilatedPolygons.remove(dilatedPolyIt);
+        else
+            dilatedPolyIt.next();
+    }
+
+    //visibilityGraph.reset();
+
+    return;
+}
+
+// Unites the given root polygons and polygons with this geometric scene.
+// This function is currently used by GeometricMap for uniting a single frame observation
+// with the observed neighborhood of a pose node.
+void GeometricModel::observationUpdate(const Vector<Polygon> &rootPols, const Vector<Polygon> &pols)
+{
+    // Unify the root polygons.
+    rootPolygons << rootPols;
+    rootPolygons = Polygon::unify(rootPolygons, false);
+
+    // Remove holes.
+    ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
+    while (rootPolyIt.hasNext())
+    {
+        if (rootPolyIt.cur().isCW())
+            rootPolygons.remove(rootPolyIt);
+        else
+            rootPolyIt.next();
+    }
+
+    // Unify the polygons.
+    polygons << pols;
+    polygons = Polygon::unify(polygons);
+
+    // Remove holes.
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+    {
+        if (polyIt.cur().isCCW())
+            polygons.remove(polyIt);
+        else
+            polyIt.next();
+    }
+/*
+    // Dilate the polygons.
+    dilate(config.gmPolygonDilation);
+
+    // Remove holes.
+    ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
+    while (dilatedPolyIt.hasNext())
+    {
+        if (dilatedPolyIt.cur().isCCW())
+            dilatedPolygons.remove(dilatedPolyIt);
+        else
+            dilatedPolyIt.next();
+    }
+*/
     return;
 }
 
@@ -838,13 +1050,15 @@ void GeometricModel::dilate(double delta)
 // is used, for example, to create the local map from the world map.
 void GeometricModel::clip(const Box &box)
 {
+    // The algorithm is in principle capable of taking any convex
+    // clip polygon as input. Right now it's just a box.
+
     ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
     while (rootPolyIt.hasNext())
     {
         Polygon& pol = rootPolyIt.cur();
         //qDebug() << "Clipping pol" << &pol;
         pol.clipBox(box);
-        pol.prune();
         if (pol.isEmpty())
             rootPolygons.remove(rootPolyIt);
         else
@@ -857,7 +1071,6 @@ void GeometricModel::clip(const Box &box)
         Polygon& pol = polyIt.cur();
         //qDebug() << "Clipping pol" << &pol;
         pol.clipBox(box);
-        pol.prune();
         if (pol.isEmpty())
             polygons.remove(polyIt);
         else
@@ -870,7 +1083,6 @@ void GeometricModel::clip(const Box &box)
         Polygon& pol = dilatedPolyIt.cur();
         //qDebug() << "Clipping pol" << &pol;
         pol.clipBox(box);
-        pol.prune();
         if (pol.isEmpty())
             dilatedPolygons.remove(dilatedPolyIt);
         else
@@ -885,6 +1097,73 @@ void GeometricModel::clip(const Box &box)
         else
             obstIt.next();
     }
+
+    return;
+}
+
+// Clips the edges of the root polygons with the provided dilated polygons.
+void GeometricModel::clipRoot(const Vector<Polygon>& pol)
+{
+    thread_local Vector<Polygon> inputBuffer;
+    thread_local LinkedList<Polygon> outputBuffer;
+    outputBuffer.clear();
+    ListIterator<Polygon> it = rootPolygons.begin();
+    while (it.hasNext())
+    {
+        Polygon& rootPolygon = it.next();
+        inputBuffer.clear();
+        for (uint i = 0; i < pol.size(); i++)
+            if (!rootPolygon.contains(pol[i]) && rootPolygon.intersects(pol[i]))
+                inputBuffer << pol[i];
+        outputBuffer << rootPolygon.clipped(inputBuffer);
+    }
+
+    rootPolygons = outputBuffer;
+
+    return;
+}
+
+// Clips the core polygons with the given polygons.
+void GeometricModel::clipPolygons(const Vector<Polygon>& pols)
+{
+    thread_local Vector<Polygon> inputBuffer;
+    thread_local LinkedList<Polygon> outputBuffer;
+    outputBuffer.clear();
+    ListIterator<Polygon> it = polygons.begin();
+    while (it.hasNext())
+    {
+        Polygon& pol = it.next();
+        inputBuffer.clear();
+        for (uint i = 0; i < pols.size(); i++)
+            if (pol.intersects(pols[i]))
+                inputBuffer << pols[i];
+        if (!inputBuffer.isEmpty())
+            outputBuffer << pol.clipped(inputBuffer);
+        else
+            outputBuffer << pol;
+    }
+
+    polygons = outputBuffer;
+
+    return;
+}
+
+// Clips the core polygons with the given polygon.
+void GeometricModel::clipPolygons(const Polygon& pol)
+{
+    thread_local LinkedList<Polygon> outputBuffer;
+    outputBuffer.clear();
+    ListIterator<Polygon> it = polygons.begin();
+    while (it.hasNext())
+    {
+        if (it.cur().intersects(pol))
+            outputBuffer << it.cur().clipped(pol);
+        else
+            outputBuffer << it.cur();
+        it.next();
+    }
+
+    polygons = outputBuffer;
 
     return;
 }
@@ -933,7 +1212,7 @@ void GeometricModel::predict(double dt)
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
         obstIt.next().predict(dt);
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
     return;
 }
 
@@ -974,7 +1253,7 @@ void GeometricModel::autoPredict(bool debug)
         }
     }
 
-    visibilityGraph.reset();
+    //visibilityGraph.reset();
     return;
 }
 
@@ -1102,10 +1381,14 @@ const Polygon& GeometricModel::dilatedLineCollisionCheck(const Line &l, bool deb
 }
 
 // Checks if the Polygon p intersects with any real object, that is a polygon
-// or an obstacle. It returns the polygon of the first found touched object or
-// an empty polygon if there is no collision.
+// or an obstacle. It ignores root polygons and dilated polygons as they are
+// not real. It returns the polygon of the first found touched object or an
+// empty polygon if there is no collision.
 const Polygon& GeometricModel::polygonCollisionCheck(const Polygon &p, bool debug) const
 {
+    if (debug)
+         qDebug() << "Polygon& GeometricModel::polygonCollisionCheck(const Polygon &p, bool debug)" << p;
+
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
     {
@@ -1121,7 +1404,8 @@ const Polygon& GeometricModel::polygonCollisionCheck(const Polygon &p, bool debu
     {
         if (debug)
             qDebug() << "   Intersecting pol" << &polyIt.cur() << "with" << &p;
-        if (polyIt.cur().intersects(p))
+        //if (polyIt.cur().intersects(p))
+        if (polyIt.cur().intersectsEdges(p))
             return polyIt.cur();
         polyIt.next();
     }
@@ -1343,7 +1627,7 @@ bool GeometricModel::computeDynamicPath(const Vec2 &from, const Vec2 &to, int de
 }
 
 // Returns the last computed path.
-const Vector<Vec2> &GeometricModel::getPath() const
+const Path &GeometricModel::getPath() const
 {
     return visibilityGraph.getPath();
 }
@@ -1364,7 +1648,10 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
     while (rootPolyIt.hasNext())
     {
         const Polygon& pol = rootPolyIt.next();
-        pol.draw(painter, pen, drawUtil.brushWhite, 0.8); // always white
+        if (pol.isCCW())
+            pol.draw(painter, pen, drawUtil.brushLightGreen, 0.1); // lighz green for root polygons
+        else
+            pol.draw(painter, pen, drawUtil.brushRed, 0.5); // red for out of place cw polygons
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
         if (config.debugLevel > 5 && command.showLabels)
             pol.drawLabel(painter);
@@ -1376,7 +1663,10 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
     while (dilatedPolyIt.hasNext())
     {
         const Polygon& pol = dilatedPolyIt.next();
-        pol.draw(painter, pen, dilatedPolygonBrush, 0.5); // dilated brush
+        if (pol.isCCW())
+            pol.draw(painter, pen, drawUtil.brushRed, 0.5); // red for out of place ccw polygons
+        else
+            pol.draw(painter, pen, dilatedPolygonBrush, 0.5); // dilatedPolygonBrush for dilated polygons
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
         if (config.debugLevel > 5  && command.showLabels)
             pol.drawLabel(painter);
@@ -1388,9 +1678,9 @@ void GeometricModel::draw(QPainter *painter, const QPen &pen, const QBrush &poly
     while (polyIt.hasNext())
     {
         const Polygon& pol = polyIt.next();
-        pol.draw(painter, pen, polygonBrush, 0.5); // polygon brush
+        pol.draw(painter, pen, polygonBrush, 0.5); // polygon brush for polygons
         pol.draw(painter, pen, Qt::NoBrush, 1.0);
-        if (config.debugLevel > 5 && command.showLabels)
+        if (command.showLabels)
             pol.drawLabel(painter);
     }
 
@@ -1478,7 +1768,6 @@ void GeometricModel::streamOut(QDataStream &out) const
     out << rootPolygons;
     out << polygons;
     out << dilatedPolygons;
-    out << unicycleObstacles;
 }
 
 // Reads the GeometricModel from a data stream.
@@ -1487,7 +1776,6 @@ void GeometricModel::streamIn(QDataStream &in)
     in >> rootPolygons;
     in >> polygons;
     in >> dilatedPolygons;
-    in >> unicycleObstacles;
 }
 
 QDataStream& operator<<(QDataStream& out, const GeometricModel &o)

@@ -1,5 +1,5 @@
-#include "robotcontrol/slam/GraphConstraint.h"
-#include "globals.h"
+#include "GraphConstraint.h"
+#include "lib/globals.h"
 #include <cmath>
 
 Eigen::Matrix3d GraphConstraint::getAij() const
@@ -26,8 +26,8 @@ void GraphConstraint::addOdomConstraint(PoseGraphNode &node1, PoseGraphNode &nod
     nj = &node2;
     posei = node1.pose;
     posej = node2.pose;
-    observation = posej - posei;
-    measurement = observation;
+    measurement = posej - posei;
+    observation = measurement;
 }
 
 void GraphConstraint::addLoopClosingConstraint(

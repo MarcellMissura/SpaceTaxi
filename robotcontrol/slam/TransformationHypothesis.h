@@ -21,14 +21,22 @@ public:
     TransformationHypothesis();
     ~TransformationHypothesis(){}
 
+    bool operator==(const TransformationHypothesis &o) const {return id == o.id;}
+    bool operator!=(const TransformationHypothesis &o) const {return id != o.id;}
+    bool operator<(const TransformationHypothesis &o) const {return id < o.id;}
+    bool operator>(const TransformationHypothesis &o) const {return id > o.id;}
+
     bool computeTransform(LinePair &lpi_, LinePair &lpj_, bool debug=false);
     bool computeTranslation(LinePair &lpi_, LinePair &lpj_, bool debug=false);
     const Pose2D& tr() const;
 
     double dist(const TransformationHypothesis& other) const;
+    bool isRelatedTo(const TransformationHypothesis& other) const;
+    bool isInConflictWith(const TransformationHypothesis& other) const;
 
 };
 
 QDebug operator<<(QDebug dbg, const TransformationHypothesis &n);
+QDebug operator<<(QDebug dbg, const TransformationHypothesis *n);
 
 #endif
