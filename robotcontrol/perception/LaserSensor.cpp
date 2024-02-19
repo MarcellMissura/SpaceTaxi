@@ -335,7 +335,7 @@ const Polygon& LaserSensor::extractVisibilityPolygon() const
 Polygon LaserSensor::extractTriangle(int debug) const
 {
     // The docking frame detection is based on a sample consensus approach.
-    // The way this algorithm works is that for every point in the point buffer, we assume the point to
+    // For every point in the point buffer, we assume the point to
     // be the tip of the triangle and try to find triangle candidates in the neighborhood (stride) around
     // the point by validating whether the tip, a point to the left of the tip and a point to the right of
     // the tip make a triangle of the right size, shape, and orientation. Every candidate that matches the
@@ -359,7 +359,7 @@ Polygon LaserSensor::extractTriangle(int debug) const
     votes.clear();
 
     // The primary parameters of the procedure are the leg length of the triangular docking frame,
-    // the angle between the legs of the triangle, and the strength of the smoothing.
+    // the angle between the legs of the triangle, and the strength of the low-pass smoothing.
     double legLength = config.laserTriangleLegLength; // The expected length of a triangle leg in meters.
     double triangleAngle = config.laserTriangleAngle; // The expected angle between the legs of the triangle in rad.
     double smoothing = config.laserTriangleSmoothing; // Low passs filter parameter for triangle smoothing.
@@ -370,13 +370,13 @@ Polygon LaserSensor::extractTriangle(int debug) const
     double sizeTolerance = config.laserTriangleSizeTolerance; // Allowed triangle size deviation in percent.
     double symmetryTolerance = 0.05; // Allowed symmetry deviation of a triangle in percent.
     double maxOrthogonalDist = 0.008; // Max deviation of a voting point to the triangle leg in meters.
-    int minPoints = 3; // Minimum points needed to for a stride and to confirm a triangle.
+    int minPoints = 3; // Minimum points needed to form a stride and to confirm a triangle.
 
     // The triangle angle is processed to the scalar product of the two normalized triangle legs.
     double fs = fsin(0.5*triangleAngle);
     double expectedScalar = 1.0-2.0*fs*fs; // Angle processed to scalar product.
 
-    uint observed = 378;
+    uint observed = 10000;
 
     // For every laser point in the point buffer...
     for (int i = 0; i < pointBuffer.size(); i++)
@@ -507,7 +507,7 @@ Polygon LaserSensor::extractTriangle(int debug) const
         qDebug() << "Detection time:" << time << "ms";
     sw.start();
 
-    // Didn't find anything at all?
+    // Didn't find anything at all? Return an empty polygon.
     if (poses.isEmpty())
         return Polygon();
 
@@ -785,8 +785,9 @@ bool LaserSensor::isLineOkay(const Line &l, bool debug) const
 
 // Draws the laser points on a QPainter in 3 modes.
 // 0 - draw nothing
-// 1 - draw the laser beams and laser points
-// 2 - draw the points and the extracted features
+// 1 - draw the raw laser beams and laser points with labels
+// 2 - draw the laser points segmentwise connected
+// 3 - draw the extracted features
 void LaserSensor::draw(QPainter *painter) const
 {
     if (command.showLaser == 0)
@@ -886,6 +887,7 @@ void LaserSensor::draw(QPainter *painter) const
         mutex.unlock();
     }
 
+    // Draw the extracted features.
     if (command.showLaser == 3)
     {
         // Line features as extracted for line mapping.

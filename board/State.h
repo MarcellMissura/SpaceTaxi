@@ -7,7 +7,6 @@
 #include <typeinfo>
 #include <QDebug>
 #include "World.h"
-#include <QMutex>
 
 // Represents the current state of the robot and its perception of the world.
 struct State

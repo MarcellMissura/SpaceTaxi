@@ -117,6 +117,9 @@ public:
     void setWorldPolygons(const GeometricModel &pols);
     void setWorldUnicycleObstacles(const Vector<UnicycleObstacle> &value);
 
+    void clearMap(const Polygon &pol);
+    void fillMap(const Polygon &pol);
+
     void setMainTarget(const Pose2D& p);
 
     void setParams(int trajectoryPlanningMethod, int trajectoryType, int predictionType, int heuristicType, uint frequency=0);

@@ -18,17 +18,13 @@ Command::Command()
     showLocalMap = false;
     showCostmap = false;
     showDijkstraMap = false;
-    showSimulationDebugDraw = false;
     showWorldVisibilityGraph = false;
     showLocalVisibilityGraph = false;
-    showNavGoals = false;
-    showWorldPolygons = true;
     showWorldMap = true;
-    showRayModel = false;
     showPaths = true;
     showLaser = 0;
     showPoseGraph = 1;
-    showLineMap = 1;
+    showLineMap = 0;
     showMotionPlan = false;
     showVisibilityPolygon = false;
     showPolygonMap = 1;
@@ -37,17 +33,18 @@ Command::Command()
     showRuler = false;
     showOdometry = false;
     showSafetyZone = true;
+    showSimulationDebugDraw = false;
+    showWorldPolygons = true;
+    showNavGoals = false;
+    showRayModel = false;
 
     bufferToFile = false;
     laserSpatialFilter = false;
-    laserTemporalFilter = false;
     laserSpeckleRemoval = false;
     slamEnabled = false;
     useOdometry = true;
     mapUpdateEnabled = true;
-    globalLocalization = false;
     keepLineObservations = false;
-    keepPoseHistory = false;
     selectPose = false;
     selectTarget = false;
     clearMap = false;
@@ -58,8 +55,8 @@ Command::Command()
     useTimeAbort = true;
     useDynamicPath = true;
     useClosing = true;
-    ghostMode = false;
     draw = true;
+    ghostMode = false;
     learn = false;
 
     heuristic = MinimalConstruct;

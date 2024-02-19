@@ -28,6 +28,10 @@ class MainWindow : public QMainWindow
     GraphicsViewWidget graphicsViewWidget;
     GraphicsScene graphicsScene;
 
+    QSplitter* verticalSplitterTop;
+    QSplitter* verticalSplitterBottom;
+    QSplitter* horizontalSplitter;
+
     QSignalMapper mapSelectionMapper;
     QSignalMapper trajectoryPlannerSelectionMapper;
     QSignalMapper frequencySelectionMapper;
@@ -36,13 +40,8 @@ class MainWindow : public QMainWindow
     QSignalMapper predictionTypeSelectionMapper;
     QSignalMapper heuristicSelectionMapper;
 
-    QSplitter* verticalSplitterTop;
-    QSplitter* verticalSplitterBottom;
-    QSplitter* horizontalSplitter;
-
     QAction* joystickAction;
     QAction* keyboardAction;
-    QAction* showWorldPathAction;
 
     int cfi; // current frame index
     int fim; // frame index modifier
@@ -52,7 +51,7 @@ class MainWindow : public QMainWindow
 
     QString robotName;
     Joystick joystick;
-    MainControlLoop mainControlLoop; // This is the main control loop of the robot control and the simulation.
+    MainControlLoop mainControlLoop;
     Experimenter experimenter;
 
     void buildMenu();
@@ -62,6 +61,19 @@ public:
     ~MainWindow();
 
 public slots:
+
+    void reset();
+    void saveConfig();
+    void loadConfig();
+    void saveStateHistory();
+    void loadStateHistory(QString fileName = "");
+    void toggleFileBuffering();
+    void saveMap();
+    void loadMap();
+    void exportWorld();
+
+    void toggleJoystick();
+    void toggleKeyboard();
     void joystickConnected();
     void joystickDisconnected();
     void joystickButtonPressed(QList<bool>);
@@ -73,6 +85,7 @@ public slots:
     void messageIn(QString m);
     void toggleConfig();
     void toggleGraph();
+
     void animate();
     void record();
     void recordStart();
@@ -80,59 +93,68 @@ public slots:
     void play();
     void stop();
     void frameBack();
+    void framesBack();
     void frameForward();
+    void framesForward();
     void jumpToStart();
     void jumpToEnd();
-    void jumpToFrame(int);
+    void jumpToFrame();
     void loadFrame(int);
     void updateGui();
 
-    void reset();
-    void saveConfig();
-    void loadConfig();
-    void saveStateHistory();
-    void loadStateHistory(QString fileName = "");
-    void exportWorld();
-
-    void toggleJoystick();
-    void toggleKeyboard();
     void toggleMap(int mapId);
 
     void toggleSelectPose();
     void toggleSelectTarget();
-    void poseRecorded(const Pose2D& pose);
+    void toggleClearMap();
+    void toggleFillMap();
+    void poseSelected(const Pose2D& pose);
+    void mapEdited(const Polygon& pol);
 
-    void toggleLocalMap();
-    void toggleSimulationDebug();
-    void toggleTeaching();
-    void clearRuleBase();
-    void toggleNavGoals();
-    void toggleTargets();
     void toggleLabels();
-    void toggleWorldPolygons();
-    void toggleWorldMap();
-    void togglePaths();
-    void toggleWorldVisibilityGraph();
-    void toggleLocalVisibilityGraph();
+    void toggleBody();
+    void toggleSimulationDebug();
+
+    void toggleShowOdometry();
+    void toggleLaser();
     void toggleVisibilityPolygon();
     void toggleSafetyZone();
-    void toggleLaser();
     void toggleCostmap();
     void toggleDijkstraMap();
+    void toggleLocalMap();
+    void toggleRayModel();
+
+    void toggleTargets();
+    void toggleLocalVisibilityGraph();
+    void toggleWorldVisibilityGraph();
+    void togglePaths();
+
+    void togglePose();    
+    void toggleLineMap();
+    void togglePoseGraph();
+    void togglePolygonMap();
+    void toggleWorldPolygons();
+    void toggleNavGoals();
+
+    void toggleFrequency(int f);
     void toggleTrajectoryControl(int d);
     void togglePredictionType(int d);
     void toggleHeuristic(int d);
     void toggleTrajectoryType(int d);
-    void toggleFrequency(int f);
-    void toggleRayModel();
     void toggleSafetyZoneReflex();
     void toggleEmergencyBrakeReflex();
     void toggleStucknessReflex();
     void toggleTimeAbort();
     void toggleClosing();
     void toggleDynamicPath();
-    void toggleBody();
+    void toggleKeepLineObservations();
+    void toggleOdometry();
+    void toggleMapUpdate();
+    void toggleSlam();
+
     void toggleGhostMode();
+    void toggleTeaching();
+    void clearRuleBase();
 
 signals:
     void frameChanged();

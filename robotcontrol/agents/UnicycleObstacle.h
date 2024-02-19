@@ -1,12 +1,11 @@
 #ifndef UNICYCLEOBSTACLE_H_
 #define UNICYCLEOBSTACLE_H_
 #include "Obstacle.h"
-#include "HolonomicObstacle.h"
 #include "lib/pml/unicycle.h"
 
 // The UnicycleObstacle extends the Obstacle with unicycle motion capabilities
 // (acc(), vel(), predict()) and a hullPolygon that is an inflated version of
-// the core Polygon the Obstacles is derived from.
+// the core Polygon the Obstacle is derived from.
 
 class UnicycleObstacle : public Obstacle
 {
@@ -21,8 +20,6 @@ public:
 
     UnicycleObstacle();
     ~UnicycleObstacle(){}
-
-    operator HolonomicObstacle() const;
 
     UnicycleObstacle(const Unicycle& o);
     UnicycleObstacle& operator=(const Unicycle& v);

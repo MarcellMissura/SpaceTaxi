@@ -15,9 +15,9 @@ DrawUtil::DrawUtil()
 {
     // A blue-red-yellow palette for mapping colors for height maps.
     heightMapPalette << QColor("#000077");
-	heightMapPalette << QColor("#0000FF");
-	heightMapPalette << QColor("#FF0000");
-	heightMapPalette << QColor("#FFFF00");
+    heightMapPalette << QColor("#0000FF");
+    heightMapPalette << QColor("#FF0000");
+    heightMapPalette << QColor("#FFFF00");
 
     // A transparent white to opaque red palette good for heat maps.
     heatMapPalette << QColor("#00FFFFFF");

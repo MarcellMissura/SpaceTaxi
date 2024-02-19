@@ -15,7 +15,6 @@ MainControlLoop::MainControlLoop(QObject *parent) : QObject(parent)
     // Connect the internal timer.
     // It must be a direct connection so that the step() function is called in the thread of the timer.
     connect(&timer, SIGNAL(timeout()), this, SLOT(step()), Qt::DirectConnection);
-
     running = false;
 }
 
@@ -61,14 +60,14 @@ void MainControlLoop::stop()
     timer.stop();
 }
 
-// The main loop of the game. It's periodically called by the timer.
+// The main control loop. It's periodically called by the timer.
 void MainControlLoop::step()
 {
     QMutexLocker locker(&state.bigMutex);
 
     state.frameId++;
-    state.time += 1.0/command.frequency; // in seconds
     state.iterationTime = stopWatch.elapsedTimeMs();
+    state.time += 1.0/command.frequency; // in seconds
     stopWatch.start();
 
     // Step the world.

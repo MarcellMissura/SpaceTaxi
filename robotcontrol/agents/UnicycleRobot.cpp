@@ -14,11 +14,9 @@ UnicycleRobot::UnicycleRobot() : UnicycleObstacle()
     dynamicPathSuccess = true;
     trajectorySuccess = true;
     atTarget = false;
-    targetDropOffId = 0;
 
     score = 0;
     collisions = 0;
-    stucks = 0;
     milage = 0;
     pathTime = 0;
     trajectoryTime = 0;
@@ -89,7 +87,7 @@ void UnicycleRobot::setInitialPose(const Pose2D &p)
     worldMap.localizeAt(p);
 }
 
-// In the sense method, a world represenation is computed that can be
+// In the sense method, a world representation is computed that can be
 // used for localization and motion planning.
 void UnicycleRobot::sense()
 {
@@ -107,10 +105,10 @@ void UnicycleRobot::sense()
     visibilityPolygon = laserSensor.extractVisibilityPolygon();
 
     // Detect docking frames.
-    //laserSensor.extractTriangleMarker();
+    laserSensor.extractTriangle();
 
     // Line extraction.
-    laserSensor.extractLines();
+    laserSensor.extractLines(); // Doing these here only for the time measurement.
 
     state.laserTime = sw.elapsedTimeMs();
     //qDebug() << state.frameId << "Laser time:" << state.laserTime;
@@ -221,8 +219,9 @@ void UnicycleRobot::act()
     //# HIGH LAYER #
     //##############
     // High level planning. Where to put the main target?
-    // The main target is the Pose2D of a POI in the map in world coordinates.
-    // This is waiting for the order management to start working.
+    // The main target is a Pose2D in the map in world coordinates. We receive the
+    // main target as an input from the outside and only decide here whether we are
+    // at the target or not.
 
     // Target has been reached.
     if (!atTarget && (mainTarget.distxy(pose()) < config.agentTargetReachedDistance))
@@ -232,7 +231,7 @@ void UnicycleRobot::act()
     }
 
     // When we are at target, do nothing until a new target has been set.
-    if (atTarget && !(command.keyboard || command.joystick))
+    if (atTarget && !command.keyboard && !command.joystick)
     {
         setVel(0,0);
         return;
@@ -280,8 +279,8 @@ void UnicycleRobot::act()
         worldPath -= pose();
 
         // Determine the intermediate target.
-        // The intermediate target is the intersection of the static world path and the
-        // boundary of the sensed grid. The intermediate target is expressed in local coordinates.
+        // The intermediate target is the intersection of the world path and the boundary
+        // of the sensed grid. The intermediate target is expressed in local coordinates.
         Box box = costmap.boundingBox();
         box.grow(-0.1); // Exclude the exact boundary to avoid problems.
         intermediateTarget = box.intersection(worldPath.getVertices());
@@ -291,7 +290,7 @@ void UnicycleRobot::act()
         // It's a big issue if we cannot find the world path. Probably there is no way to the target at all.
         // We can keep going for a short while with the path and the intermediate target we had last.
 
-        //qDebug() << state.frameId << "World path computation failed from" << pos() << "to:" << mainTarget;
+        qDebug() << state.frameId << "World path computation failed from" << pos() << "to:" << mainTarget;
         //state.stop = true;
         //worldMap.computeStaticPath(pos(), mainTarget.pos(), 50);
     }
@@ -552,7 +551,7 @@ void UnicycleRobot::drawBody() const
 // Draws the local grid model.
 void UnicycleRobot::drawGridModel() const
 {
-    if (command.showSensedGrid)
+    if (command.showCostmap)
     {
         costmap.draw(drawUtil.brushRed);
         glTranslated(0,0,0.001);
@@ -563,7 +562,7 @@ void UnicycleRobot::drawGridModel() const
 // Draws the local geometric model.
 void UnicycleRobot::drawGeometricModel() const
 {
-    if (command.showSensedPolygons)
+    if (command.showLocalMap)
     {
         localMap.draw(drawUtil.penThick, drawUtil.brushOrange, 0.5);
         glTranslated(0,0,0.001);
@@ -758,24 +757,18 @@ void UnicycleRobot::draw(QPainter *painter) const
     painter->rotate(orientation()*RAD_TO_DEG);
 
     // The sensed grid.
-    if (command.showSensedGrid)
+    if (command.showCostmap)
     {
         costmap.draw(painter, drawUtil.brushOrange);
         costmap.drawBorder(painter);
     }
 
-    // Sensed polygons.
-    if (command.showSensedPolygons)
+    // The local geometric map.
+    if (command.showLocalMap)
     {
         // The local geometric map.
-        //localMap.draw(painter, drawUtil.penThick, drawUtil.brushRed, drawUtil.brushOrange);
-        //costmap.drawBorder(painter);
-        Vector<Polygon> dp = laserSensor.extractSensedPolygons();
-        for (uint i = 0; i < dp.size(); i++)
-        {
-            dp[i].pruneOut(config.gmPolygonPruning);
-            dp[i].draw(painter, drawUtil.pen, drawUtil.brushRed, 0.5);
-        }
+        localMap.draw(painter, drawUtil.penThick, drawUtil.brushRed, drawUtil.brushOrange);
+        costmap.drawBorder(painter);
     }
 
     // The Visibility Polygon.

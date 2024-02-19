@@ -1,7 +1,7 @@
 ﻿#include "UnicycleAgent.h"
 #include "board/Config.h"
-#include "board/State.h"
 #include "board/Command.h"
+#include "board/State.h"
 #include "lib/kfi/VelocityProfile.h"
 #include "lib/kfi/BangBang2D.h"
 #include "lib/kfi/Bezier2D.h"
@@ -9,7 +9,7 @@
 #include "lib/util/StopWatch.h"
 #include "lib/util/DrawUtil.h"
 
-// The UnicycleAgent is the controller that drives the unicycle agents in the game.
+// The UnicycleAgent is the controller that drives the unicycle agents in the simulation.
 // It behaves like (is a) UnicycleObstacle and has an integrated sense()-act() loop.
 
 UnicycleAgent::UnicycleAgent() : UnicycleObstacle()
@@ -89,6 +89,7 @@ void UnicycleAgent::init(const Vec2& initialPos)
 
     // Init the main target to lie on the agent.
     mainTarget = pose();
+    atTarget = true;
 
     // Init path and trajectory controllers.
     shortTermAbortingAStar.init();
@@ -154,6 +155,8 @@ void UnicycleAgent::setWorldUnicycleObstacles(const Vector<UnicycleObstacle> &ob
 void UnicycleAgent::setMainTarget(const Pose2D &p)
 {
     mainTarget = p;
+    mainTarget.z = fpicut(mainTarget.z);
+    atTarget = false;
 }
 
 // Sets the trajectory and controller parameters.
@@ -187,14 +190,13 @@ void UnicycleAgent::setParams(int trajectoryPlanningMethod, int trajectoryType, 
     }
 }
 
-// In the sense method, a world represenation is computed that can be
-// used for planning and localization.
+// In the sense method, a world representation is computed that can be
+// used for localization and motion planning.
 void UnicycleAgent::sense()
 {
     //####################
     //# LASER PROCESSING #
     //####################
-
     StopWatch sw;
     sw.start();
 
@@ -228,7 +230,7 @@ void UnicycleAgent::sense()
     // would produce when building a map with LineSlam. The world map
     // is kept in world coordinates and used for path planning.
 
-    // Geometric slam. Track the pose of the robot using laser data and build the map.
+    // Geometric slam. Track the pose of the robot using the laser data and build the world map.
 //    sw.start();
 //    if (command.slamEnabled)
 //        worldMap.slam(pose(), laserSensor.extractLines(), visibilityPolygon, laserSensor.extractSensedPolygons());
@@ -321,7 +323,7 @@ void UnicycleAgent::sense()
     localMap.transform();
 }
 
-// Compute an action. This method results in the acceleration of the agent being set.
+// Compute an action. This method results in the acceleration (a,b) of the agent being set.
 void UnicycleAgent::act()
 {
     //##############
@@ -348,6 +350,7 @@ void UnicycleAgent::act()
         mainTarget = navGoals[navGoalQueue[targetNavGoalId]];
         //qDebug() << "agent" << getAgentId() << "updated main target" << mainTarget << dropOffPointQueue[targetDropOffId-1];
     }
+
 
     //##############
     //# PATH LAYER #
@@ -381,8 +384,8 @@ void UnicycleAgent::act()
     if (worldPathSuccess)
     {
         // Determine the intermediate target.
-        // The intermediate target is the intersection of the static world path and the
-        // boundary of the sensed grid. The intermediate target is expressed in local coordinates.
+        // The intermediate target is the intersection of the world path and the boundary
+        // of the sensed grid. The intermediate target is expressed in local coordinates.
         Box box = costmap.boundingBox();
         box.grow(-0.1); // Exclude the exact boundary to avoid problems.
         intermediateTarget = box.intersection(worldPath.getVertices());
@@ -402,14 +405,14 @@ void UnicycleAgent::act()
 
     state.pathLength = worldPath.length();
 
-    // 4. Compute the static path in case it is needed as a fallback.
+    // 2. Compute the static path in case it is needed as a fallback.
     staticPathSuccess = localMap.computeStaticPath(Vec2(), intermediateTarget.pos());
     staticPath = localMap.getPath();
 
 //    if (isFirstAgent() && !staticPathSuccess)
 //        qDebug() << state.frameId << "Static path computation failed to:" << intermediateTarget;
 
-    // 5. Now compute the "dynamic" path up to the intermediate target using the sensed polygons and
+    // 3. Now compute the "dynamic" path up to the intermediate target using the sensed polygons and
     // the moving obstacles that are seen in the local map. Sometimes, moving obstacles cover the
     // target. Such obstacles are erased from the model before path computation. Also, moving obstacles
     // can block narrow passages and then no dynamic path can be found at all.
@@ -425,7 +428,8 @@ void UnicycleAgent::act()
         //localMap.computeDynamicPath(Vec2(), intermediateTarget.pos(), 50);
     }
 
-    // 6. Determine the used path to extract the carrot from.
+    // 4. Carrot extraction.
+    // Determine the used path to extract the carrot from.
     if (dynamicPathSuccess && command.useDynamicPath)
         usedPath = dynamicPath;
     else if (staticPathSuccess)
@@ -433,7 +437,6 @@ void UnicycleAgent::act()
     else if (worldPathSuccess)
         usedPath = worldPath;
 
-    // 7. Carrot extraction.
     carrot.setNull();
     double dt = config.DWA_carrotOffset;
     if (trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl)
@@ -457,36 +460,11 @@ void UnicycleAgent::act()
     // long (stuckness reflex).
 
 
-    // Emergency brake reflex.
-    // The emergency break reflex activates when the agent is on a collision course.
-    // When the brake reflex is active, the reflex stops the robot by commanding zero velocity
-    // for the duration of one second.
-    if (command.emergencyBrakeReflex)
-    {
-        Polygon uni = predicted(config.ebPredictionTime) - pose();
-        uni.transform();
-        if (ebActive || !localMap.polygonCollisionCheck(uni).isEmpty())
-        {
-            // Activation
-            if (!ebActive)
-            {
-                ebActive = true;
-                ebActivationCounter = command.frequency;
-            }
-
-            // Deactivation
-            if (ebActivationCounter == 0)
-                ebActive = false;
-
-            ebActivationCounter--;
-            setTxVel(0,0);
-            return;
-        }
-    }
 
     // Safety zone reflex.
     // The safety zone in front of the robot is dynamically computed depending on the velocity.
-    // If any obstacle is detected within the safety box, an emergency stop is triggered.
+    // If any obstacle is detected within the safety box, an emergency stop is triggered that
+    // stops the robot for three seconds.
     if (command.safetyZoneReflex)
     {
         if (safetyActive)
@@ -498,7 +476,7 @@ void UnicycleAgent::act()
             return;
         }
 
-        if (v > 0.16)
+        if (v > 0.3)
         {
             Polygon sz = getSafetyPolygon(v);
             if (!localMap.polygonCollisionCheck(sz).isEmpty())
@@ -554,7 +532,8 @@ void UnicycleAgent::act()
     //# CONTROLLER LAYER #
     //####################
     // Action planning. High rate dynamic trajectory planning with bounded computation time.
-    // The controller layer computes and sets the acceleration of the agent using Aborting A* or DWA or a PD controller.
+    // The controller layer computes and sets the acceleration of the agent using one of the
+    // inbuilt controllers. (Aborting A*, DWA, Rule Base,PD controller).
 
     // Joystick and keyboard control override.
     joystickCarrot = carrot;
@@ -567,6 +546,35 @@ void UnicycleAgent::act()
     else if (command.keyboard && isFirstAgent())
     {
         setAcc(command.ax, command.ay);
+
+        // Emergency brake reflex.
+        // The emergency break reflex activates when the agent is on a collision course.
+        // When the brake reflex is active, the reflex stops the robot by commanding zero velocity
+        // for the duration of one second.
+        if (command.emergencyBrakeReflex)
+        {
+            Polygon uni = predicted(config.ebPredictionTime) - pose();
+            uni.transform();
+            uni.grow(config.staaPolygonGrowth);
+            //qDebug() << localMap.polygonCollisionCheck(uni).isEmpty() << uni;
+            if (ebActive || !localMap.polygonCollisionCheck(uni).isEmpty())
+            {
+                // Activation
+                if (!ebActive)
+                {
+                    ebActive = true;
+                    ebActivationCounter = command.frequency; // activates for one second
+                }
+
+                // Deactivation
+                if (ebActivationCounter == 0)
+                    ebActive = false;
+
+                ebActivationCounter--;
+                setTxVel(0,0);
+                return;
+            }
+        }
     }
     else if (trajectoryPlanningMethod == command.PD)
     {
@@ -706,8 +714,13 @@ void UnicycleAgent::act()
     }
     else if (trajectoryPlanningMethod == command.SpeedControl)
     {
-        // Speed control
-        // Trying to avoid the safety zone reflex activation.
+        // Speed control: trying to avoid the safety zone reflex activation.
+        // The idea of this controller is that it determines the closest point in the geometric
+        // map and if the closest point lies within the safety zone, it reduces the commanded
+        // velocity such that the closest point no longer lies in the box. The commanded velocity
+        // comes out of pd control. This is not a very successful controller as it leads to
+        // oscillations and sometimes still makes a mistake around corners and triggers the safety
+        // zone reflex.
 
         setAcc(pdControlTo(carrot));
 
@@ -761,6 +774,19 @@ void UnicycleAgent::computeRayModel()
         Vec2 ray3 = localWorldDynamicObstacles.rayIntersection(Vec2(), ray2);
         rays << ray3.norm();
     }
+}
+
+
+// Clears a polygonal region from the map as described by pol.
+void UnicycleAgent::clearMap(const Polygon &pol)
+{
+    //worldMap.clearPolygon(pol);
+}
+
+// Fills a polygonal region in the map as described by pol.
+void UnicycleAgent::fillMap(const Polygon &pol)
+{
+    //worldMap.fillPolygon(pol);
 }
 
 // Simulates a 2D lidar sensor.
@@ -947,7 +973,7 @@ void UnicycleAgent::draw(QPainter *painter) const
         if (!localMap.polygonCollisionCheck(sz).isEmpty())
             sz.draw(painter, drawUtil.pen, drawUtil.brushRed, 0.3);
         else
-            sz.draw(painter, drawUtil.pen, drawUtil.brushRed, 0.03);
+            sz.draw(painter, drawUtil.pen, drawUtil.brushRed, 0.05);
     }
 
     // Speed Controller
@@ -1081,6 +1107,7 @@ void UnicycleAgent::draw(QPainter *painter) const
     {
         Polygon uni = predicted(config.ebPredictionTime) - pose();
         uni.transform();
+        uni.grow(config.staaPolygonGrowth);
         //qDebug() << localMap.polygonCollisionCheck(uni, true);
         if (!localMap.polygonCollisionCheck(uni).isEmpty())
             uni.draw(painter, drawUtil.penRedThick, Qt::NoBrush, 0.5);

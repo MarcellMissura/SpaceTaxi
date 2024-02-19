@@ -20,22 +20,8 @@ UnicycleObstacle::UnicycleObstacle() : Obstacle()
     w = 0;
     a = 0;
     b = 0;
-    timeStep = 1.0/command.frequency;
     ignored = false;
-}
-
-// Conversion from UnicycleObstale to HolonomicObstacle.
-UnicycleObstacle::operator HolonomicObstacle() const
-{
-    HolonomicObstacle o;
-    o.setId(getId());
-    o.setPos(pos());
-    o.setOrientation(orientation());
-    o.setVel(v*cos(theta), v*sin(theta));
-    ListIterator<Line> li = edgeIterator();
-    while (li.hasNext())
-        o.appendVertex(li.next().p1());
-    return o;
+    timeStep = 1.0/command.frequency;
 }
 
 // Copy constructor from Unicycle (pml) object.
@@ -213,16 +199,14 @@ void UnicycleObstacle::setVel(const Vec2 &v)
 {
     this->v = v.x;
     this->w = v.y;
-    boundingBoxValid = false;
 }
 
 // Sets the velocity of the UnicycleObstacle. The velocity of the car obstacle
 // is a vector of the linear and angular velocities v and omega.
 void UnicycleObstacle::setVel(double v, double omega)
 {
-    this->v = v;
-    this->w = omega;
-    boundingBoxValid = false;
+    this->v = qBound(config.agentLinearVelocityLimitBackward, v, config.agentLinearVelocityLimitForward);
+    this->w = qBound(-config.agentAngularAccelerationLimit, omega, config.agentAngularVelocityLimit);
 }
 
 // Returns the acceleration of the UnicycleObstacle. The acceleration of the car
@@ -255,7 +239,6 @@ void UnicycleObstacle::setAcc(double a, double b)
 
     this->a = a;
     this->b = b;
-    boundingBoxValid = false;
 }
 
 // Convenience function to support velocity control. You may call this function

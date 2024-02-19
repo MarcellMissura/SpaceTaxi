@@ -38,8 +38,6 @@ public:
 
     // Navigation handles.
     bool atTarget;
-    Vector<uint> navGoalQueue;
-    uint targetNavGoalId; // The id of the target drop off point.
     Pose2D mainTarget; // The world coordinates of the main target.
     Pose2D intermediateTarget; // The local coordinates of the intermediate target at the boundary of the sensed grid.
     Pose2D carrot; // Nearby target in local coordinates that steers dumb controllers.
@@ -61,7 +59,6 @@ public:
     // Statistics.
     uint score;
     uint collisions;
-    uint stucks;
     double milage;
     double pathTime;
     double trajectoryTime;

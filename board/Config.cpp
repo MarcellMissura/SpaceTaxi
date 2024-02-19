@@ -118,7 +118,7 @@ Config::Config()
     predictIgnoreHorizon = 5.0; // From what ETA are obstacles ignored.
 
     // Emergency brake reflex.
-    ebPredictionTime = 0.5;
+    ebPredictionTime = 0.25;
 
     // Bezier control
     bezierDt = 0.6;
@@ -284,13 +284,12 @@ void Config::init()
     registerMember("lineSlam.visibilityPolygonBound", &slamVisibilityPolygonBound, 20.0);
     registerMember("lineSlam.snapAcceptanceThreshold", &slamSnapAcceptanceThreshold, 1.0);
 
-
-
     // Path planning
     registerMember("prediction.predictFactor", &predictFactor, 1.0);
     registerMember("prediction.maxPredictTime", &predictMaxPredictTime, 3.0);
     registerMember("prediction.ignoreHorizon", &predictIgnoreHorizon, 5.0);
 
+    // Emergency brake
     registerMember("emergencyBrake.predictionTime", &ebPredictionTime, 2.0);
 
     // Bezier control
@@ -368,35 +367,35 @@ void Config::load(QString robotName)
 // Saves the config variables to the .conf file.
 void Config::save(QString robotName)
 {
-	QFile file("conf/" + robotName + ".conf");
-	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-	{
-		qDebug() << "Couldn't open config file" << file.fileName();
-		return;
-	}
+    QFile file("conf/" + robotName + ".conf");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qDebug() << "Couldn't open config file" << file.fileName();
+        return;
+    }
 
-	QTextStream out(&file);
-	foreach (QString key, memberNames)
-		out << key << "=" << QString::number(this->operator[](key)) << endl;
-	file.close();
+    QTextStream out(&file);
+    foreach (QString key, memberNames)
+        out << key << "=" << QString::number(this->operator[](key)) << endl;
+    file.close();
 }
 
 // Returns a reference to the ith member of this object.
 double& Config::operator()(int i)
 {
-	return this->operator[](memberNames[i]);
+    return this->operator[](memberNames[i]);
 }
 
 // Returns a reference to the ith member of this object.
 double& Config::operator[](int i)
 {
-	return this->operator[](memberNames[i]);
+    return this->operator[](memberNames[i]);
 }
 
 // Returns a reference to the member that was registered with the given key.
 double& Config::operator()(QString key)
 {
-	return this->operator[](key);
+    return this->operator[](key);
 }
 
 // Returns a reference to the member that was registered with the given key,

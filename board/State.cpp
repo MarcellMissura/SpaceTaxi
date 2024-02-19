@@ -150,10 +150,6 @@ void State::init()
     registerMember("STAA*.finished", &aasFinished);
     registerMember("STAA*.score", &aasScore);
     registerMember("STAA*.pathfails", &aasPathFails);
-
-//	qDebug() << memberNames;
-//	qDebug() << memberTypes;
-//	qDebug() << memberOffsets;
 }
 
 // Clears the state history.
@@ -261,7 +257,10 @@ void State::bufferToFile() const
     QMutexLocker locker(&mutex);
 
     QFile file("data/statehistory.dat");
-    file.open(QIODevice::Append);
+    if (state.frameId < 2)
+        file.open(QIODevice::WriteOnly);
+    else
+        file.open(QIODevice::Append);
     QDataStream out(&file);
     out << time;
     //out << timeDiff;
@@ -400,7 +399,7 @@ int State::findIndex(double t)
 
 QDebug operator<<(QDebug dbg, const State &v)
 {
-	for (int i = 0; i < v.memberNames.length(); i++)
-		dbg.nospace() << "id:" << i << ", key:" << v.memberNames[i] << ", val:" << v.getMember(i) << "\n";
-	return dbg.space();
+    for (int i = 0; i < v.memberNames.length(); i++)
+        dbg.nospace() << "id:" << i << ", key:" << v.memberNames[i] << ", val:" << v.getMember(i) << "\n";
+    return dbg.space();
 }

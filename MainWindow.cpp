@@ -22,13 +22,13 @@ MainWindow::MainWindow(QWidget *parent)
     config.load(robotName);
 
     // Initialize everything else that needs to be initialized.
-    mainControlLoop.init();
+    configWidget.init();
     graphWidget.init();
     checkboxWidget.init();
     graphicsScene.init();
-    configWidget.init();
     graphicsViewWidget.setScene(&graphicsScene);
     graphicsViewWidget.init();
+    mainControlLoop.init();
     //experimenter.init();
 
     // Build the splitter separated gui components.
@@ -62,12 +62,15 @@ MainWindow::MainWindow(QWidget *parent)
     // Build the menu bar.
     buildMenu();
 
+    toggleGraph();
+    toggleConfig();
+    //showFullScreen();
+
     // Connect signals to slots.
     connect(this, SIGNAL(progressOut(int)), ui.frameSlider, SLOT(setValue(int)));
-    connect(ui.frameSlider, SIGNAL(sliderMoved(int)), this, SLOT(jumpToFrame(int)));
-
-    connect(&configWidget, SIGNAL(configChangedOut()), &graphicsScene, SLOT(update()));
-    connect(&configWidget, SIGNAL(configChangedOut()), &graphicsViewWidget, SLOT(update()));
+    connect(ui.frameSlider, SIGNAL(sliderPressed()), this, SLOT(jumpToFrame()));
+    connect(ui.frameSlider, SIGNAL(sliderReleased()), this, SLOT(jumpToFrame()));
+    connect(&configWidget, SIGNAL(configChangedOut()), &graphicsViewWidget, SLOT(update()));    
     connect(&checkboxWidget, SIGNAL(stateMemberStatusChanged(int, bool)), &graphWidget, SLOT(setShowCurve(int, bool)));
     connect(&graphWidget, SIGNAL(messageOut(QString)), this, SLOT(messageIn(QString)));
 
@@ -78,20 +81,19 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&joystick, SIGNAL(buttonPressed(QList<bool>)), this, SLOT(joystickButtonPressed(QList<bool>)));
     connect(&joystick, SIGNAL(joystickMoved(QList<double>)), this, SLOT(joystickMoved(QList<double>)));
 
-    toggleGraph();
-    toggleConfig();
-    //showFullScreen();
+    connect(&graphicsViewWidget, SIGNAL(poseSelected(const Pose2D&)), this, SLOT(poseSelected(const Pose2D&)));
 
-    connect(&graphicsViewWidget, SIGNAL(poseRecorded(const Pose2D&)), this, SLOT(poseRecorded(const Pose2D&)));
-
+    // User interaction signals.
+    connect(&graphicsViewWidget, SIGNAL(poseSelected(const Pose2D&)), this, SLOT(poseSelected(const Pose2D&)));
+    connect(&graphicsViewWidget, SIGNAL(boxSelected(const Polygon&)), this, SLOT(mapEdited(const Polygon&)));
 
     // Animation components.
     cfi = 0;
     fim = 0;
     recording = false;
     graphicsViewWidget.recording = false;
-    guiUpdateTimer.setInterval(30);
-    //guiUpdateTimer.start();
+    guiUpdateTimer.setInterval(30); // The gui updates constantly with a rate of 30 Hz.
+    guiUpdateTimer.start();
     connect(&guiUpdateTimer, SIGNAL(timeout()), this, SLOT(updateGui()));
 
     animationTimer.setInterval(100);
@@ -114,15 +116,22 @@ void MainWindow::buildMenu()
 
     QMenu* fileMenu = menuBar->addMenu(tr("&File"));
 
+    QAction* loadStateAction = fileMenu->addAction(tr("&Load State"));
+    loadStateAction->setToolTip(tr("Loads the state history."));
+    //loadStateAction->setShortcut(QKeySequence(tr("Ctrl+L")));
+    connect(loadStateAction, SIGNAL(triggered()), this, SLOT(loadStateHistory()));
+
     QAction* saveStateAction = fileMenu->addAction(tr("&Save State"));
     saveStateAction->setToolTip(tr("Saves the state history."));
     //saveStateAction->setShortcut(QKeySequence(tr("Ctrl+S")));
     connect(saveStateAction, SIGNAL(triggered()), this, SLOT(saveStateHistory()));
 
-    QAction* loadStateAction = fileMenu->addAction(tr("&Load State"));
-    loadStateAction->setToolTip(tr("Loads the state history."));
-    //loadStateAction->setShortcut(QKeySequence(tr("Ctrl+L")));
-    connect(loadStateAction, SIGNAL(triggered()), this, SLOT(loadStateHistory()));
+    QAction* bufferToFileAction = fileMenu->addAction(tr("&Buffer To File"));
+    bufferToFileAction->setToolTip(tr("Toggles file buffering."));
+    //bufferToFileAction->setShortcut(QKeySequence(tr("Ctrl+L")));
+    bufferToFileAction->setCheckable(true);
+    bufferToFileAction->setChecked(command.bufferToFile);
+    connect(bufferToFileAction, SIGNAL(triggered()), this, SLOT(toggleFileBuffering()));
 
     fileMenu->addSeparator();
 
@@ -135,6 +144,18 @@ void MainWindow::buildMenu()
     loadConfigAction->setToolTip(tr("Loads the config."));
     loadConfigAction->setShortcut(QKeySequence(tr("Ctrl+R")));
     connect(loadConfigAction, SIGNAL(triggered()), this, SLOT(loadConfig()));
+
+    fileMenu->addSeparator();
+
+    QAction* saveMapAction = fileMenu->addAction(tr("&Save Map"));
+    saveMapAction->setToolTip(tr("Saves the map."));
+    saveMapAction->setShortcut(QKeySequence(tr("Ctrl+M")));
+    connect(saveMapAction, SIGNAL(triggered()), this, SLOT(saveMap()));
+
+    QAction* loadMapAction = fileMenu->addAction(tr("&Load Map"));
+    loadMapAction->setToolTip(tr("Loads the map."));
+    loadMapAction->setShortcut(QKeySequence(tr("Ctrl+Shift+M")));
+    connect(loadMapAction, SIGNAL(triggered()), this, SLOT(loadMap()));
 
     fileMenu->addSeparator();
 
@@ -165,7 +186,7 @@ void MainWindow::buildMenu()
     graphViewAction->setChecked(false);
     connect(graphViewAction, SIGNAL(triggered()), this, SLOT(toggleGraph()));
 
-    viewMenu->addSeparator();
+    viewMenu->addSeparator(); // visual aids section
 
     QAction* showAxisAction = viewMenu->addAction(tr("&Axis"));
     showAxisAction->setToolTip(tr("Toggles the axis."));
@@ -194,43 +215,12 @@ void MainWindow::buildMenu()
     showFrameInfoAction->setChecked(graphicsViewWidget.showFrameInfo);
     connect(showFrameInfoAction, SIGNAL(triggered()), &graphicsViewWidget, SLOT(toggleFrameInfo()));
 
-    QAction* simulationDebugAction = viewMenu->addAction(tr("&Simulation Debug"));
-    simulationDebugAction->setToolTip(tr("Toggles the simulation debug drawing."));
-    simulationDebugAction->setCheckable(true);
-    simulationDebugAction->setChecked(command.showSimulationDebugDraw);
-    connect(simulationDebugAction, SIGNAL(triggered()), this, SLOT(toggleSimulationDebug()));
-
     QAction* showLabelsAction = viewMenu->addAction(tr("&Labels"));
     showLabelsAction->setToolTip(tr("Toggles all labels."));
     //showLabelsAction->setShortcut(QKeySequence(tr("F")));
     showLabelsAction->setCheckable(true);
     showLabelsAction->setChecked(command.showLabels);
     connect(showLabelsAction, SIGNAL(triggered()), this, SLOT(toggleLabels()));
-
-    viewMenu->addSeparator();
-
-    QAction* showWorldObstaclesAction = viewMenu->addAction(tr("&World Polygons"));
-    showWorldObstaclesAction->setToolTip(tr("Toggles the world polygons."));
-    showWorldObstaclesAction->setShortcut(QKeySequence(tr("Shift+W")));
-    showWorldObstaclesAction->setCheckable(true);
-    showWorldObstaclesAction->setChecked(command.showWorldPolygons);
-    connect(showWorldObstaclesAction, SIGNAL(triggered()), this, SLOT(toggleWorldPolygons()));
-
-    QAction* showWorldMapAction = viewMenu->addAction(tr("&World Map"));
-    showWorldMapAction->setToolTip(tr("Toggles the world map."));
-    showWorldMapAction->setShortcut(QKeySequence(tr("W")));
-    showWorldMapAction->setCheckable(true);
-    showWorldMapAction->setChecked(command.showWorldMap);
-    connect(showWorldMapAction, SIGNAL(triggered()), this, SLOT(toggleWorldMap()));
-
-    QAction* showNavGoalsAction = viewMenu->addAction(tr("&Nav Goals"));
-    showNavGoalsAction->setToolTip(tr("Toggles the nav goals."));
-    showNavGoalsAction->setShortcut(QKeySequence(tr("N")));
-    showNavGoalsAction->setCheckable(true);
-    showNavGoalsAction->setChecked(command.showNavGoals);
-    connect(showNavGoalsAction, SIGNAL(triggered()), this, SLOT(toggleNavGoals()));
-
-    viewMenu->addSeparator();
 
     QAction* showBodyAction = viewMenu->addAction(tr("&Body"));
     showBodyAction->setToolTip(tr("Toggles the body."));
@@ -239,26 +229,27 @@ void MainWindow::buildMenu()
     showBodyAction->setChecked(command.showBody);
     connect(showBodyAction, SIGNAL(triggered()), this, SLOT(toggleBody()));
 
-    QAction* showTargetsAction = viewMenu->addAction(tr("&Targets"));
-    showTargetsAction->setToolTip(tr("Toggles the targets."));
-    showTargetsAction->setShortcut(QKeySequence(tr("T")));
-    showTargetsAction->setCheckable(true);
-    showTargetsAction->setChecked(command.showTargets);
-    connect(showTargetsAction, SIGNAL(triggered()), this, SLOT(toggleTargets()));
+    QAction* simulationDebugAction = viewMenu->addAction(tr("&Simulation Debug"));
+    simulationDebugAction->setToolTip(tr("Toggles the simulation debug drawing."));
+    simulationDebugAction->setCheckable(true);
+    simulationDebugAction->setChecked(command.showSimulationDebugDraw);
+    connect(simulationDebugAction, SIGNAL(triggered()), this, SLOT(toggleSimulationDebug()));
 
-    QAction* showLidarAction = viewMenu->addAction(tr("&Laser Sensor"));
-    showLidarAction->setToolTip(tr("Toggles the simulated laser sensor."));
-    showLidarAction->setShortcut(QKeySequence(tr("Shift+L")));
-    showLidarAction->setCheckable(true);
-    showLidarAction->setChecked(command.showLaser);
-    connect(showLidarAction, SIGNAL(triggered()), this, SLOT(toggleLaser()));
+    viewMenu->addSeparator(); // sensor section
 
-    QAction* showRayModelAction = viewMenu->addAction(tr("&Ray Model"));
-    showRayModelAction->setToolTip(tr("Toggles the ray model."));
-    showRayModelAction->setShortcut(QKeySequence(tr("Y")));
-    showRayModelAction->setCheckable(true);
-    showRayModelAction->setChecked(command.showRayModel);
-    connect(showRayModelAction, SIGNAL(triggered()), this, SLOT(toggleRayModel()));
+    QAction* showOdometry = viewMenu->addAction(tr("&Odometry"));
+    showOdometry->setToolTip(tr("Toggles the odometry visualization."));
+    showOdometry->setShortcut(QKeySequence(tr("O")));
+    showOdometry->setCheckable(true);
+    showOdometry->setChecked(command.showOdometry);
+    connect(showOdometry, SIGNAL(triggered()), this, SLOT(toggleShowOdometry()));
+
+    QAction* showLaserAction = viewMenu->addAction(tr("&Laser"));
+    showLaserAction->setToolTip(tr("Toggles the laser view."));
+    showLaserAction->setShortcut(QKeySequence(tr("Shift+L")));
+    showLaserAction->setCheckable(true);
+    showLaserAction->setChecked(command.showLaser);
+    connect(showLaserAction, SIGNAL(triggered()), this, SLOT(toggleLaser()));
 
     QAction* showVisibilityPolygonAction = viewMenu->addAction(tr("&Visibility Polygon"));
     showVisibilityPolygonAction->setShortcut(QKeySequence(tr("V")));
@@ -278,38 +269,98 @@ void MainWindow::buildMenu()
     showOccupancyGridAction->setChecked(command.showCostmap);
     connect(showOccupancyGridAction, SIGNAL(triggered()), this, SLOT(toggleCostmap()));
 
-    QAction* showWorldModelAction = viewMenu->addAction(tr("&Local Map"));
-    showWorldModelAction->setShortcut(QKeySequence(tr("P")));
-    showWorldModelAction->setCheckable(true);
-    showWorldModelAction->setChecked(command.showLocalMap);
-    connect(showWorldModelAction, SIGNAL(triggered()), this, SLOT(toggleLocalMap()));
-
     QAction* showDijkstraMapAction = viewMenu->addAction(tr("&Dijkstra Map"));
     //showDijkstraMapAction->setShortcut(QKeySequence(tr("D")));
     showDijkstraMapAction->setCheckable(true);
     showDijkstraMapAction->setChecked(command.showDijkstraMap);
     connect(showDijkstraMapAction, SIGNAL(triggered()), this, SLOT(toggleDijkstraMap()));
 
-    QAction* showWorldVisGraphAction = viewMenu->addAction(tr("&World Visibility Graph"));
-    showWorldVisGraphAction->setToolTip(tr("Toggles the worls visiblity graph."));
-    //showWorldVisGraphAction->setShortcut(QKeySequence(tr("V")));
-    showWorldVisGraphAction->setCheckable(true);
-    showWorldVisGraphAction->setChecked(command.showWorldVisibilityGraph);
-    connect(showWorldVisGraphAction, SIGNAL(triggered()), this, SLOT(toggleWorldVisibilityGraph()));
+    QAction* showWorldModelAction = viewMenu->addAction(tr("&Local Map"));
+    showWorldModelAction->setShortcut(QKeySequence(tr("P")));
+    showWorldModelAction->setCheckable(true);
+    showWorldModelAction->setChecked(command.showLocalMap);
+    connect(showWorldModelAction, SIGNAL(triggered()), this, SLOT(toggleLocalMap()));
+
+    QAction* showRayModelAction = viewMenu->addAction(tr("&Ray Model"));
+    showRayModelAction->setToolTip(tr("Toggles the ray model."));
+    showRayModelAction->setShortcut(QKeySequence(tr("Y")));
+    showRayModelAction->setCheckable(true);
+    showRayModelAction->setChecked(command.showRayModel);
+    connect(showRayModelAction, SIGNAL(triggered()), this, SLOT(toggleRayModel()));
+
+    viewMenu->addSeparator(); // motion planning section
+
+    QAction* showTargetsAction = viewMenu->addAction(tr("&Targets"));
+    showTargetsAction->setToolTip(tr("Toggles the targets."));
+    showTargetsAction->setShortcut(QKeySequence(tr("T")));
+    showTargetsAction->setCheckable(true);
+    showTargetsAction->setChecked(command.showTargets);
+    connect(showTargetsAction, SIGNAL(triggered()), this, SLOT(toggleTargets()));
 
     QAction* showLocalVisGraphAction = viewMenu->addAction(tr("&Local Visibility Graph"));
     showLocalVisGraphAction->setToolTip(tr("Toggles the local visiblity graph."));
-    //showLocalVisGraphAction->setShortcut(QKeySequence(tr("V")));
+    //showVisGraphAction->setShortcut(QKeySequence(tr("V")));
     showLocalVisGraphAction->setCheckable(true);
     showLocalVisGraphAction->setChecked(command.showLocalVisibilityGraph);
     connect(showLocalVisGraphAction, SIGNAL(triggered()), this, SLOT(toggleLocalVisibilityGraph()));
 
-    showWorldPathAction = viewMenu->addAction(tr("&Paths"));
+    QAction* showWorldVisGraphAction = viewMenu->addAction(tr("&World Visibility Graph"));
+    showWorldVisGraphAction->setToolTip(tr("Toggles the world visiblity graph."));
+    //showVisGraphAction->setShortcut(QKeySequence(tr("V")));
+    showWorldVisGraphAction->setCheckable(true);
+    showWorldVisGraphAction->setChecked(command.showWorldVisibilityGraph);
+    connect(showWorldVisGraphAction, SIGNAL(triggered()), this, SLOT(toggleWorldVisibilityGraph()));
+
+    QAction* showWorldPathAction = viewMenu->addAction(tr("&Paths"));
     showWorldPathAction->setToolTip(tr("Toggles the paths."));
     //showWorldPathAction->setShortcut(QKeySequence(tr("W")));
     showWorldPathAction->setCheckable(true);
     showWorldPathAction->setChecked(command.showPaths);
     connect(showWorldPathAction, SIGNAL(triggered()), this, SLOT(togglePaths()));
+
+    viewMenu->addSeparator(); // map section
+
+    QAction* showPoseAction = viewMenu->addAction(tr("&Pose"));
+    showPoseAction->setToolTip(tr("Toggles the pose view."));
+    //showPoseAction->setShortcut(QKeySequence(tr("V")));
+    showPoseAction->setCheckable(true);
+    showPoseAction->setChecked(command.showPose > 0);
+    connect(showPoseAction, SIGNAL(triggered()), this, SLOT(togglePose()));
+
+    QAction* showLineMap = viewMenu->addAction(tr("&Line Map"));
+    showLineMap->setToolTip(tr("Toggles the line map view."));
+    showLineMap->setShortcut(QKeySequence(tr("L")));
+    showLineMap->setCheckable(true);
+    showLineMap->setChecked(command.showLineMap > 0);
+    connect(showLineMap, SIGNAL(triggered()), this, SLOT(toggleLineMap()));
+
+    QAction* showPoseGraph = viewMenu->addAction(tr("&Pose Graph"));
+    showPoseGraph->setToolTip(tr("Toggles the pose history view."));
+    showPoseGraph->setShortcut(QKeySequence(tr("Shift+P")));
+    showPoseGraph->setCheckable(true);
+    showPoseGraph->setChecked(command.showPoseGraph > 0);
+    connect(showPoseGraph, SIGNAL(triggered()), this, SLOT(togglePoseGraph()));
+
+    QAction* showPolygonMapAction = viewMenu->addAction(tr("&Polygon Map"));
+    showPolygonMapAction->setToolTip(tr("Toggles the polygon map."));
+    showPolygonMapAction->setShortcut(QKeySequence(tr("W")));
+    showPolygonMapAction->setCheckable(true);
+    showPolygonMapAction->setChecked(command.showPolygonMap > 0);
+    connect(showPolygonMapAction, SIGNAL(triggered()), this, SLOT(togglePolygonMap()));
+
+    QAction* showWorldObstaclesAction = viewMenu->addAction(tr("&World Polygons"));
+    showWorldObstaclesAction->setToolTip(tr("Toggles the world polygons."));
+    showWorldObstaclesAction->setShortcut(QKeySequence(tr("Shift+W")));
+    showWorldObstaclesAction->setCheckable(true);
+    showWorldObstaclesAction->setChecked(command.showWorldPolygons);
+    connect(showWorldObstaclesAction, SIGNAL(triggered()), this, SLOT(toggleWorldPolygons()));
+
+    QAction* showNavGoalsAction = viewMenu->addAction(tr("&Nav Goals"));
+    showNavGoalsAction->setToolTip(tr("Toggles the nav goals."));
+    showNavGoalsAction->setShortcut(QKeySequence(tr("N")));
+    showNavGoalsAction->setCheckable(true);
+    showNavGoalsAction->setChecked(command.showNavGoals);
+    connect(showNavGoalsAction, SIGNAL(triggered()), this, SLOT(toggleNavGoals()));
 
     viewMenu->addSeparator();
 
@@ -484,6 +535,20 @@ void MainWindow::buildMenu()
     selectTargetAction->setChecked(command.selectTarget);
     connect(selectTargetAction, SIGNAL(triggered()), this, SLOT(toggleSelectTarget()));
 
+    QAction* clearPolygonAction = commandMenu->addAction(tr("&Clear Polygon"));
+    clearPolygonAction->setToolTip(tr("Select a map area to clear."));
+    //clearPolygonAction->setShortcut(QKeySequence(tr("Ctrl+T")));
+    clearPolygonAction->setCheckable(true);
+    clearPolygonAction->setChecked(command.clearMap);
+    connect(clearPolygonAction, SIGNAL(triggered()), this, SLOT(toggleClearMap()));
+
+    QAction* fillPolygonAction = commandMenu->addAction(tr("&Fill Polygon"));
+    fillPolygonAction->setToolTip(tr("Select a map area to fill."));
+    //clearPolygonAction->setShortcut(QKeySequence(tr("Ctrl+T")));
+    fillPolygonAction->setCheckable(true);
+    fillPolygonAction->setChecked(command.fillMap);
+    connect(fillPolygonAction, SIGNAL(triggered()), this, SLOT(toggleFillMap()));
+
     commandMenu->addSeparator();
 
     QAction* experimenterAction = commandMenu->addAction(tr("&Experimenter"));
@@ -492,6 +557,32 @@ void MainWindow::buildMenu()
     experimenterAction->setCheckable(true);
     experimenterAction->setChecked(experimenter.running);
     connect(experimenterAction, SIGNAL(triggered()), &experimenter, SLOT(startstop()));
+
+    commandMenu->addSeparator();
+
+    QAction* slamEnabledAction = commandMenu->addAction(tr("&Slam"));
+    //slamEnabledAction->setShortcut(QKeySequence(tr("U")));
+    slamEnabledAction->setCheckable(true);
+    slamEnabledAction->setChecked(command.slamEnabled);
+    connect(slamEnabledAction, SIGNAL(triggered()), this, SLOT(toggleSlam()));
+
+    QAction* mapUpdateEnabledAction = commandMenu->addAction(tr("&Map Update"));
+    //mapUpdateEnabledAction->setShortcut(QKeySequence(tr("U")));
+    mapUpdateEnabledAction->setCheckable(true);
+    mapUpdateEnabledAction->setChecked(command.mapUpdateEnabled);
+    connect(mapUpdateEnabledAction, SIGNAL(triggered()), this, SLOT(toggleMapUpdate()));
+
+    QAction* odometryAction = commandMenu->addAction(tr("&Use Odometry"));
+    //odometryAction->setShortcut(QKeySequence(tr("O")));
+    odometryAction->setCheckable(true);
+    odometryAction->setChecked(command.useOdometry);
+    connect(odometryAction, SIGNAL(triggered()), this, SLOT(toggleOdometry()));
+
+    QAction* keepLobsAction = commandMenu->addAction(tr("&Keep Line Observations"));
+    //keepLobsAction->setShortcut(QKeySequence(tr("U")));
+    keepLobsAction->setCheckable(true);
+    keepLobsAction->setChecked(command.keepLineObservations);
+    connect(keepLobsAction, SIGNAL(triggered()), this, SLOT(toggleKeepLineObservations()));
 
     commandMenu->addSeparator();
 
@@ -751,15 +842,92 @@ void MainWindow::buildMenu()
     jumpToEndAction->setToolTip(tr("Sets the player to the last frame."));
 }
 
-// Vertical splitter synchronization.
-void MainWindow::topSplitterMoved()
+void MainWindow::reset()
 {
-    verticalSplitterBottom->setSizes(verticalSplitterTop->sizes());
+    state.world.reset();
+    messageIn("Reset");
 }
 
-void MainWindow::bottomSplitterMoved()
+void MainWindow::saveConfig()
 {
-    verticalSplitterTop->setSizes(verticalSplitterBottom->sizes());
+    config.save(robotName);
+    messageIn("Config saved.");
+}
+
+void MainWindow::loadConfig()
+{
+    config.load(robotName);
+    configChanged();
+    messageIn("Config reset.");
+}
+
+void MainWindow::saveStateHistory()
+{
+    recordStop();
+    state.save();
+    messageIn("State history saved.");
+}
+
+void MainWindow::loadStateHistory(QString fileName)
+{
+    messageIn("Loading...");
+    recordStop();
+    state.load(fileName);
+    jumpToStart();
+    messageIn("State history loaded.");
+}
+
+void MainWindow::toggleFileBuffering()
+{
+    command.bufferToFile = !command.bufferToFile;
+    if (command.bufferToFile)
+    {
+        state.resetFile();
+        messageIn("File buffering enabled.");
+    }
+    else
+    {
+        messageIn("File buffering disabled.");
+    }
+}
+
+void MainWindow::saveMap()
+{
+    //state.robot.saveMap();
+    messageIn("Map saved.");
+}
+
+void MainWindow::loadMap()
+{
+    //state.robot.loadMap();
+    messageIn("Map loaded.");
+    updateGui();
+}
+
+void MainWindow::exportWorld()
+{
+    state.world.logObstaclesToTxt();
+    messageIn("World exported.");
+}
+
+
+
+void MainWindow::toggleJoystick()
+{
+    command.joystick = !command.joystick;
+    if (command.joystick)
+        messageIn("Joystick control activated.");
+    else
+        messageIn("Joystick control deactivated.");
+}
+
+void MainWindow::toggleKeyboard()
+{
+    command.keyboard = !command.keyboard;
+    if (command.keyboard)
+        messageIn("Keyboard control enabled.");
+    else
+        messageIn("Keyboard control disabled.");
 }
 
 void MainWindow::joystickConnected()
@@ -846,12 +1014,25 @@ void MainWindow::joystickMoved(QList<double> axis)
     //qDebug() << axis;
 }
 
+
+
 // This is needed when the entire config has changed, e.g. when the robot model was
 // changed, the config was reset or a new robot was detected.
 void MainWindow::configChanged()
 {
     configWidget.configChangedIn();
     graphicsViewWidget.update();
+}
+
+// Vertical splitter synchronization.
+void MainWindow::topSplitterMoved()
+{
+    verticalSplitterBottom->setSizes(verticalSplitterTop->sizes());
+}
+
+void MainWindow::bottomSplitterMoved()
+{
+    verticalSplitterTop->setSizes(verticalSplitterBottom->sizes());
 }
 
 // Slot for internal message strings.
@@ -878,202 +1059,256 @@ void MainWindow::toggleGraph()
         verticalSplitterBottom->hide();
 }
 
-void MainWindow::toggleJoystick()
+
+
+// This function is called by the animation timer to update the gui
+// when replaying the state history.
+void MainWindow::animate()
 {
-    command.joystick = !command.joystick;
-    if (command.joystick)
-        messageIn("Joystick control activated.");
+    if (recording)
+    {
+        animationTimer.stop();
+        return;
+    }
+
+    if (cfi+fim < 0 || cfi+fim > state.size()-1 || state.stop)
+    {
+        state.stop = false;
+        fim = 0;
+        animationTimer.stop();
+    }
     else
-        messageIn("Joystick control deactivated.");
+    {
+        loadFrame(cfi+fim);
+    }
 }
 
-void MainWindow::toggleKeyboard()
+// Toggles the record mode. In record mode, the robot control thread is
+// running and data are collected in the state history.
+void MainWindow::record()
 {
-    command.keyboard = !command.keyboard;
-    if (command.keyboard)
-        messageIn("Keyboard control enabled.");
+    if (recording)
+        recordStop();
     else
-        messageIn("Keyboard control disabled.");
+        recordStart();
 }
 
-void MainWindow::toggleSafetyZoneReflex()
+// Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
+void MainWindow::recordStart()
 {
-    command.safetyZoneReflex = !command.safetyZoneReflex;
-    if (command.safetyZoneReflex)
-        messageIn("Safety zone reflex enabled.");
+    cfi = state.size()-1;
+    animationTimer.stop();
+    recording = true;
+    graphicsViewWidget.startRecording();
+    //guiUpdateTimer.start();
+    mainControlLoop.start();
+    messageIn("RobotControl thread activated.");
+}
+
+// Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
+void MainWindow::recordStop()
+{
+    cfi = state.size()-1;
+    recording = false;
+    graphicsViewWidget.stopRecording();
+    mainControlLoop.stop();
+    //guiUpdateTimer.stop();
+    messageIn("RobotControl thread deactivated.");
+}
+
+// Play button handler.
+void MainWindow::play()
+{
+    if (recording)
+        return;
+
+    if (fim != 0)
+    {
+        fim = 0;
+        animationTimer.stop();
+    }
     else
-        messageIn("Safety zone reflex disabled.");
+    {
+        fim = 1;
+        animationTimer.start();
+    }
+}
+
+// Stop button handler.
+void MainWindow::stop()
+{
+    animationTimer.stop();
     update();
 }
 
-void MainWindow::toggleNavGoals()
+void MainWindow::frameForward()
 {
-    command.showNavGoals = !command.showNavGoals;
-    graphicsScene.init();
-    update();
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    if (cfi >= state.size()-1)
+    {
+        // At the end of the state history, step the controller forward and produce a new frame.
+        cfi++;
+        mainControlLoop.step();
+        update();
+    }
+    else
+    {
+        loadFrame(cfi+1);
+    }
 }
 
-void MainWindow::toggleTargets()
+// Steps ten frame forward in the state history.
+void MainWindow::framesForward()
 {
-    command.showTargets = !command.showTargets;
-    update();
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    loadFrame(cfi+10);
 }
 
-void MainWindow::toggleLabels()
+void MainWindow::frameBack()
 {
-    command.showLabels = !command.showLabels;
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    loadFrame(cfi-1);
+}
+
+// Steps ten frames back in the state history.
+void MainWindow::framesBack()
+{
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    loadFrame(qMax(0, qMin(cfi-10, state.size()-1)));
+}
+
+// Jumps to the first frame in the state history.
+void MainWindow::jumpToStart()
+{
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    loadFrame(0);
+}
+
+// Jumps to the last frame in the state history.
+void MainWindow::jumpToEnd()
+{
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    loadFrame(state.size()-1);
+}
+
+// Handles the frame slider.
+void MainWindow::jumpToFrame()
+{
+    if (recording)
+        return;
+
+    animationTimer.stop();
+    int f = ui.frameSlider->value();
+    cfi = qMax(0, int((double)((state.size()-1) * f)/1000.0));
+    loadFrame(cfi);
+}
+
+// This slot is called when the user browses the state history with the slider or with
+// the frame forward, frame backward, and playback functions.
+void MainWindow::loadFrame(int cfi)
+{
+    if (recording)
+        return;
+
+    if (cfi < 0 || cfi >= state.size())
+        return;
+
+    this->cfi = cfi;
+
+    // The browsing of the state history is implemented in a generic way such that
+    // the current state is overwritten with an older version of the state from
+    // state history.
+    state = state[cfi];
+
+    // However, a couple of things require specific attention.
+
+    if (state.world.unicycleAgents.size() > 0)
+        state.world.unicycleAgents[0] = state.uniTaxi;
+
+    // 1. The motion controllers of the agents (holo taxi, car taxi) are static members
+    // and such they are not reset to an older state when the taxi is overwritten by
+    // a copy. The sense() act() loop needs to be executed explicitly so that the
+    // controllers can recompute their output using the copied state as input.
+    state.world.stepAgents();
+
+    // 2. The physical simulation is also static. The loaded state has to be recreated
+    // in the simulation so that the simulation can continue seamlessly.
+    state.world.physicsTransformOut();
+
+    updateGui();
+    emit progressOut(qMax(0, (int)(1000.0 * double(cfi)/(state.size()-1))));
+}
+
+// Refreshes the gui components.
+void MainWindow::updateGui()
+{
+    graphicsScene.init(); // questionable
     graphicsViewWidget.update();
+    graphWidget.update();
 }
 
-void MainWindow::toggleWorldPolygons()
+
+
+void MainWindow::toggleMap(int mapId)
 {
-    command.showWorldPolygons = !command.showWorldPolygons;
+    state.clear();
+    state.world.setMap(mapId, max(config.unicycleAgents, 1.0));
     graphicsScene.init();
-    update();
+    graphicsViewWidget.init();
+
+    if (mapId == 0)
+    {
+        messageIn("Switched to Void map.");
+    }
+    if (mapId == 1)
+    {
+        messageIn("Switched to Simple map.");
+    }
+    if (mapId == 2)
+    {
+        messageIn("Switched to U Trap map.");
+    }
+    if (mapId == 3)
+    {
+        messageIn("Switched to Tunnel map.");
+    }
+    if (mapId == 4)
+    {
+        messageIn("Switched to Apartment map.");
+    }
+    if (mapId == 5)
+    {
+        messageIn("Switched to Office map.");
+    }
+    if (mapId == 6)
+    {
+        messageIn("Switched to Warehouse map.");
+    }
+    if (mapId == 7)
+    {
+        messageIn("Switched to Clutter map.");
+    }
 }
 
-void MainWindow::toggleWorldMap()
-{
-    command.showWorldMap = !command.showWorldMap;
-    update();
-}
 
-void MainWindow::togglePaths()
-{
-    command.showPaths = !command.showPaths;
-    update();
-}
-
-void MainWindow::toggleLocalMap()
-{
-    command.showLocalMap = !command.showLocalMap;
-    update();
-}
-
-void MainWindow::toggleVisibilityPolygon()
-{
-    command.showVisibilityPolygon = !command.showVisibilityPolygon;
-    update();
-}
-
-void MainWindow::toggleSafetyZone()
-{
-    command.showSafetyZone = !command.showSafetyZone;
-    update();
-}
-
-void MainWindow::toggleSimulationDebug()
-{
-    command.showSimulationDebugDraw = !command.showSimulationDebugDraw;
-    update();
-}
-
-void MainWindow::toggleRayModel()
-{
-    command.showRayModel = !command.showRayModel;
-    update();
-}
-
-void MainWindow::toggleLaser()
-{
-    command.showLaser = (command.showLaser+1) % 4;
-    update();
-}
-
-void MainWindow::toggleWorldVisibilityGraph()
-{
-    command.showWorldVisibilityGraph = !command.showWorldVisibilityGraph;
-    update();
-}
-
-void MainWindow::toggleLocalVisibilityGraph()
-{
-    command.showLocalVisibilityGraph = !command.showLocalVisibilityGraph;
-    update();
-}
-
-void MainWindow::toggleTeaching()
-{
-    command.learn = !command.learn;
-    if(command.learn)
-        messageIn("Teaching enabled!");
-    else
-        messageIn("Teaching off.");
-}
-
-void MainWindow::clearRuleBase()
-{
-    state.world.unicycleAgents[0].ruleBase.clear();
-    messageIn("Rule base cleared.");
-}
-
-void MainWindow::toggleCostmap()
-{
-    command.showCostmap = !command.showCostmap;
-    update();
-}
-
-void MainWindow::toggleDijkstraMap()
-{
-    command.showDijkstraMap = !command.showDijkstraMap;
-    update();
-}
-
-void MainWindow::toggleEmergencyBrakeReflex()
-{
-    command.emergencyBrakeReflex = !command.emergencyBrakeReflex;
-    if (command.emergencyBrakeReflex)
-        messageIn("Emergency brake reflex enabled.");
-    else
-        messageIn("Emergency brake disabled.");
-    update();
-}
-
-void MainWindow::toggleStucknessReflex()
-{
-    command.stucknessReflex = !command.stucknessReflex;
-    if (command.stucknessReflex)
-        messageIn("Stuckness reflex enabled.");
-    else
-        messageIn("Stuckness reflex disabled.");
-    update();
-}
-
-void MainWindow::toggleTimeAbort()
-{
-    command.useTimeAbort = !command.useTimeAbort;
-    if (command.useTimeAbort)
-        messageIn("Time abort enabled.");
-    else
-        messageIn("Time abort disabled.");
-    update();
-}
-
-void MainWindow::toggleClosing()
-{
-    command.useClosing = !command.useClosing;
-    if (command.useClosing)
-        messageIn("Closing enabled.");
-    else
-        messageIn("Closing disabled.");
-    update();
-}
-
-void MainWindow::toggleDynamicPath()
-{
-    command.useDynamicPath = !command.useDynamicPath;
-    if (command.useDynamicPath)
-        messageIn("Dynamic path enabled.");
-    else
-        messageIn("Dynamic path disabled.");
-    update();
-}
-
-void MainWindow::toggleBody()
-{
-    command.showBody = !command.showBody;
-    graphicsViewWidget.update();
-}
 
 void MainWindow::toggleSelectPose()
 {
@@ -1095,11 +1330,28 @@ void MainWindow::toggleSelectTarget()
     graphicsViewWidget.togglePoseSelection();
 }
 
-void MainWindow::poseRecorded(const Pose2D &pose)
+void MainWindow::toggleClearMap()
+{
+    command.clearMap = !command.clearMap;
+    if (command.clearMap)
+        messageIn("Clearing map.");
+    graphicsViewWidget.toggleBoxSelection();
+}
+
+void MainWindow::toggleFillMap()
+{
+    command.fillMap = !command.fillMap;
+    if (command.fillMap)
+        messageIn("Filling map.");
+    graphicsViewWidget.toggleBoxSelection();
+}
+
+void MainWindow::poseSelected(const Pose2D &pose)
 {
     if (command.selectPose)
     {
-        //messageIn("Initial pose set.");
+//        state.robot.setInitialPose(pose);
+        messageIn("Initial pose set.");
     }
     else if (command.selectTarget)
     {
@@ -1110,13 +1362,183 @@ void MainWindow::poseRecorded(const Pose2D &pose)
     command.selectTarget = false;
 }
 
-void MainWindow::toggleGhostMode()
+void MainWindow::mapEdited(const Polygon& pol)
 {
-    command.ghostMode = !command.ghostMode;
-    if (command.ghostMode)
-        messageIn("Ghost mode enabled.");
+    if (command.clearMap)
+    {
+//        state.robot.clearMap(pol);
+    }
+    else if (command.fillMap)
+    {
+//        state.robot.fillMap(pol);
+    }
+    command.clearMap = false;
+    command.fillMap = false;
+}
+
+
+
+void MainWindow::toggleLabels()
+{
+    command.showLabels = !command.showLabels;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleBody()
+{
+    command.showBody = !command.showBody;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleSimulationDebug()
+{
+    command.showSimulationDebugDraw = !command.showSimulationDebugDraw;
+    update();
+}
+
+
+
+void MainWindow::toggleShowOdometry()
+{
+    command.showOdometry = !command.showOdometry;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleLaser()
+{
+    command.showLaser = (command.showLaser+1) % 3;
+    update();
+}
+
+void MainWindow::toggleVisibilityPolygon()
+{
+    command.showVisibilityPolygon = !command.showVisibilityPolygon;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleSafetyZone()
+{
+    command.showSafetyZone = !command.showSafetyZone;
+    update();
+}
+
+void MainWindow::toggleCostmap()
+{
+    command.showCostmap = !command.showCostmap;
+    update();
+}
+
+void MainWindow::toggleDijkstraMap()
+{
+    command.showDijkstraMap = !command.showDijkstraMap;
+    update();
+}
+
+void MainWindow::toggleLocalMap()
+{
+    command.showLocalMap = !command.showLocalMap;
+    update();
+}
+
+void MainWindow::toggleRayModel()
+{
+    command.showRayModel = !command.showRayModel;
+    update();
+}
+
+
+
+void MainWindow::toggleTargets()
+{
+    command.showTargets = !command.showTargets;
+    update();
+}
+
+void MainWindow::toggleLocalVisibilityGraph()
+{
+    command.showLocalVisibilityGraph = !command.showLocalVisibilityGraph;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleWorldVisibilityGraph()
+{
+    command.showWorldVisibilityGraph = !command.showWorldVisibilityGraph;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::togglePaths()
+{
+    command.showPaths = !command.showPaths;
+    update();
+}
+
+
+
+void MainWindow::togglePose()
+{
+    command.showPose = (command.showPose+1) % 3;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleLineMap()
+{
+    command.showLineMap = (command.showLineMap+1) % 4;
+    graphicsViewWidget.update();
+
+    if (command.showLineMap == 1)
+        messageIn("Line matching view.");
+    if (command.showLineMap == 2)
+        messageIn("Line map view.");
+    if (command.showLineMap == 3)
+        messageIn("Line observations view.");
+}
+
+void MainWindow::togglePoseGraph()
+{
+    command.showPoseGraph = (command.showPoseGraph+1) % 4;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::togglePolygonMap()
+{
+    command.showPolygonMap = (command.showPolygonMap+1) % 6;
+    graphicsViewWidget.update();
+}
+
+void MainWindow::toggleWorldPolygons()
+{
+    command.showWorldPolygons = !command.showWorldPolygons;
+    graphicsScene.init();
+    update();
+}
+
+void MainWindow::toggleNavGoals()
+{
+    command.showNavGoals = !command.showNavGoals;
+    graphicsScene.init();
+    update();
+}
+
+
+void MainWindow::toggleFrequency(int f)
+{
+    command.frequency = f;
+    state.clear();
+    state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
+    if (mainControlLoop.isRunning())
+    {
+        mainControlLoop.stop();
+        mainControlLoop.start();
+    }
+
+    if (f == 5)
+        messageIn("Switched to 5Hz.");
+    else if (f == 10)
+        messageIn("Switched to 10Hz.");
+    else if (f == 20)
+        messageIn("Switched to 20Hz.");
     else
-        messageIn("Ghost mode disabled.");
+        messageIn("Switched to 30Hz.");
 }
 
 void MainWindow::toggleTrajectoryControl(int d)
@@ -1195,288 +1617,128 @@ void MainWindow::toggleTrajectoryType(int d)
         messageIn("Switched to Fresnel trajectory type.");
 }
 
-void MainWindow::toggleFrequency(int f)
+void MainWindow::toggleSafetyZoneReflex()
 {
-    command.frequency = f;
-    state.clear();
-    state.world.setParams(command.trajectoryPlanningMethod, command.trajectoryType, command.predictionType, command.heuristic, command.frequency);
-    if (mainControlLoop.isRunning())
-    {
-        mainControlLoop.stop();
-        mainControlLoop.start();
-    }
-
-    if (f == 5)
-        messageIn("Switched to 5Hz.");
-    else if (f == 10)
-        messageIn("Switched to 10Hz.");
-    else if (f == 20)
-        messageIn("Switched to 20Hz.");
+    command.safetyZoneReflex = !command.safetyZoneReflex;
+    if (command.safetyZoneReflex)
+        messageIn("Safety zone reflex enabled.");
     else
-        messageIn("Switched to 30Hz.");
-}
-
-void MainWindow::toggleMap(int mapId)
-{
-    state.clear();
-    state.world.setMap(mapId, max(config.unicycleAgents, 1.0));
-    graphicsScene.init();
-    graphicsViewWidget.init();
-
-    if (mapId == 0)
-    {
-        messageIn("Switched to Void map.");
-    }
-    if (mapId == 1)
-    {
-        messageIn("Switched to Simple map.");
-    }
-    if (mapId == 2)
-    {
-        messageIn("Switched to U Trap map.");
-    }
-    if (mapId == 3)
-    {
-        messageIn("Switched to Tunnel map.");
-    }
-    if (mapId == 4)
-    {
-        messageIn("Switched to Apartment map.");
-    }
-    if (mapId == 5)
-    {
-        messageIn("Switched to Office map.");
-    }
-    if (mapId == 6)
-    {
-        messageIn("Switched to Warehouse map.");
-    }
-    if (mapId == 7)
-    {
-        messageIn("Switched to Clutter map.");
-    }
-}
-
-// This function is called by the animation timer to update the gui
-// when replaying the state history.
-void MainWindow::animate()
-{
-    if (recording)
-    {
-        animationTimer.stop();
-        return;
-    }
-
-    if (cfi+fim < 0 || cfi+fim > state.size()-1 || state.stop)
-    {
-        state.stop = false;
-        fim = 0;
-        animationTimer.stop();
-    }
-    else
-    {
-        loadFrame(cfi+fim);
-    }
-}
-
-// Toggles the record mode. In record mode, the robot control thread is
-// running and data are collected in the state history.
-void MainWindow::record()
-{
-    if (recording)
-        recordStop();
-    else
-        recordStart();
-}
-
-// Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
-void MainWindow::recordStart()
-{
-    animationTimer.stop();
-    recording = true;
-    graphicsViewWidget.startRecording();
-    guiUpdateTimer.start();
-    mainControlLoop.start();
-}
-
-// Toggles the record mode. In record mode the robot control thread is running and data are collected in the state history.
-void MainWindow::recordStop()
-{
-    recording = false;
-    graphicsViewWidget.stopRecording();
-    mainControlLoop.stop();
-    guiUpdateTimer.stop();
-    cfi = max(0,state.size()-1);
-}
-
-// Play button handler.
-void MainWindow::play()
-{
-    if (recording)
-        return;
-
-    if (fim != 0)
-    {
-        fim = 0;
-        animationTimer.stop();
-    }
-    else
-    {
-        fim = 1;
-        animationTimer.start();
-    }
-}
-
-// Stop button handler.
-void MainWindow::stop()
-{
-    animationTimer.stop();
+        messageIn("Safety zone reflex disabled.");
     update();
 }
 
-void MainWindow::frameForward()
+void MainWindow::toggleEmergencyBrakeReflex()
 {
-    if (recording)
-        return;
-
-    animationTimer.stop();
-    if (cfi >= state.size()-1)
-    {
-        // At the end of the state history, step the controller forward and produce a new frame.
-        cfi++;
-        mainControlLoop.step();
-        update();
-    }
+    command.emergencyBrakeReflex = !command.emergencyBrakeReflex;
+    if (command.emergencyBrakeReflex)
+        messageIn("Emergency brake reflex enabled.");
     else
-    {
-        loadFrame(cfi+1);
-    }
+        messageIn("Emergency brake disabled.");
+    update();
 }
 
-void MainWindow::frameBack()
+void MainWindow::toggleStucknessReflex()
 {
-    if (recording)
-        return;
-
-    animationTimer.stop();
-    loadFrame(cfi-1);
+    command.stucknessReflex = !command.stucknessReflex;
+    if (command.stucknessReflex)
+        messageIn("Stuckness reflex enabled.");
+    else
+        messageIn("Stuckness reflex disabled.");
+    update();
 }
 
-void MainWindow::jumpToStart()
+void MainWindow::toggleTimeAbort()
 {
-    if (recording)
-        return;
-
-    animationTimer.stop();
-    loadFrame(0);
-}
-
-void MainWindow::jumpToEnd()
-{
-    if (recording)
-        return;
-
-    animationTimer.stop();
-    loadFrame(state.size()-1);
-}
-
-void MainWindow::jumpToFrame(int f)
-{
-    if (recording)
-        return;
-
-    animationTimer.stop();
-    cfi = qMax(0, int((double)((state.size()-1) * f)/1000.0));
-    loadFrame(cfi);
-}
-
-// This slot is called when the user browses the state history with the slider or with
-// the frame forward, frame backward, and playback functions.
-void MainWindow::loadFrame(int cfi)
-{
-    if (recording)
-        return;
-
-    if (cfi < 0 || cfi >= state.size())
-        return;
-
-    this->cfi = cfi;
-
-    // The browsing of the state history is implemented in a generic way such that
-    // the current state is overwritten with an older version of the state from
-    // state history.
-    state = state[cfi];
-
-    // However, a couple of things require specific attention.
-
-    if (state.world.unicycleAgents.size() > 0)
-        state.world.unicycleAgents[0] = state.uniTaxi;
-
-    // 1. The motion controllers of the agents (holo taxi, car taxi) are static members
-    // and such they are not reset to an older state when the taxi is overwritten by
-    // a copy. The sense() act() loop needs to be executed explicitly so that the
-    // controllers can recompute their output using the copied state as input.
-    state.world.stepAgents();
-
-    // 2. The physical simulation is also static. The loaded state has to be recreated
-    // in the simulation so that the simulation can continue seamlessly.
-    state.world.physicsTransformOut();
-
-    updateGui();
-    emit progressOut(qMax(0, (int)(1000.0 * double(cfi)/(state.size()-1))));
-}
-
-// Refreshes the gui components.
-void MainWindow::updateGui()
-{
-    graphicsScene.init();
+    command.useTimeAbort = !command.useTimeAbort;
+    if (command.useTimeAbort)
+        messageIn("Time abort enabled.");
+    else
+        messageIn("Time abort disabled.");
     graphicsViewWidget.update();
-    graphWidget.update();
 }
 
-void MainWindow::saveConfig()
+void MainWindow::toggleClosing()
 {
-    config.save(robotName);
-    messageIn("Config saved.");
+    command.useClosing = !command.useClosing;
+    if (command.useClosing)
+        messageIn("Closing enabled.");
+    else
+        messageIn("Closing disabled.");
+    graphicsViewWidget.update();
 }
 
-void MainWindow::loadConfig()
+void MainWindow::toggleDynamicPath()
 {
-    config.load(robotName);
-    configChanged();
-    messageIn("Config reset.");
+    command.useDynamicPath = !command.useDynamicPath;
+    if (command.useDynamicPath)
+        messageIn("Dynamic path enabled.");
+    else
+        messageIn("Dynamic path disabled.");
+    graphicsViewWidget.update();
 }
 
-void MainWindow::saveStateHistory()
+void MainWindow::toggleKeepLineObservations()
 {
-    recordStop();
-    state.save();
-    messageIn("State history saved.");
+    command.keepLineObservations = !command.keepLineObservations;
+    if (command.keepLineObservations)
+        messageIn("Keeping line observations.");
+    else
+        messageIn("Forgetting line observations.");
 }
 
-void MainWindow::loadStateHistory(QString fileName)
+void MainWindow::toggleOdometry()
 {
-    messageIn("Loading...");
-    recordStop();
-    state.load(fileName);
-    jumpToStart();
-    messageIn("State history loaded.");
+    command.useOdometry = !command.useOdometry;
+    if (command.useOdometry)
+        messageIn("Odometry is used.");
+    else
+        messageIn("Odometry is not used.");
 }
 
-void MainWindow::exportWorld()
+void MainWindow::toggleMapUpdate()
 {
-    state.world.logObstaclesToTxt();
-    messageIn("World exported.");
+    command.mapUpdateEnabled = !command.mapUpdateEnabled;
+    if (command.mapUpdateEnabled)
+        messageIn("Map update enabled.");
+    else
+        messageIn("Map update disabled.");
 }
 
-void MainWindow::reset()
+void MainWindow::toggleSlam()
 {
-    state.world.reset();
-    //mainControlLoop.reset();
-    //graphicsScene.reset();
-    //graphicsViewWidget.reset();
-    messageIn("Reset");
+    command.slamEnabled = !command.slamEnabled;
+    if (command.slamEnabled)
+        messageIn("Slam enabled.");
+    else
+        messageIn("Slam disabled.");
 }
+
+
+
+void MainWindow::toggleGhostMode()
+{
+    command.ghostMode = !command.ghostMode;
+    if (command.ghostMode)
+        messageIn("Ghost mode enabled.");
+    else
+        messageIn("Ghost mode disabled.");
+}
+
+void MainWindow::toggleTeaching()
+{
+    command.learn = !command.learn;
+    if(command.learn)
+        messageIn("Teaching enabled!");
+    else
+        messageIn("Teaching off.");
+}
+
+void MainWindow::clearRuleBase()
+{
+    state.world.unicycleAgents[0].ruleBase.clear();
+    messageIn("Rule base cleared.");
+}
+
 
 // ---- KEYBOARD HANDLING ---- //
 
@@ -1489,6 +1751,12 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         keyPressEvent(keyEvent);
+        return true;
+    }
+    else if (event->type() == QEvent::KeyRelease)
+    {
+        QKeyEvent * keyEvent = static_cast<QKeyEvent*>(event);
+        keyReleaseEvent(keyEvent);
         return true;
     }
     else
@@ -1517,10 +1785,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     {
         close();
     }
-    //    else if (event->key() == Qt::Key_D)
-    //    {
-    //        toggleDwa(-1);
-    //    }
+    else if (event->key() == Qt::Key_Space)
+    {
+        play();
+    }
     else if (event->key() == Qt::Key_Up)
     {
         if (recording)
@@ -1581,11 +1849,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         config.debugLevel = config.debugLevel-1;
         configChanged();
     }
-
-    else
-    {
-        //landscapeWidget.keyPressEvent(event);
-    }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
@@ -1626,6 +1889,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             command.ay = 0;
             command.w = 0;
         }
+        else
+        {
+            fim = 0;
+            animationTimer.stop();
+        }
     }
     else if (event->key() == Qt::Key_Left)
     {
@@ -1633,6 +1901,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
         {
             command.ay = 0;
             command.w = 0;
+        }
+        else
+        {
+            fim = 0;
+            animationTimer.stop();
         }
     }
 }

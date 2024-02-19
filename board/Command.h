@@ -19,12 +19,8 @@ struct Command
     bool showLocalMap;
     bool showCostmap;
     bool showDijkstraMap;
-    bool showRayModel;
-    bool showSimulationDebugDraw;
     bool showWorldVisibilityGraph;
     bool showLocalVisibilityGraph;
-    bool showNavGoals;
-    bool showWorldPolygons;
     bool showWorldMap;
     bool showPaths;
     int showLaser;
@@ -38,16 +34,18 @@ struct Command
     bool showRuler;
     bool showOdometry;
     bool showSafetyZone;
+    bool showNavGoals;
+    bool showRayModel;
+    bool showSimulationDebugDraw;
+    bool showWorldPolygons; // the simulated polygons
+    
 
     bool bufferToFile;
     bool slamEnabled;
     bool mapUpdateEnabled;
     bool useOdometry;
-    bool globalLocalization;
     bool keepLineObservations;
-    bool keepPoseHistory;
     bool laserSpatialFilter;
-    bool laserTemporalFilter;
     bool laserSpeckleRemoval;
     bool emergencyBrakeReflex;
     bool stucknessReflex;
@@ -59,8 +57,8 @@ struct Command
     bool selectTarget;
     bool clearMap;
     bool fillMap;
-    bool learn;
     bool draw;
+    bool learn;
     bool ghostMode;
 
     int predictionType; // Unicycle, Holonomic, None

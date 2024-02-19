@@ -23,7 +23,7 @@ public:
     double f; // cost + heuristic
 
     Path path; // Needed only for visualization.
-    Polygon sz; // Needed only for visualization.
+    Polygon safetyZone; // Needed only for visualization.
 
     UnicycleSearchNode();
     ~UnicycleSearchNode(){}

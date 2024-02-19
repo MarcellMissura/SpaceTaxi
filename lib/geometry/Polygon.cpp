@@ -328,8 +328,8 @@ void Polygon::turn(double a)
 // vertices are pushed outwards along the half angle between the two neighbouring edges.
 // If delta is negative, the vertices are pulled invards and the polygon is shrunk.
 // This is a fast, but not well defined procedure that works well on convex and star-shaped
-// polygons, but may create self-intersections and other unexpected results on polygons of
-// a less friendly shape. For a well defined kind of growing, try the offset() function.
+// polygons, but may create self-intersections and other unexpected results on non convex
+// polygons. For a slower, but well defined kind of growing, try the offset() function.
 void Polygon::grow(double delta)
 {
     boundingBoxValid = false;

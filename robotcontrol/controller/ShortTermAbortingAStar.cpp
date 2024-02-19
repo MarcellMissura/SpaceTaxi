@@ -8,19 +8,12 @@
 #include "lib/util/GLlib.h"
 
 // This is an A*-based motion planner that plans short plans with a high frequency.
-// An action tree expressed in (x,y,theta) coordinates is mapped onto a support foot
-// centeted grid where states can be closed which helps greatly with overcoming
-// obsacles. Collision checks between planned footsteps and obstalces are made
-// with a geometric model. The heurisitc is an RTR function. The A* is terminated
-// early and then the state with the lowest heuristic is returned rather than the
-// best score state the one with the lowest heuristic is more robustly close to
-// the target. Footsteps are evaluated for balance, collision, and progress with
-// respect to a target. The root of the tree is the current state of the robot,
-// i.e. the current location of the support foot (refered to as loc) and the
-// measured lip state. For balance, the initial lip state determines where the
-// center of the step actions is and the zmp bounds are used to determine a
-// feasible set of steps, propagating from end-of-step state to end-of-step
-// state through the steps. The timing of the steps is computed automatically.
+// The planner is able to guarantee bounded planning time because it is simply
+// aborted after a certain amount of computation time has passed. Aborting is
+// possible due to the path RTR function that is used as a heuristic. The planner
+// plans using accelerations as control input for steering a nonholonomic vehicle.
+// During planning, precise collision checks are performed using polygons in a
+// geometric model. https://arxiv.org/abs/2109.07775
 
 ShortTermAbortingAStar::ShortTermAbortingAStar()
 {
@@ -312,15 +305,18 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
             }
 
             // SAFETY ZONE
-            currentChild.sz = getSafetyPolygon(currentChild.v);
-            if (!localMap->polygonCollisionCheck(currentChild.sz).isEmpty())
+            if (command.safetyZoneReflex)
             {
-                currentChild.collided = 4;
-                collided++;
-                if (debug > 3)
-                    qDebug() << "    Collided with safety zone" << currentChild << ". Skipping.";
-                open << currentChild;
-                continue;
+                currentChild.safetyZone = getSafetyPolygon(currentChild.v);
+                if (!localMap->polygonCollisionCheck(currentChild.safetyZone).isEmpty())
+                {
+                    currentChild.collided = 4;
+                    collided++;
+                    if (debug > 3)
+                        qDebug() << "    Collided with safety zone" << currentChild << ". Skipping.";
+                    open << currentChild;
+                    continue;
+                }
             }
 
             // COLLISION CHECK
@@ -725,7 +721,7 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
         closedMap.drawCumulated(painter);
 
     // The safety zones of the closed nodes.
-    if (config.debugLevel >= 2)
+    if (config.debugLevel >= 2 && command.safetyZoneReflex)
     {
         ListIterator<UnicycleSearchNode> it = open.begin();
         it.next(); // skip the root
@@ -735,11 +731,11 @@ void ShortTermAbortingAStar::draw(QPainter* painter) const
             if (!u.closed)
                 continue;
 
-            u.sz.setPose(u.pose());
+            u.safetyZone.setPose(u.pose());
             if (u.collided == 4)
-                u.sz.draw(painter, drawUtil.penThin, drawUtil.brushRed, 0.3);
+                u.safetyZone.draw(painter, drawUtil.penThin, drawUtil.brushRed, 0.3);
             else
-                u.sz.draw(painter, drawUtil.penThin, Qt::NoBrush, 0.1);
+                u.safetyZone.draw(painter, drawUtil.penThin, Qt::NoBrush, 0.1);
         }
     }
 
