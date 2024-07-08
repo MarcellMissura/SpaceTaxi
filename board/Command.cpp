@@ -32,7 +32,7 @@ Command::Command()
     showLabels = false;
     showRuler = false;
     showOdometry = false;
-    showSafetyZone = true;
+    showSafetyZone = false;
     showSimulationDebugDraw = false;
     showWorldPolygons = true;
     showNavGoals = false;
@@ -51,7 +51,7 @@ Command::Command()
     fillMap = false;
     emergencyBrakeReflex = false;
     stucknessReflex = false;
-    safetyZoneReflex = true;
+    safetyZoneReflex = false;
     useTimeAbort = true;
     useDynamicPath = true;
     useClosing = true;

@@ -490,7 +490,7 @@ void MainWindow::buildMenu()
     trajectoryPlannerSelectionMapper.setMapping(bezierControlAction, command.Bezier);
     trajectoryPlannerSelectionMapper.setMapping(reelControlAction, command.Reel);
     trajectoryPlannerSelectionMapper.setMapping(dwaAction, command.DWA);
-    trajectoryPlannerSelectionMapper.setMapping(scAction, command.RuleBase);
+    trajectoryPlannerSelectionMapper.setMapping(rbAction, command.RuleBase);
     trajectoryPlannerSelectionMapper.setMapping(staaAction, command.STAA);
     trajectoryPlannerSelectionMapper.setMapping(scAction, command.SpeedControl);
     connect(&trajectoryPlannerSelectionMapper, SIGNAL(mapped(int)), this, SLOT(toggleTrajectoryControl(int)));
@@ -780,6 +780,15 @@ void MainWindow::buildMenu()
     ghostModeAction->setCheckable(true);
     ghostModeAction->setChecked(command.ghostMode);
     connect(ghostModeAction, SIGNAL(triggered()), this, SLOT(toggleGhostMode()));
+
+    commandMenu->addSeparator();
+
+    QAction* useDrawingAction = commandMenu->addAction(tr("&Draw enabled"));
+    useDrawingAction->setToolTip(tr("Toggles drawing."));
+    useDrawingAction->setShortcut(QKeySequence(tr("D")));
+    useDrawingAction->setCheckable(true);
+    useDrawingAction->setChecked(command.draw);
+    connect(useDrawingAction, SIGNAL(triggered()), this, SLOT(toggleDrawing()));
 
 
     menuBar->addSeparator();
@@ -1714,7 +1723,6 @@ void MainWindow::toggleSlam()
 }
 
 
-
 void MainWindow::toggleGhostMode()
 {
     command.ghostMode = !command.ghostMode;
@@ -1722,6 +1730,16 @@ void MainWindow::toggleGhostMode()
         messageIn("Ghost mode enabled.");
     else
         messageIn("Ghost mode disabled.");
+}
+
+void MainWindow::toggleDrawing()
+{
+    command.draw = !command.draw;
+    if (command.draw)
+        messageIn("Drawing enabled.");
+    else
+        messageIn("Drawing disabled.");
+    graphicsViewWidget.update();
 }
 
 void MainWindow::toggleTeaching()

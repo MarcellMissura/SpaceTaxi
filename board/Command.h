@@ -38,7 +38,6 @@ struct Command
     bool showRayModel;
     bool showSimulationDebugDraw;
     bool showWorldPolygons; // the simulated polygons
-    
 
     bool bufferToFile;
     bool slamEnabled;

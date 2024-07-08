@@ -343,7 +343,7 @@ void UnicycleAgent::act()
     // The metric that decides whether a target has been reached is quite crucial for accuracy.
     // Right now, only the Euklidean distance in (x,y) needs to be within 5cm.
     if ((mainTarget-pose()).max() < config.agentTargetReachedDistance
-            || ((trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl) && mainTarget.distxy(pose()) < config.agentTargetReachedDistance))
+            || ((trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl || trajectoryPlanningMethod == command.RuleBase) && mainTarget.distxy(pose()) < config.agentTargetReachedDistance))
     {
         score++;
         targetNavGoalId = (targetNavGoalId + 1) % navGoalQueue.size();
@@ -405,7 +405,7 @@ void UnicycleAgent::act()
 
     state.pathLength = worldPath.length();
 
-    // 2. Compute the static path in case it is needed as a fallback.
+    // 2. Compute the local static path in case it is needed as a fallback.
     staticPathSuccess = localMap.computeStaticPath(Vec2(), intermediateTarget.pos());
     staticPath = localMap.getPath();
 
@@ -724,6 +724,10 @@ void UnicycleAgent::act()
 
         setAcc(pdControlTo(carrot));
 
+        // Defintition of the safety polygon:
+        // double x = max(0.0, vel * 2.6/1.5);
+        // double y = vel <= 0.5 ? 0.5 : (0.5 + 0.5/0.6 * (vel-0.5));
+
         Polygon st = getSafetyPolygon(v);
         Vec2 cp = localMap.getClosestPoint(Vec2());
         double d = localMap.distance(Vec2());
@@ -877,8 +881,11 @@ Pose2D UnicycleAgent::extractCarrot(const Vector<Vec2> &path, double dist) const
     return carrot;
 }
 
+// Computes the safety polygon given the current velocity vel
 Polygon UnicycleAgent::getSafetyPolygon(double vel) const
 {
+    // The parameters the determine the size of the safety polygon depending
+    // on the input velocity approximate the safety polygon of G4T4.
     Polygon sz;
     if (vel > 0.16)
     {

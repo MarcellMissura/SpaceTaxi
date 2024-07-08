@@ -153,6 +153,7 @@ public slots:
     void toggleSlam();
 
     void toggleGhostMode();
+    void toggleDrawing();
     void toggleTeaching();
     void clearRuleBase();
 
