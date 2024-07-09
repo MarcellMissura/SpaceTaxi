@@ -37,27 +37,40 @@ bool RuleBase::addRule(const Vector<double> &rays, const Vec2& target, const Vec
     if (fabs(target.angleTo(carrot)) > PI34)
         return false;
 
-    // Discard rules that already exist, i.e. we can find a really close one.
+    // Find the best matching rule.
+    int minIndex = -1;
+    double minRayDist = 100000000;
     for (uint k = 0; k < rules.size(); k++)
     {
-        if (rules[k].targetDistance(target) < config.rbTargetDistanceThreshold
-                && rules[k].carrotDistance(carrot) < config.rbCarrotDistanceThreshold
-                && rules[k].rayDistance(rays) < config.rbRayDistanceThreshold)
+        double raydist = rules[k].rayDistance(rays);
+        if (rules[k].targetDistance(target) && raydist < minRayDist)
         {
-//            if (debug > 0)
-//                qDebug() << "rule discarded, because a similar rule already exists." << rules[k].targetDistance(target) << rules[k].carrotDistance(carrot) << rules[k].rayDistance(rays);
-            return false;
+            minRayDist = raydist;
+            minIndex = k;
         }
     }
 
-    //qDebug() << "adding rule" << target << carrot << target.angleTo(carrot);
+    // If there was no close matching rule, we can create a new one.
+    if (minIndex == -1 || rules[minIndex].rayDistance(rays) > config.rbRayDistanceThreshold)
+    {
+        //qDebug() << " adding rule target:" << target << "carrot:" << carrot;
 
-    Rule rule;
-    rule.id = rules.size();
-    rule.rays = rays;
-    rule.target = target;
-    rule.carrot = carrot;
-    rules << rule;
+        Rule rule;
+        rule.id = rules.size();
+        rule.rays = rays;
+        rule.target = target;
+        rule.carrot = carrot;
+        rules << rule;
+    }
+
+    // Otherwise we overwrite.
+    else
+    {
+        //qDebug() << " overwriting rule" << minIndex << "target:" << target << "carrot:" << carrot;
+        rules[minIndex].rays = rays;
+        rules[minIndex].target = target;
+        rules[minIndex].carrot = carrot;
+    }
 
     return true;
 }
@@ -94,6 +107,9 @@ Vec2 RuleBase::query(const Vector<double> &rays, const Vec2& target, int debug)
     inputRays = rays;
     inputTarget = target;
 
+    if (debug > 0)
+        qDebug() << "RuleBase::query target:" << target << "rays:" << rays;
+
     // Preselect rules that have a small target distance.
     Vector<Rule> selectedRules;
     double minTargetDist = 100000000;
@@ -127,7 +143,7 @@ Vec2 RuleBase::query(const Vector<double> &rays, const Vec2& target, int debug)
     if (selectedRules.size() > 0)
         bestRule = selectedRules[minIndex];
 
-    if (debug > 0)
+    if (debug > 0 && !rules.empty())
         qDebug() << "best rule:" << rules[minIndex];
     return bestRule.carrot;
 }

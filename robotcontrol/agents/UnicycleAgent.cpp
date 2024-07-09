@@ -94,11 +94,8 @@ void UnicycleAgent::init(const Vec2& initialPos)
     // Init path and trajectory controllers.
     shortTermAbortingAStar.init();
 
-    if (command.trajectoryPlanningMethod == command.RuleBase)
-    {
-        ruleBase.load("data/rulebase.dat");
-        qDebug() << ruleBase.size() << "rules loaded";
-    }
+    ruleBase.load("data/rulebase.dat");
+    qDebug() << ruleBase.size() << "rules loaded";
 
     // The costmap and the occupancy grid are rectangular local grid maps around the robot.
     // The area and resolution of the grid is initialized based on config parameters.
@@ -438,9 +435,9 @@ void UnicycleAgent::act()
         usedPath = worldPath;
 
     carrot.setNull();
-    double dt = config.DWA_carrotOffset;
-    if (trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl)
-        dt = config.UPD_carrotOffset;
+    double dt = config.UPD_carrotOffset;
+    if (trajectoryPlanningMethod == command.DWA)
+        dt = config.DWA_carrotOffset;
     VelocityProfile vp;
     Unicycle u;
     u.setVel(vel());
@@ -710,7 +707,6 @@ void UnicycleAgent::act()
         Vec2 ccarrot = ruleBase.query(rays, carrot);
         Vec2 acc = pdControlTo(ccarrot);
         setAcc(acc);
-        //qDebug() << ccarrot << ccarrot.pos().norm2() << pdControlTo(ccarrot.pos()) << acc();
     }
     else if (trajectoryPlanningMethod == command.SpeedControl)
     {

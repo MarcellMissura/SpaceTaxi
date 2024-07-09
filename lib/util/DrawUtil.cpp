@@ -1,6 +1,7 @@
 ﻿#include "DrawUtil.h"
 #include <QtCore/qmath.h>
 #include "Statistics.h"
+#include <QPainterPath>
 
 // The ColorUtil is a useful helper when used in the context
 // of rendering on a QPainter. Mostly, it is a collection of

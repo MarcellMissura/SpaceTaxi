@@ -51,6 +51,6 @@ QDataStream& operator>>(QDataStream& in, Rule &o)
 
 QDebug operator<<(QDebug dbg, const Rule &o)
 {
-    dbg << o.id << o.rays << "out:" << o.carrot;
+    dbg << o.id /*<< o.rays*/ << "target:" << o.target << "carrot:" << o.carrot;
     return dbg;
 }
