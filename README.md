@@ -5,8 +5,8 @@ This is a simulation environment with a graphical user interface that contains t
 
 After cloning the project, change into the root directory of the project and type:
 
-qmake
-make
+qmake\
+make\
 ./SpaceTaxi
 
 This should compile and open the main window of the simulator.
