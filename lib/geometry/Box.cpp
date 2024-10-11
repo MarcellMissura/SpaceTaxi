@@ -29,10 +29,10 @@ Box::Box(double t, double l, double b, double r)
     // The reference point is set to be the bottom left corner.
     this->x = l;
     this->y = b;
-    this->t = t-y;
+    this->t = t - y;
     this->l = 0;
     this->b = 0;
-    this->r = r-x;
+    this->r = r - x;
 }
 
 // Sets the bounding box by providing the world coordinates of the reference
@@ -68,10 +68,10 @@ void Box::set(double t, double l, double b, double r)
     // The reference point is set to be the bottom left corner.
     this->x = l;
     this->y = b;
-    this->t = t-y;
+    this->t = t - y;
     this->l = 0;
     this->b = 0;
-    this->r = r-x;
+    this->r = r - x;
 }
 
 // Sets the bounding box by providing the world coordinates of the reference
@@ -103,37 +103,37 @@ void Box::set(Vec2 p, double t, double l, double b, double r)
 // Returns the height of the box.
 double Box::height() const
 {
-    return t-b;
+    return t - b;
 }
 
 // Returns the width of the box.
 double Box::width() const
 {
-    return r-l;
+    return r - l;
 }
 
 // Returns the world x coordinate of the left margin.
 double Box::left() const
 {
-    return x+l;
+    return x + l;
 }
 
 // Returns the world x coordinate of the right margin.
 double Box::right() const
 {
-    return x+r;
+    return x + r;
 }
 
 // Returns the world y coordinate of the top margin.
 double Box::top() const
 {
-    return y+t;
+    return y + t;
 }
 
 // Returns the world y coordinate of the bottom margin.
 double Box::bottom() const
 {
-    return y+b;
+    return y + b;
 }
 
 // Returns the world coordinates of the top left corner.
@@ -169,25 +169,25 @@ Vec2 Box::center() const
 // Sets the left border of the box in world.
 void Box::setLeft(double ll)
 {
-    l = ll-x;
+    l = ll - x;
 }
 
 // Sets the right border of the box in world.
 void Box::setRight(double rr)
 {
-    r = rr-x;
+    r = rr - x;
 }
 
 // Sets the top border of the box in world.
 void Box::setTop(double tt)
 {
-    t = tt-y;
+    t = tt - y;
 }
 
 // Sets the bottom border of the box in world.
 void Box::setBottom(double bb)
 {
-    b = bb-y;
+    b = bb - y;
 }
 
 // Sets the world (x,y) position of the box.

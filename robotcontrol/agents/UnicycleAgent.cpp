@@ -243,26 +243,9 @@ void UnicycleAgent::sense()
     // We use the simulated lidar to compute the occupancy grid as the robot would do.
     // The occupancy grid is a local 8m x 8m occupancy grid. It is nearly centered around
     // the robot but is also pushed forward a bit so that the robot would see more to the
-    // front than to the back.
-    occupanyGrid.computeOccupancyGrid(laserSensor.readPointBuffer());
-    //occupanyGrid.dilate(config.gridSensedDilationRadius);
-
-    // Here is a little simulation cheat where I delete cells from the occupancy grid
-    // where the dynamic obstacles are.
-    for (uint i = 0; i < worldDynamicObstacles.size(); i++)
-    {
-        UnicycleObstacle uo = worldDynamicObstacles[i];
-        uo -= pose(); // Transform from world to local coordinates.
-        if (costmap.contains(uo.pos()))
-        {
-            uo.grow(config.gridCellSize);
-            uo.transform();
-            occupanyGrid.clearPolygon(uo);
-        }
-    }
-
-    // The occupancy grid is dilated a little bit in order to
+    // front than to the back. The occupancy grid is dilated a little bit in order to
     // connect single cells to contiguous regions.
+    occupanyGrid.computeOccupancyGrid(laserSensor.readPointBuffer());
     occupanyGrid.dilate(config.gridSensedDilationRadius);
 
     // The costmap is computed by blurring the occupancy grid.
@@ -272,27 +255,14 @@ void UnicycleAgent::sense()
     costmap.blur(config.gridBlurRadius);
     costmap.max(occupanyGrid); // Make sure occupied cells stay occupied.
 
-
-    // We compute the clipped world map though, the world map clipped
-    // to the size local map.
-    clippedWorldMap = worldMap;
-    clippedWorldMap -= pose(); // local
-    clippedWorldMap.clip(costmap.boundingBox());
-
-    // Sensed polygons are important in order to avoid obstacles that are not in the map.
-    // The dilated sensed polygons are used for path planning inside the local map.
-    localMap.clear();
-    localMap.setPolygons(laserSensor.extractSensedPolygons());
-    localMap.dilate(config.gmPolygonDilation);
-    //localMap.simplify(config.gmDouglasPeuckerEpsilon);
-    localMap.clip(costmap.boundingBox());
-
-    // The clipped world map is added to the local map. This has the advantage that the map
-    // polygons can be taken into account when path planning in the local map. This is actually
-    // crucial, otherwise we get silly paths leading only around the polygons we can see but
-    // through obstacles that are in the map. Adding the clipped world map requires good
-    // localization.
-    localMap += clippedWorldMap; // local
+    // The local geometric map is computed by clipping the wold map with an 8x8 box.
+    // This simplicity is possible because the world map is accurately updated in every
+    // frame and contains all obstacles seen by the sensors. To perform the clipping,
+    // we transform the local map to world coordinates, then clip, and transform the
+    // result back to local coordinates.
+    localMap = worldMap;
+    localMap.clipConvex(costmap.boundingBox() + pose());
+    localMap -= pose();
 
     // Now add UnicycleObstacle models to the local map taken from the unicycle agents in the world.
     // This is a simulation cheat as we are not yet able to detect and separate moving obstacles.
@@ -338,9 +308,7 @@ void UnicycleAgent::act()
 
     // If the target has been reached, pick a new random target.
     // The metric that decides whether a target has been reached is quite crucial for accuracy.
-    // Right now, only the Euklidean distance in (x,y) needs to be within 5cm.
-    if ((mainTarget-pose()).max() < config.agentTargetReachedDistance
-            || ((trajectoryPlanningMethod == command.PD || trajectoryPlanningMethod == command.SpeedControl || trajectoryPlanningMethod == command.RuleBase) && mainTarget.distxy(pose()) < config.agentTargetReachedDistance))
+    if (mainTarget.distxy(pose()) < config.agentTargetReachedDistance)
     {
         score++;
         targetNavGoalId = (targetNavGoalId + 1) % navGoalQueue.size();

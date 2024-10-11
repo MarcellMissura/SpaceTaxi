@@ -5,15 +5,15 @@
 
 const double G = 9.81;
 const double PI = 3.1415926535897932384626433832795;
-const double PII = 2.0*PI;
-const double PI2 = 1.5707963267948965579989817342721; // pi half
-const double PI4 = 0.78539816339744830961566084581988; // pi quarter
-const double PI23 = 2.094395102; // two thirds pi
-const double PI34 = 3.0*PI/4.0; // three quaters pi
-const double PI32 = 4.71238898038468985769396507492; // three half pi
-const double SPI = 1.7724538509055160272981674833411; // sqrt of pi
-const double RAD_TO_DEG =  180.0 / PI;
-const double DEG_TO_RAD =  PI / 180.0;
+const double PII = 2.0 * PI;
+const double PI2 = 1.5707963267948965579989817342721;   // pi half
+const double PI4 = 0.78539816339744830961566084581988;  // pi quarter
+const double PI23 = 2.094395102;                        // two thirds pi
+const double PI34 = 3.0 * PI / 4.0;                     // three quaters pi
+const double PI32 = 4.71238898038468985769396507492;    // three half pi
+const double SPI = 1.7724538509055160272981674833411;   // sqrt of pi
+const double RAD_TO_DEG = 180.0 / PI;
+const double DEG_TO_RAD = PI / 180.0;
 const double EPSILON = 1.0E-5;
 
 // Checks if number is (almost) zero.

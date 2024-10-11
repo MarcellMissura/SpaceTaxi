@@ -546,6 +546,9 @@ void GeometricModel::worldImport(const LinkedList<Polygon> &pols)
     }
     polygons.clear();
 
+    // Finally, set the convex polygons.
+    polygons = pols;
+
 
     // Renumber everything.
     renumber();
@@ -1119,6 +1122,62 @@ void GeometricModel::clipRoot(const Vector<Polygon>& pol)
     }
 
     rootPolygons = outputBuffer;
+
+    return;
+}
+
+// Removes everything from the scene that's not inside the polygon.
+// Polygons are clipped and obstacles are removed. The Polygon needs
+// to be convex.
+void
+GeometricModel::clipConvex(const Polygon& clipPol)
+{
+    // AlDebug() << "GeometricModel::clipConvex(Polygon)" << clipPol;
+
+    ListIterator<Polygon> fsPolyIt = rootPolygons.begin();
+    while (fsPolyIt.hasNext())
+    {
+        Polygon& pol = fsPolyIt.cur();
+        // AlDebug() << "Clipping pol" << &pol;
+        pol.clipConvex(clipPol);
+        if (pol.isEmpty())
+            rootPolygons.remove(fsPolyIt);
+        else
+            fsPolyIt.next();
+    }
+
+    ListIterator<Polygon> polyIt = polygons.begin();
+    while (polyIt.hasNext())
+    {
+        Polygon& pol = polyIt.cur();
+        // AlDebug() << "Clipping pol" << pol;
+        pol.clipConvex(clipPol);
+        if (pol.isEmpty())
+            polygons.remove(polyIt);
+        else
+            polyIt.next();
+    }
+
+    ListIterator<Polygon> dilatedPolyIt = dilatedPolygons.begin();
+    while (dilatedPolyIt.hasNext())
+    {
+        Polygon& pol = dilatedPolyIt.cur();
+        // AlDebug() << "Clipping pol" << &pol;
+        pol.clipConvex(clipPol);
+        if (pol.isEmpty())
+            dilatedPolygons.remove(dilatedPolyIt);
+        else
+            dilatedPolyIt.next();
+    }
+
+    ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
+    while (obstIt.hasNext())
+    {
+        if (!clipPol.intersects(obstIt.cur().pos()))
+            unicycleObstacles.remove(obstIt);
+        else
+            obstIt.next();
+    }
 
     return;
 }

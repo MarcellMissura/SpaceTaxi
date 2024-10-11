@@ -341,15 +341,15 @@ bool ShortTermAbortingAStar::aStarSearch(int debug)
 
             // Quick polygon collision check in the occupancy grid.
             // This is a very fast operation and hopefully enough to cover the static obstacles.
-            if (sensedGrid->polygonCollisionCheck(planPolygon))
-            {
-                currentChild.collided = 2;
-                collided++;
-                if (debug > 3)
-                    qDebug() << "    Collided with grid" << currentChild << ". Skipping.";
-                open << currentChild;
-                continue;
-            }
+//            if (sensedGrid->polygonCollisionCheck(planPolygon))
+//            {
+//                currentChild.collided = 2;
+//                collided++;
+//                if (debug > 3)
+//                    qDebug() << "    Collided with grid" << currentChild << ". Skipping.";
+//                open << currentChild;
+//                continue;
+//            }
 
             // Polygon collision check with the geometric model.
             if (!localMap->polygonCollisionCheck(planPolygon).isEmpty())
@@ -941,7 +941,8 @@ bool ShortTermAbortingAStar::isFinished()
         return false;
     //score = heuristic_rtr_max(bestScoreNode->pose(), targetState);
     //return (score < config.staaFinishedThreshold);
-    return ((bestScoreNode->pose()-targetState).max() < config.agentTargetReachedDistance);
+    //return ((bestScoreNode->pose()-targetState).max() < config.agentTargetReachedDistance);
+    return ((targetState.pos() - bestScoreNode->pos()).norm() < config.agentTargetReachedDistance);
 }
 
 // Returns the computed plan.

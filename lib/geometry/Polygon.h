@@ -58,12 +58,12 @@ protected:
     mutable bool boundingBoxValid;
 
 public:
-
     Polygon();
+    Polygon(const Box& box);
     Polygon(double x, double y, double w, double h);
     Polygon(const Vec2& v0, const Vec2& v1, const Vec2& v2);
     Polygon(const Vec2& v0, const Vec2& v1, const Vec2& v2, const Vec2& v3);
-    ~Polygon(){}
+    ~Polygon() {}
 
     int getId() const;
     void setId(int id);

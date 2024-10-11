@@ -19,10 +19,15 @@ class GeometricModel
     int pathSearchMode; // Static or dynamic path search.
     Polygon sinkPolygon; // To return a reference to sometimes.
 
-public:
+    enum
+    {
+        Static,
+        Dynamic
+    };
 
+public:
     GeometricModel();
-    ~GeometricModel(){}
+    ~GeometricModel() {}
 
     GeometricModel(const GeometricModel& o);
     GeometricModel& operator=(const GeometricModel& v);
@@ -52,8 +57,8 @@ public:
     void addObstacles(const LinkedList<UnicycleObstacle>& obst);
     void eraseObstacles();
 
-    void operator+=(const GeometricModel &o);
-    GeometricModel operator+(const GeometricModel &o);
+    void operator+=(const GeometricModel& o);
+    GeometricModel operator+(const GeometricModel& o);
 
     // Various geometric queries.
     uint getObjectCount() const;
@@ -64,7 +69,7 @@ public:
     double dynamicDistance(const Vec2& v) const;
     Vec2 closestNormal(const Vec2& p) const;
     Vec2 closestPoint(const Vec2& p) const;
-    void closestPointNormal(const Vec2& p, Vec2 &closestPoint, Vec2 &closestNormal) const;
+    void closestPointNormal(const Vec2& p, Vec2& closestPoint, Vec2& closestNormal) const;
 
     // Order maintenance functions.
     void setObstacleIds(int id);
@@ -82,10 +87,10 @@ public:
     void translate(double dx, double dy);
     void translate(const Vec2& v);
     void transform();
-    void operator-=(const Pose2D &o);
-    void operator+=(const Pose2D &o);
-    GeometricModel operator-(const Pose2D &o);
-    GeometricModel operator+(const Pose2D &o);
+    void operator-=(const Pose2D& o);
+    void operator+=(const Pose2D& o);
+    GeometricModel operator-(const Pose2D& o);
+    GeometricModel operator+(const Pose2D& o);
 
     // Clipping, offsetting, and boolean operations.
     void unite(const GeometricModel& gm);
@@ -95,6 +100,7 @@ public:
     void dilate(double delta);
     void observationUpdate(const Vector<Polygon>& rootPolygons, const Vector<Polygon>& pols);
     void clipRoot(const Vector<Polygon>& pol);
+    void clipConvex(const Polygon& pol);
     void clipPolygons(const Vector<Polygon>& pols);
     void clipPolygons(const Polygon& pol);
 

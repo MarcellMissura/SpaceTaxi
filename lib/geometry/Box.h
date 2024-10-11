@@ -12,16 +12,14 @@
 class Box
 {
 protected:
-
-    double x,y,t,l,b,r;
+    double x, y, t, l, b, r;
 
 public:
-
     Box();
     Box(double t, double l, double b, double r);
     Box(double x, double y, double t, double l, double b, double r);
     Box(Vec2 p, double t, double l, double b, double r);
-    ~Box(){}
+    ~Box() {}
 
     void set(double t, double l, double b, double r);
     void set(double x, double y, double t, double l, double b, double r);
@@ -33,7 +31,7 @@ public:
     double left() const;
     double right() const;
     double top() const;
-    double bottom() const;    
+    double bottom() const;
     void setLeft(double ll);
     void setRight(double rr);
     void setTop(double tt);
@@ -56,11 +54,11 @@ public:
     void operator+=(const Box& b);
     Box operator+(const Box& b) const;
 
-    bool intersects(const Box &o) const;
-    bool intersects(const Line &l, bool debug=false) const;
-    bool intersects(const Vec2 &p) const;
-    bool intersects(const Vec2 &p, double radius) const;
-    bool isOnBounds(const Vec2 &p) const;
+    bool intersects(const Box& o) const;
+    bool intersects(const Line& l, bool debug = false) const;
+    bool intersects(const Vec2& p) const;
+    bool intersects(const Vec2& p, double radius) const;
+    bool isOnBounds(const Vec2& p) const;
 
     Vec2 intersection(const Line& l) const;
     Pose2D intersection(const Vector<Vec2>& path) const;

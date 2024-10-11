@@ -47,8 +47,8 @@ using namespace Clipper2Lib;
 // negatively oriented (clockwise, CW). This choice is up to you and the winding is
 // essentially determined by the order you construct the a Polygon. Polygons do not
 // care whether they are in CCW or in CW winding. All functions transparently
-// support both types of winding. Perhaps you should just keep in mind that the for
-// CCW oriented polygons the inside of the polygon is on the left side of the edges,
+// support both types of winding. Perhaps you should just keep in mind that for CCW
+// oriented polygons the inside of the polygon is on the left side of the edges and
 // for CW oriented polygons on the right side.
 //
 // The Polygon class provides means to query its transformation (x,y,theta) relative
@@ -90,12 +90,12 @@ using namespace Clipper2Lib;
 // p.setPose(pose);
 // Vector<Polygon> trigs = p.triangulation() + p.pose();
 //
-// Polygons carry a number of collision detection functions, such as the frequently used
-// intersects(Vec2) function that decides whether a point is inside the polygon or not.
-// Furthermore, Polygons can be intersected with other polygons, Lines, Unicycle bangs,
-// and holonomic Hpm2D bangs.
+// Polygons carry a number of collision checking functions, such as the intersects(Vec2)
+// function that decides whether a point is inside the polygon or not. Furthermore,
+// Polygons can also be intersected with other polygons, Lines, Unicycle bangs, and
+// holonomic Hpm2D bangs.
 //
-// Polygons can also be grow()-n and offset()-ed to be shrinked and enlarged. Polygons can
+// Polygons can also be grow()-n and offset()-ed to be shrunk or enlarged. Polygons can
 // be unite()-ed or clip()-ed with other Polygon objects. Finally, Polygons can be
 // simplify()-ed with the Douglas Peucker algorithm.
 
@@ -110,6 +110,25 @@ Polygon::Polygon()
     windingFlag = 0;
     setPos(0, 0);
     setOrientation(0);
+}
+
+// Box constructor.
+// y and y are the coordinates of a reference point in the center.
+// w and h are the half width and height along the x and y axis, respectively.
+// The created box is ccw and transformed with a pose of (0,0,0).
+Polygon::Polygon(const Box& box)
+{
+    id = idCounter++;
+    boundingBoxValid = false;
+    convexityFlag = 1;
+    windingFlag = 1;
+    setPos(0, 0);
+    setOrientation(0);
+
+    edges.push_back(Line(Vec2(box.left(), box.top()), Vec2(box.left(), box.bottom())));
+    edges.push_back(Line(Vec2(box.left(), box.bottom()), Vec2(box.right(), box.bottom())));
+    edges.push_back(Line(Vec2(box.right(), box.bottom()), Vec2(box.right(), box.top())));
+    edges.push_back(Line(Vec2(box.right(), box.top()), Vec2(box.left(), box.top())));
 }
 
 // Box constructor.
@@ -2090,7 +2109,6 @@ const LinkedList<Polygon>& Polygon::clipped(const Vector<Polygon> &cp) const
 // polygon remain that overlap the cp polygon. If this polygon is A and cp is B,
 // then you get A^B. Both polygons need to be in the same frame of reference,
 // i.e. both must have the same pose. All edge types are set to blocking.
-// Currently, both polygons have to be convex for this to work properly.
 void Polygon::clipConvex(const Polygon &clipPolygon, bool debug)
 {
     // The computations are carried out according to the Sutherland Hodgman algorithm.
@@ -2098,6 +2116,12 @@ void Polygon::clipConvex(const Polygon &clipPolygon, bool debug)
 
     if (debug)
         qDebug() << "Polygon::clipConvex(const Polygon &clipPolygon):" << this;
+
+    if (clipPolygon.isEmpty())
+    {
+        clear();
+        return;
+    }
 
     Polygon outputPol = *this;
     Polygon inputPol;
@@ -2120,8 +2144,8 @@ void Polygon::clipConvex(const Polygon &clipPolygon, bool debug)
             if (debug)
                 qDebug() << "  Next input edge:" << inputEdge;
 
-            const Vec2& cp = inputEdge.p2(); // current point
-            const Vec2& pp = inputEdge.p1(); // prev point
+            const Vec2& cp = inputEdge.p2();  // current point
+            const Vec2& pp = inputEdge.p1();  // prev point
 
             if (((cp-clipEdge.p1()).det(lv))*clipPolygon.windingFlag > 0) // p2 (cp) is inside
             {
@@ -2844,14 +2868,16 @@ Polygon operator-(const Polygon& l, const Pose2D& p)
 // Only the pose of the polygon is changed, but not the vertex coordinates.
 void operator+=(Polygon& pol, const Pose2D& p)
 {
-    pol.setPose(pol.pose()+p);
+    pol.setPose(pol.pose() + p);
+    pol.transform();
 }
 
 // Maps the polygon into the local coordinates of the frame given by Pose.
 // Only the pose of the polygon is changed, but not the vertex coordinates.
 void operator-=(Polygon& pol, const Pose2D& p)
 {
-    pol.setPose(pol.pose()-p);
+    pol.setPose(pol.pose() - p);
+    pol.transform();
 }
 
 // Maps the vector of polygons from the frame given by Pose2D to world coordinates.
@@ -2965,7 +2991,6 @@ void operator-=(LinkedList<Polygon> &v, const Pose2D &p)
         pol.transform();
     }
 }
-
 
 // Writes the polygon into a data stream.
 void Polygon::streamOut(QDataStream &out) const
