@@ -2172,6 +2172,29 @@ void Polygon::clipConvex(const Polygon &clipPolygon, bool debug)
 
     *this = outputPol;
 
+    // Remove possible duplicate from the "end" of the polygon.
+    if (edges.last().p1() == edges.last().p2())
+    {
+        //qDebug() << "Last edge is a duplicate" << edges.last();
+        ListIterator<Line> it = edges.end();
+        removeEdge(it);
+    }
+
+    // Remove spikes.
+    ListIterator<Line> edgeIt = edgeIterator();
+    while (edgeIt.hasNext())
+    {
+        const Line& edge = edgeIt.cur();
+        const Line& prevEdge = edgeIt.peekPrev();
+        if (fabs(edge.det(prevEdge)) < EPSILON)
+        {
+            //qDebug() << "Removing spike" << edge << prevEdge << "|" << edge.det(prevEdge);
+            removeEdge(edgeIt);
+        }
+        else
+            edgeIt.next();
+    }
+
     return;
 }
 

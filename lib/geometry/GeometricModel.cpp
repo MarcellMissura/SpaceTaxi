@@ -1132,13 +1132,13 @@ void GeometricModel::clipRoot(const Vector<Polygon>& pol)
 void
 GeometricModel::clipConvex(const Polygon& clipPol)
 {
-    // AlDebug() << "GeometricModel::clipConvex(Polygon)" << clipPol;
+    //qDebug() << "GeometricModel::clipConvex(Polygon)" << clipPol;
 
     ListIterator<Polygon> fsPolyIt = rootPolygons.begin();
     while (fsPolyIt.hasNext())
     {
         Polygon& pol = fsPolyIt.cur();
-        // AlDebug() << "Clipping pol" << &pol;
+        //qDebug() << "Clipping pol" << &pol;
         pol.clipConvex(clipPol);
         if (pol.isEmpty())
             rootPolygons.remove(fsPolyIt);
@@ -1150,7 +1150,7 @@ GeometricModel::clipConvex(const Polygon& clipPol)
     while (polyIt.hasNext())
     {
         Polygon& pol = polyIt.cur();
-        // AlDebug() << "Clipping pol" << pol;
+        //qDebug() << "Clipping pol" << pol;
         pol.clipConvex(clipPol);
         if (pol.isEmpty())
             polygons.remove(polyIt);

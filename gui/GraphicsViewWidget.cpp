@@ -236,7 +236,7 @@ void GraphicsViewWidget::drawForeground(QPainter* painter, const QRectF& rect)
         painter->setFont(QFont("Helvetica", 14, QFont::Light));
         painter->setPen(QColor::fromRgbF(0.3,0.3,0.7));
         painter->drawText(QPoint(18, height()-10), "frame: " + QString::number(state.frameId) +
-                          "  time: " + QString::number(state.time) +
+                          "  time: " + QString::number(state.time, 'f', 2) +
                           "  score: " + QString::number(state.uniTaxi.score) +
                           "  cols: " + QString::number(state.uniTaxi.collisions));
         if (state.iterationTime > 0)
