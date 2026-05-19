@@ -151,7 +151,7 @@ Polygon::Polygon(double x, double y, double w, double h)
 }
 
 // Triangle constructor. The vertices are given in world coordinates.
-Polygon::Polygon(const Vec2 &v0, const Vec2 &v1, const Vec2 &v2)
+Polygon::Polygon(const Vec2& v0, const Vec2& v1, const Vec2& v2)
 {
     id = idCounter++;
     boundingBoxValid = false;
@@ -166,7 +166,7 @@ Polygon::Polygon(const Vec2 &v0, const Vec2 &v1, const Vec2 &v2)
 }
 
 // Quadrangle constructor. The vertices are given in world coordinates.
-Polygon::Polygon(const Vec2 &v0, const Vec2 &v1, const Vec2 &v2, const Vec2 &v3)
+Polygon::Polygon(const Vec2& v0, const Vec2& v1, const Vec2& v2, const Vec2& v3)
 {
     id = idCounter++;
     boundingBoxValid = false;
@@ -1031,7 +1031,7 @@ Polygon Polygon::convexHull() const
 
     // We are using OpenCV's convexHull() function here.
     // To my knowledge, cv::convexHull() implements Slanky's 1982 algorithm, which is incorrect.
-    // It is desirable to reimplement Melkman 1987 and thereby also avoid the opencv dependancy.
+    // It is desirable to reimplement Melkman 1987 and thereby also avoid the opencv dependency.
     // http://cgm.cs.mcgill.ca/~athens/cs601/Melkman.html
 
     std::vector<cv::Point2f> pol;

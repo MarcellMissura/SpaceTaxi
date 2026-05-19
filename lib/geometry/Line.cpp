@@ -798,7 +798,7 @@ void Line::drawLabel(QPainter *painter, const QPen &pen, double opacity, double 
     Vec2 c = center();
     painter->translate(c.x + 0.01, c.y + 0.02);
     painter->rotate(RAD_TO_DEG*rotation);
-    painter->scale(0.05, -0.05);
+    painter->scale(0.01, -0.01);
     painter->drawText(QPointF(), QString::number(id));
     painter->restore();
 }

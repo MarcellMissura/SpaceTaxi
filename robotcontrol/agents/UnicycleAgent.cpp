@@ -271,22 +271,35 @@ void UnicycleAgent::sense()
     for (uint i = 0; i < worldDynamicObstacles.size(); i++)
     {
         UnicycleObstacle uo = worldDynamicObstacles[i];
-        uo -= pose(); // Transform from world to local coordinates.
-        //if (visibilityPolygon.intersects(uo.pos()))
-        if (costmap.contains(uo.pos()))
+
+        // Compute prediction time
+        double T = (uo.pos()-pos()).norm() / config.agentLinearVelocityLimitForward;
+        double dt = min(config.predictFactor*T, config.predictMaxPredictTime);
+        //qDebug() << state.frameId << "agent" << getAgentId() << "obst" << i << "T:" << T << "dt:" << dt;
+
+        // TODO, replace with RTR
+        if (T < config.predictIgnoreHorizon)
         {
             if (predictionType == command.Holonomic)
                 uo.setVel(uo.v,0);
             else if (predictionType == command.None)
                 uo.setVel(0,0);
             uo.setAcc(0,0);
-            localMap.addObstacle(uo); // local but untransformed
+            uo.predict(dt);
+
+            uo.hullPolygon += uo.pose();
+            uo.hullPolygon -= pose();
+            uo -= pose(); // Transform from world to local coordinates.
+
+
+            localMap.addObstacle(uo); // already transformed
+
         }
     }
 
     localMap.setBounds(costmap.boundingBox());
     localMap.renumber();
-    localMap.autoPredict(); // Predict the future states of the agents.
+    //localMap.autoPredict(); // Predict the future states of the agents.
     localMap.transform();
 }
 
@@ -648,7 +661,7 @@ void UnicycleAgent::act()
         shortTermAbortingAStar.setTargetState(intermediateTarget);
         if (command.stucknessReflex)
             shortTermAbortingAStar.setStuck(stuckTimer > 0);
-        trajectorySuccess = shortTermAbortingAStar.aStarSearch(isFirstAgent() ? config.debugLevel : 0);
+        trajectorySuccess = shortTermAbortingAStar.aStarSearch();
         Vec2 acc = shortTermAbortingAStar.getAction();
         setAcc(acc);
 
@@ -1106,15 +1119,15 @@ void UnicycleAgent::draw(QPainter *painter) const
     if (command.showPaths)
     {
         // Draw the world path.
-        if (worldPathSuccess)
+        if (false && worldPathSuccess)
             worldPath.draw(painter, drawUtil.penBlueThick, 0.2);
 
         // Draw the dynamic path.
         if (dynamicPathSuccess)
-            dynamicPath.draw(painter, drawUtil.penRedThick, 0.2);
+            dynamicPath.draw(painter, drawUtil.penRedThicker, 0.2);
 
         // Draw the static path.
-        if (staticPathSuccess)
+        if (false && staticPathSuccess)
             staticPath.draw(painter, drawUtil.penGreenThick, 0.2);
     }
 

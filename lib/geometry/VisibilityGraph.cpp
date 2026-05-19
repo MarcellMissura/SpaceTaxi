@@ -718,7 +718,7 @@ void VisibilityGraph::draw(QPainter *painter) const
     // The visibility graph edges taken from the adjacency matrix.
     painter->setPen(drawUtil.penThin);
     painter->setBrush(drawUtil.brushDarkGray);
-    painter->setOpacity(0.2);
+    painter->setOpacity(0.8);
     ListIterator<Node> it = nodes.begin();
     while (it.hasNext())
     {
@@ -748,23 +748,23 @@ void VisibilityGraph::draw(QPainter *painter) const
     }
 
     // Node labels.
-    QFont font;
-    font.setFamily("Arial");
-    font.setPointSize(1);
-    painter->setFont(font);
-    painter->setPen(drawUtil.pen);
-    painter->setOpacity(0.8);
-    it = nodes.begin();
-    while (it.hasNext())
-    {
-        Node node = it.next();
+//    QFont font;
+//    font.setFamily("Arial");
+//    font.setPointSize(1);
+//    painter->setFont(font);
+//    painter->setPen(drawUtil.pen);
+//    painter->setOpacity(0.8);
+//    it = nodes.begin();
+//    while (it.hasNext())
+//    {
+//        Node node = it.next();
 
-        painter->save();
-        painter->translate(node.x + 0.03, node.y + 0.04);
-        painter->scale(0.1, -0.1);
-        painter->drawText(QPointF(), QString::number(node.id));
-        painter->restore();
-    }
+//        painter->save();
+//        painter->translate(node.x + 0.03, node.y + 0.04);
+//        painter->scale(0.1, -0.1);
+//        painter->drawText(QPointF(), QString::number(node.id));
+//        painter->restore();
+//    }
 
     painter->restore();
 }

@@ -1469,6 +1469,7 @@ Vector<UnicycleObstacle> World::getUnicycleObstacles(int excludeId) const
     Vector<UnicycleObstacle> obst;
     for (int i = 0; i < unicycleAgents.size(); i++)
     {
+        //qDebug() << state.frameId << "getting uo from world except" << unicycleAgents[i].getAgentId() << excludeId << unicycleAgents[i];
         if (unicycleAgents[i].isActive())
             if (unicycleAgents[i].getAgentId() != excludeId)
                 obst << unicycleAgents[i];

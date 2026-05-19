@@ -1232,11 +1232,11 @@ void GeometricModel::clipPolygons(const Polygon& pol)
 // or the hull polygon of an obstacle.
 bool GeometricModel::isInFreeSpace(const Vec2 &p, bool debug) const
 {
-    bool iifs = false;
+    bool iifs = true;
     ListIterator<Polygon> rootPolyIt = rootPolygons.begin();
-    while (rootPolyIt.hasNext() && !iifs)
-        if (rootPolyIt.next().intersects(p))
-            iifs = true;
+    while (rootPolyIt.hasNext() && iifs)
+        if (!rootPolyIt.next().intersects(p))
+            iifs = false;
     if (!iifs)
         return false;
 
@@ -1291,13 +1291,11 @@ GeometricModel GeometricModel::predicted(double dt) const
 // model by their prediction time, but no collisions are resolved.
 void GeometricModel::autoPredict(bool debug)
 {
-    if (unicycleObstacles.isEmpty())
-        return;
-
     ListIterator<UnicycleObstacle> obstIt = unicycleObstacles.begin();
     while (obstIt.hasNext())
     {
         double T = obstIt.cur().pos().norm() / config.agentLinearVelocityLimitForward;
+        // TODO, replace with RTR
         if (T > config.predictIgnoreHorizon)
         {
             unicycleObstacles.remove(obstIt);
@@ -1305,7 +1303,7 @@ void GeometricModel::autoPredict(bool debug)
         else
         {
             double dt = min(config.predictFactor*T, config.predictMaxPredictTime);
-            if (debug)
+            //if (debug)
                 qDebug() << obstIt.cur().getId() << "T:" << T << "dt:" << dt;
             obstIt.cur().predict(dt);
             obstIt.next();
